@@ -6,6 +6,7 @@ import {
   Boxes,
   BriefcaseBusiness,
   CalendarDays,
+  Calculator,
   ChartNoAxesCombined,
   CheckSquare,
   ClipboardCheck,
@@ -64,6 +65,7 @@ export const modules = {
     ["field-work", "Mobile / Field Work", HardHat, "planned"],
   ],
   business: [
+    ["pricing-calculator", "Pricing Calculator", Calculator, "ready"],
     ["billing", "Billing", WalletCards, "preview"],
     ["invoices", "Invoices", ReceiptText, "ready"],
     ["payments", "Payments", HandCoins, "preview"],
@@ -166,4 +168,3 @@ export const moduleDetails = {
   "bug-reports": { title: "Bug Reports", description: "Submit and track issues discovered while rebuilding and testing.", metric: "No open reports", action: "Report a bug" },
   "feature-requests": { title: "Feature Requests", description: "Capture ideas and track them through review and planning.", metric: "3 requests under review", action: "Submit request" },
 };
-

@@ -1,37 +1,28 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
-  AlertTriangle,
   Bell,
-  CalendarDays,
   Check,
   ChevronDown,
   ChevronRight,
-  CircleDollarSign,
-  Clock3,
-  Command,
-  FileCheck2,
   HelpCircle,
   LayoutDashboard,
   Menu,
-  PackageSearch,
   Plus,
   Search,
   Settings,
-  Sparkles,
   X,
 } from "lucide-react";
 import {
-  actionItems,
   moduleDetails,
   modules,
   notifications,
-  orders,
   quickCreate,
-  schedule,
   searchRecords,
   statusLabels,
   workspaces,
 } from "./data";
+import { AppRibbon } from "./components/ribbon/AppRibbon";
+import { Dashboard } from "./components/dashboard/Dashboard";
 
 const statusTone = { ready: "green", preview: "blue", planned: "gray" };
 
@@ -94,8 +85,8 @@ function App() {
             <span className="workspace-kicker">{workspaceInfo.label}</span>
             <strong>{module === "dashboard" ? "Command Center" : activeModule?.[1]}</strong>
           </div>
-          <Ribbon module={module} onAction={showToast} />
         </div>
+        <AppRibbon isDashboard={module === "dashboard"} onNavigate={navigate} onAction={showToast} />
         <div className="content-shell">
           <ModuleNav workspace={workspace} module={module} onSelect={(id) => setModule(id)} />
           <main className="main-content">
@@ -161,17 +152,6 @@ function TopBar({ onSearch, onCreate, onNotifications, onMenu, notificationOpen 
   );
 }
 
-function Ribbon({ module, onAction }) {
-  const actions = module === "dashboard"
-    ? [["Refresh", Clock3], ["Open schedule", CalendarDays], ["View reports", CircleDollarSign]]
-    : [["New record", Plus], ["Search this module", Search], ["Module help", HelpCircle]];
-  return (
-    <div className="ribbon">
-      {actions.map(([label, Icon]) => <button key={label} onClick={() => onAction(`${label} selected`)}><Icon size={15} />{label}</button>)}
-    </div>
-  );
-}
-
 function ModuleNav({ workspace, module, onSelect }) {
   return (
     <aside className="module-nav">
@@ -184,84 +164,6 @@ function ModuleNav({ workspace, module, onSelect }) {
       ))}
     </aside>
   );
-}
-
-function Dashboard({ onNavigate }) {
-  return (
-    <div className="dashboard-page">
-      <section className="page-heading">
-        <div><h1>Good morning, Bill</h1><p>Thursday, June 11 · Here is what needs attention across the shop.</p></div>
-        <button className="secondary-button" onClick={() => onNavigate("operations", "schedule")}><CalendarDays size={16} />Open shop schedule</button>
-      </section>
-
-      <section className="metric-strip">
-        <Metric label="Open orders" value="31" detail="6 due this week" icon={PackageSearch} />
-        <Metric label="Pending approvals" value="3" detail="Oldest: 18 hours" icon={FileCheck2} />
-        <Metric label="Unpaid invoices" value="$18.4k" detail="$4.2k due today" icon={CircleDollarSign} />
-        <Metric label="Daily sales" value="$6,840" detail="+12% vs. last Thu" icon={Sparkles} />
-      </section>
-
-      <div className="dashboard-grid">
-        <section className="panel action-panel">
-          <PanelTitle title="Action required" count="6" action="View all" />
-          <div className="action-list">
-            {actionItems.map((item) => (
-              <button key={item.title} className={`action-row ${item.tone}`}>
-                <span className="action-icon"><AlertTriangle size={17} /></span>
-                <span><strong>{item.title}</strong><small>{item.detail}</small></span>
-                <span className="row-action">{item.action}<ChevronRight size={15} /></span>
-              </button>
-            ))}
-          </div>
-        </section>
-
-        <section className="panel schedule-panel">
-          <PanelTitle title="Today's schedule" action="Full calendar" />
-          <div className="schedule-list">
-            {schedule.map((item) => (
-              <div className="schedule-row" key={item.time + item.title}>
-                <span className="schedule-time"><strong>{item.time}</strong><small>{item.period}</small></span>
-                <span className={`schedule-mark ${item.tone}`} />
-                <span><strong>{item.title}</strong><small>{item.detail}</small></span>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="panel orders-panel">
-          <PanelTitle title="Open orders" count="31" action="All orders" />
-          <div className="table-head"><span>Order</span><span>Stage</span><span>Due</span></div>
-          {orders.map((order) => (
-            <button className="order-row" key={order.id} onClick={() => onNavigate("operations", "orders")}>
-              <span><strong>{order.id}</strong><small>{order.customer} · {order.item}</small></span>
-              <span className={`tag ${order.tone}`}>{order.stage}</span>
-              <span className={order.due === "Today" ? "due-today" : ""}>{order.due}</span>
-            </button>
-          ))}
-        </section>
-
-        <section className="panel shop-pulse">
-          <PanelTitle title="Shop pulse" action="Reports" />
-          <PulseRow label="Tasks due" value="9" detail="3 assigned to you" tone="teal" onClick={() => onNavigate("productivity", "tasks")} />
-          <PulseRow label="Production alerts" value="4" detail="2 jobs waiting on material" tone="amber" onClick={() => onNavigate("operations", "production")} />
-          <PulseRow label="Low inventory" value="—" detail="Available when Inventory launches" tone="gray" status="Coming soon" onClick={() => onNavigate("business", "inventory")} />
-          <PulseRow label="AI suggestions" value="—" detail="Available when AI Assistant launches" tone="purple" status="Coming soon" onClick={() => onNavigate("ai-hub", "assistant")} />
-        </section>
-      </div>
-    </div>
-  );
-}
-
-function Metric({ label, value, detail, icon: Icon }) {
-  return <div className="metric"><Icon size={18} /><span><small>{label}</small><strong>{value}</strong><em>{detail}</em></span></div>;
-}
-
-function PanelTitle({ title, count, action }) {
-  return <div className="panel-title"><div><h2>{title}</h2>{count && <span>{count}</span>}</div><button>{action}<ChevronRight size={14} /></button></div>;
-}
-
-function PulseRow({ label, value, detail, tone, status, onClick }) {
-  return <button className="pulse-row" onClick={onClick}><span className={`pulse-dot ${tone}`} /><span><strong>{label}</strong><small>{detail}</small></span>{status ? <span className="coming">{status}</span> : <b>{value}</b>}<ChevronRight size={15} /></button>;
 }
 
 function ModulePage({ item, onAction }) {
