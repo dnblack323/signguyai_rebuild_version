@@ -14,6 +14,8 @@ This file tracks the running preview against `MASTER_AGENT_REBUILD_PLAN.md`.
 - Webstores and Wrap Center use the lower Add-ons rail section; collapsed mode uses icons/tooltips and expanded mode shows labels. Wrap Center uses a vehicle icon.
 - Removed the tall workspace/title row; a compact section-information banner now sits directly beneath the ribbon.
 - Webstores shown as the first expansion preview, with approved store types in its target description.
+- Webstore management is always available in the main app. Publishing and Cart/Checkout are shown as separate feature gates.
+- A standalone Webstores-only shell reuses the same Webstores workspace and entitlement model.
 - Pricing Foundation in Settings and Pricing Calculator as a Business/global action.
 - Backend ownership folders: models, routes, services, repositories, integrations, shared.
 - Base records include tenant ID, application ID, native UTC datetimes, and version.

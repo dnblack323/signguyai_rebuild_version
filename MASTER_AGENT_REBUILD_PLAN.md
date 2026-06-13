@@ -152,6 +152,15 @@ Quotes support signed expiring public acceptance and idempotent conversion. Agin
 
 Webstores are protected approved behavior and the first full expansion track, not a late placeholder.
 
+Webstores product and entitlement rules:
+
+- Webstore management is always available inside the main SignGuyAI app. Tenants can create stores, complete setup, configure products, collect owner information, review designs, and prepare stores without purchasing commerce capabilities.
+- Publishing public storefronts is a separately feature-gated entitlement.
+- Shopping cart, checkout, payments, and the canonical order bridge are a separately feature-gated commerce entitlement. Publishing does not silently imply checkout.
+- Offer a standalone Webstores product for customers who only want Webstores. It uses the same canonical Webstores domain, product catalog, forms, documents, owner portal, entitlements, and future commerce engine, but renders through a focused Webstores-only shell.
+- The standalone product must not create duplicate Webstore, customer, order, payment, document, notification, report, or AI-usage systems.
+- Capability checks must be explicit and service-controlled: management available, publishing enabled, cart/checkout enabled, and standalone product mode.
+
 Approved store types: B2B, Fundraiser, Event, Promotional, General. Creator is an optional ownership/payout mode, not a primary type. Donations can apply to any store.
 
 Setup workflow: create and link customer/owner -> send reusable questionnaire/upload requests -> owner completes details -> AI produces reviewed summary and missing-info/product drafts -> admin review -> build catalog/branding/payments -> owner preview/approval -> launch with QR/share/slug/domain/status/tracking/reporting.

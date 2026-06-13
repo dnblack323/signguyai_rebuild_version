@@ -25,10 +25,12 @@ import {
 } from "./data";
 import { AppRibbon } from "./components/ribbon/AppRibbon";
 import { Dashboard } from "./components/dashboard/Dashboard";
+import { StandaloneWebstoresShell, WebstoresWorkspace } from "./components/webstores/WebstoresWorkspace";
 
 const statusTone = { ready: "green", preview: "blue", planned: "gray" };
 
 function App() {
+  const standaloneWebstores = new URLSearchParams(window.location.search).get("mode") === "webstores";
   const [workspace, setWorkspace] = useState("home");
   const [module, setModule] = useState("dashboard");
   const [searchOpen, setSearchOpen] = useState(false);
@@ -76,6 +78,10 @@ function App() {
     window.setTimeout(() => setToast(""), 2600);
   };
 
+  if (standaloneWebstores) {
+    return <><StandaloneWebstoresShell onToast={showToast} />{toast && <div className="toast"><Check size={17} />{toast}</div>}</>;
+  }
+
   return (
     <div className="app-shell">
       <WorkspaceRail workspace={workspace} module={module} onSelect={(id) => navigate(id, "dashboard")} onNavigate={navigate} />
@@ -98,6 +104,8 @@ function App() {
               <Dashboard onNavigate={navigate} />
             ) : module === "dashboard" ? (
               <WorkspaceDashboard workspace={workspaceInfo} />
+            ) : module === "webstores" ? (
+              <WebstoresWorkspace onToast={showToast} />
             ) : (
               <ModulePage item={activeModule} onAction={showToast} />
             )}
