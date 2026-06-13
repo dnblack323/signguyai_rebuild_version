@@ -66,7 +66,7 @@ export function Dashboard({ onNavigate }) {
           <SnapshotRow label="Printing" value="7" tone="purple" />
           <SnapshotRow label="Finishing" value="4" tone="amber" />
           <SnapshotRow label="Ready" value="3" tone="green" />
-          <button className="snapshot-alert" onClick={() => onNavigate("operations", "production")}><AlertTriangle size={14} />2 tickets blocked<ChevronRight size={14} /></button>
+          <button className="snapshot-alert" onClick={() => onNavigate("operations", "production")}><AlertTriangle size={14} />2 work orders blocked<ChevronRight size={14} /></button>
         </section>
 
         <section className="panel billing-snapshot">
@@ -109,7 +109,7 @@ export function Dashboard({ onNavigate }) {
           <PanelTitle title="Future signals" />
           <FutureRow icon={Boxes} title="Inventory alerts" detail="Activates with Inventory" onClick={() => onNavigate("business", "inventory")} />
           <FutureRow icon={Bot} title="AI suggestions" detail="Activates with AI Assistant" onClick={() => onNavigate("ai-hub", "assistant")} />
-          <FutureRow icon={ClipboardCheck} title="Material shortages" detail="Activates with job materials" onClick={() => onNavigate("business", "purchasing")} />
+          <FutureRow icon={ClipboardCheck} title="Material shortages" detail="Activates with work order materials" onClick={() => onNavigate("business", "purchasing")} />
         </section>
       </div>
     </div>

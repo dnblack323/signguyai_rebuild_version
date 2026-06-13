@@ -2,9 +2,9 @@
 
 First preview version of the clean SignGuyAI rebuild.
 
-This release establishes the final application surface:
+This release establishes the controlling application shell and first structural preview:
 
-- Global Command Center
+- Icon-only Home / Global Command Center
 - Global Search
 - Global Create
 - Notifications
@@ -14,6 +14,10 @@ This release establishes the final application surface:
 - Business workspace
 - Productivity workspace
 - AI Hub
+- Settings workspace
+- Full Help menu accessed through the `?` icon
+- Final Order Item and Work Order Summary terminology
+- Early Webstores expansion track
 - Working sample interactions
 - Honest module status pages for future releases
 
@@ -38,7 +42,7 @@ uvicorn main:app --reload --port 8000
 The backend health endpoint is `http://localhost:8000/api/health`.
 The dashboard digest contract is `http://localhost:8000/api/digest`.
 
-See `DAY1_SPEC_COVERAGE.md` for the requirements currently represented by the preview.
+See `MASTER_AGENT_REBUILD_PLAN.md` for the sole controlling rebuild plan and `FINAL_SPEC_COMPLIANCE.md` for current preview coverage.
 
 ## Emergent
 

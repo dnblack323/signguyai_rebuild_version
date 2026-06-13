@@ -46,6 +46,7 @@ export const workspaces = [
   { id: "business", label: "Business", icon: BriefcaseBusiness, description: "Money, people, and materials" },
   { id: "productivity", label: "Productivity", icon: CheckSquare, description: "Team coordination" },
   { id: "ai-hub", label: "AI Hub", icon: Sparkles, description: "Assistance, learning, and support" },
+  { id: "settings", label: "Settings", icon: Settings, description: "Shop configuration and permissions" },
 ];
 
 export const modules = {
@@ -54,13 +55,13 @@ export const modules = {
     ["quotes", "Quotes", FileText, "ready"],
     ["orders", "Orders", ShoppingBag, "ready"],
     ["order-items", "Order Items", ListChecks, "ready"],
-    ["job-tickets", "Job Tickets", ClipboardCheck, "ready"],
+    ["work-orders", "Work Order Summaries", ClipboardCheck, "ready"],
     ["production", "Production Board", PanelsTopLeft, "ready"],
     ["schedule", "Schedule", CalendarDays, "preview"],
     ["approvals", "Proofs & Approvals", PackageCheck, "preview"],
     ["artwork", "Documents & Artwork", Images, "preview"],
     ["wraps", "Wrap Command Center", GalleryHorizontalEnd, "planned"],
-    ["webstores", "Webstores", Store, "planned"],
+    ["webstores", "Webstores", Store, "preview"],
     ["customer-portal", "Customer Portal", Users, "planned"],
     ["field-work", "Mobile / Field Work", HardHat, "planned"],
   ],
@@ -99,6 +100,17 @@ export const modules = {
     ["community", "Community", Users, "planned"],
     ["roadmap", "Roadmap", LayoutDashboard, "ready"],
     ["release-notes", "Release Notes", Megaphone, "ready"],
+  ],
+  settings: [
+    ["company-settings", "Company", BriefcaseBusiness, "ready"],
+    ["permissions", "Permissions", Users, "preview"],
+    ["pricing-foundation", "Pricing Foundation", Calculator, "ready"],
+    ["production-stages", "Production Stages", Workflow, "preview"],
+    ["team-settings", "Team & Payroll", Clock3, "preview"],
+    ["billing-terms", "Billing Terms", ReceiptText, "preview"],
+    ["integrations", "Integrations", Repeat2, "planned"],
+    ["webstore-settings", "Webstore Settings", Store, "preview"],
+    ["feature-flags", "Features & Entitlements", Settings, "preview"],
   ],
 };
 
@@ -160,7 +172,10 @@ export const moduleDetails = {
   customers: { title: "Customers", description: "Manage customer records, contacts, notes, files, history, and activity.", metric: "248 active customers", action: "New customer" },
   quotes: { title: "Quotes", description: "Build accurate quotes and convert approved work into orders.", metric: "12 open quotes", action: "New quote" },
   orders: { title: "Orders", description: "Track customer work from approved sale through completion.", metric: "31 active orders", action: "New order" },
-  production: { title: "Production Board", description: "Keep every job ticket visible and moving through the shop.", metric: "18 tickets in production", action: "View board" },
+  production: { title: "Production Board", description: "Keep every Work Order Summary visible and moving through tenant-configurable production stages.", metric: "18 work orders in production", action: "View board" },
+  "work-orders": { title: "Work Order Summaries", description: "Review production-facing order summaries, required Order Items, tasks, materials, proofs, and due dates.", metric: "18 active work orders", action: "View work orders" },
+  webstores: { title: "Webstores", description: "Create and operate B2B, Fundraiser, Event, Promotional, and General stores using the shared platform core.", metric: "First expansion track", action: "Open webstores" },
+  "pricing-foundation": { title: "Pricing Foundation", description: "Configure deterministic material, labor, markup, waste, rush, tax, and category pricing defaults.", metric: "Protected base behavior", action: "Review pricing setup" },
   tasks: { title: "Tasks", description: "One canonical task system for personal, production, and team work.", metric: "9 tasks due this week", action: "New task" },
   invoices: { title: "Invoices", description: "Create invoices, record payments, and monitor outstanding balances.", metric: "$18,460 outstanding", action: "New invoice" },
   documentation: { title: "Documentation", description: "Contextual product guidance and workflow documentation.", metric: "12 starter guides", action: "Browse guides" },

@@ -5,6 +5,7 @@ import {
   ChevronDown,
   ChevronRight,
   HelpCircle,
+  Home,
   LayoutDashboard,
   Menu,
   Plus,
@@ -27,17 +28,18 @@ import { Dashboard } from "./components/dashboard/Dashboard";
 const statusTone = { ready: "green", preview: "blue", planned: "gray" };
 
 function App() {
-  const [workspace, setWorkspace] = useState("operations");
+  const [workspace, setWorkspace] = useState("home");
   const [module, setModule] = useState("dashboard");
   const [searchOpen, setSearchOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const [mobileNav, setMobileNav] = useState(false);
   const [query, setQuery] = useState("");
   const [toast, setToast] = useState("");
 
-  const workspaceInfo = workspaces.find((item) => item.id === workspace);
-  const activeModule = modules[workspace].find((item) => item[0] === module);
+  const workspaceInfo = workspace === "home" ? { label: "Home" } : workspaces.find((item) => item.id === workspace);
+  const activeModule = workspace === "home" ? null : modules[workspace].find((item) => item[0] === module);
 
   useEffect(() => {
     const onKeyDown = (event) => {
@@ -49,6 +51,7 @@ function App() {
         setSearchOpen(false);
         setCreateOpen(false);
         setNotificationsOpen(false);
+        setHelpOpen(false);
         setMobileNav(false);
       }
     };
@@ -77,8 +80,10 @@ function App() {
           onSearch={() => setSearchOpen(true)}
           onCreate={() => setCreateOpen(true)}
           onNotifications={() => setNotificationsOpen((value) => !value)}
+          onHelp={() => setHelpOpen((value) => !value)}
           onMenu={() => setMobileNav(true)}
           notificationOpen={notificationsOpen}
+          helpOpen={helpOpen}
         />
         <div className="workspace-header">
           <div>
@@ -86,12 +91,14 @@ function App() {
             <strong>{module === "dashboard" ? "Command Center" : activeModule?.[1]}</strong>
           </div>
         </div>
-        <AppRibbon isDashboard={module === "dashboard"} onNavigate={navigate} onAction={showToast} />
+        <AppRibbon isDashboard={workspace === "home" && module === "dashboard"} onNavigate={navigate} onAction={showToast} />
         <div className="content-shell">
-          <ModuleNav workspace={workspace} module={module} onSelect={(id) => setModule(id)} />
+          {workspace !== "home" && <ModuleNav workspace={workspace} module={module} onSelect={(id) => setModule(id)} />}
           <main className="main-content">
-            {module === "dashboard" ? (
+            {workspace === "home" && module === "dashboard" ? (
               <Dashboard onNavigate={navigate} />
+            ) : module === "dashboard" ? (
+              <WorkspaceDashboard workspace={workspaceInfo} />
             ) : (
               <ModulePage item={activeModule} onAction={showToast} />
             )}
@@ -102,6 +109,7 @@ function App() {
       {searchOpen && <SearchPalette query={query} setQuery={setQuery} onClose={() => setSearchOpen(false)} onNavigate={navigate} />}
       {createOpen && <CreatePalette onClose={() => setCreateOpen(false)} onNavigate={navigate} onToast={showToast} />}
       {notificationsOpen && <NotificationsPanel onClose={() => setNotificationsOpen(false)} />}
+      {helpOpen && <HelpPanel onClose={() => setHelpOpen(false)} onNavigate={navigate} />}
       {mobileNav && <MobileNavigation workspace={workspace} module={module} onClose={() => setMobileNav(false)} onNavigate={navigate} />}
       {toast && <div className="toast"><Check size={17} />{toast}</div>}
     </div>
@@ -111,27 +119,30 @@ function App() {
 function WorkspaceRail({ workspace, onSelect }) {
   return (
     <aside className="workspace-rail">
-      <button className="brand" onClick={() => onSelect("operations")} aria-label="SignGuyAI home">
+      <div className="brand" aria-label="SignGuyAI">
         <span>SG</span>
         <strong>SignGuy<span>AI</span></strong>
-      </button>
+      </div>
       <nav aria-label="Workspaces">
+        <button className={workspace === "home" ? "active home-button" : "home-button"} onClick={() => onSelect("home")} aria-label="Home / Command Center" title="Home / Command Center">
+          <Home size={20} />
+          <span>Home</span>
+        </button>
         {workspaces.map(({ id, label, icon: Icon }) => (
-          <button key={id} className={workspace === id ? "active" : ""} onClick={() => onSelect(id)}>
+          <button key={id} className={workspace === id ? "active" : ""} onClick={() => onSelect(id)} aria-label={label} title={label}>
             <Icon size={20} />
             <span>{label}</span>
           </button>
         ))}
       </nav>
       <div className="rail-bottom">
-        <button><Settings size={19} /><span>Settings</span></button>
         <div className="user-avatar">BN</div>
       </div>
     </aside>
   );
 }
 
-function TopBar({ onSearch, onCreate, onNotifications, onMenu, notificationOpen }) {
+function TopBar({ onSearch, onCreate, onNotifications, onHelp, onMenu, notificationOpen, helpOpen }) {
   return (
     <header className="top-bar">
       <button className="mobile-menu" onClick={onMenu}><Menu size={20} /></button>
@@ -145,10 +156,25 @@ function TopBar({ onSearch, onCreate, onNotifications, onMenu, notificationOpen 
         <button className={notificationOpen ? "icon-button active" : "icon-button"} onClick={onNotifications} aria-label="Notifications">
           <Bell size={19} /><span className="notification-dot" />
         </button>
-        <button className="icon-button" aria-label="Help"><HelpCircle size={19} /></button>
+        <button className={helpOpen ? "icon-button active" : "icon-button"} onClick={onHelp} aria-label="Help menu" title="Help"><HelpCircle size={19} /></button>
         <button className="profile-button"><span className="user-avatar small">BN</span><span>Bill Nelson</span><ChevronDown size={14} /></button>
       </div>
     </header>
+  );
+}
+
+function WorkspaceDashboard({ workspace }) {
+  return (
+    <div className="module-page">
+      <section className="page-heading compact-heading">
+        <div><h1>{workspace.label} Dashboard</h1><p>Contextual workspace summary. The global command center remains under the Home icon.</p></div>
+      </section>
+      <section className="empty-workspace">
+        <LayoutDashboard size={28} />
+        <h2>{workspace.label} dashboard foundation</h2>
+        <p>This dashboard will use the shared shell and digest pattern while showing only {workspace.label.toLowerCase()}-specific actions and cards.</p>
+      </section>
+    </div>
   );
 }
 
@@ -223,8 +249,29 @@ function NotificationsPanel({ onClose }) {
   return <aside className="notifications-panel"><div className="modal-heading"><div><h2>Notifications</h2><p>Recent activity across the shop</p></div><button onClick={onClose}><X size={18} /></button></div>{notifications.map((item) => <button key={item.title}><span className="unread-dot" /><span><strong>{item.title}</strong><small>{item.detail}</small><em>{item.time} ago</em></span></button>)}<button className="notification-footer">View notification center<ChevronRight size={15} /></button></aside>;
 }
 
+const helpLinks = [
+  ["Current page tips", "documentation"],
+  ["Documentation", "documentation"],
+  ["Onboarding", "onboarding"],
+  ["Contact support", "help"],
+  ["Report a bug", "bug-reports"],
+  ["Request a feature", "feature-requests"],
+  ["Roadmap", "roadmap"],
+  ["Release notes", "release-notes"],
+];
+
+function HelpPanel({ onClose, onNavigate }) {
+  return (
+    <aside className="help-panel">
+      <div className="modal-heading"><div><h2>Help</h2><p>Guidance and support without taking navigation space</p></div><button onClick={onClose}><X size={18} /></button></div>
+      <div className="page-tip"><HelpCircle size={18} /><span><strong>Current page tip</strong><small>Use the ribbon for page actions, the left rail for major workspaces, and global search to find records.</small></span></div>
+      {helpLinks.map(([label, moduleId]) => <button key={label} onClick={() => { onNavigate("ai-hub", moduleId); onClose(); }}><span>{label}</span><ChevronRight size={15} /></button>)}
+    </aside>
+  );
+}
+
 function MobileNavigation({ workspace, module, onClose, onNavigate }) {
-  return <div className="mobile-nav"><div className="modal-heading"><strong>SignGuyAI</strong><button onClick={onClose}><X size={19} /></button></div>{workspaces.map(({ id, label, icon: Icon }) => <div key={id}><button className={workspace === id ? "workspace-mobile active" : "workspace-mobile"} onClick={() => onNavigate(id, "dashboard")}><Icon size={18} />{label}</button>{workspace === id && modules[id].map(([moduleId, moduleLabel]) => <button className={module === moduleId ? "module-mobile active" : "module-mobile"} key={moduleId} onClick={() => onNavigate(id, moduleId)}>{moduleLabel}</button>)}</div>)}</div>;
+  return <div className="mobile-nav"><div className="modal-heading"><strong>SignGuyAI</strong><button onClick={onClose}><X size={19} /></button></div><button className={workspace === "home" ? "workspace-mobile active" : "workspace-mobile"} onClick={() => onNavigate("home", "dashboard")}><Home size={18} />Home / Command Center</button>{workspaces.map(({ id, label, icon: Icon }) => <div key={id}><button className={workspace === id ? "workspace-mobile active" : "workspace-mobile"} onClick={() => onNavigate(id, "dashboard")}><Icon size={18} />{label}</button>{workspace === id && modules[id].map(([moduleId, moduleLabel]) => <button className={module === moduleId ? "module-mobile active" : "module-mobile"} key={moduleId} onClick={() => onNavigate(id, moduleId)}>{moduleLabel}</button>)}</div>)}</div>;
 }
 
 function ModalShell({ children, onClose }) {
