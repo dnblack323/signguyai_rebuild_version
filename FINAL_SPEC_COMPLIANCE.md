@@ -5,13 +5,13 @@ This file tracks the running preview against `MASTER_AGENT_REBUILD_PLAN.md`.
 ## Represented Now
 
 - Final compact shell with icon-only Home entry, Operations, Business, Productivity, AI Hub, and Settings.
-- No large or wide left sidebar. Workspace modules use compact horizontal navigation beneath the workspace header.
+- No permanently wide left sidebar. The blue workspace rail is icon-only by default, expands over content with icons and labels on hover/focus, then collapses without shifting content. Workspace modules use compact horizontal navigation.
 - Help is a full compact menu opened through the `?` icon. It includes current-page tips and routes to documentation, onboarding, support, bug reports, feature requests, roadmap, and release notes.
 - Home is the global Command Center; workspace dashboards are separate contextual foundations.
 - Global search, global create, notifications, and compact Office-style Home ribbon.
 - Operations top-level navigation is limited to Customers, Quotes, Orders, Production, Approvals, and Doc Library.
 - Order Items and Work Order create/download actions live inside Orders. Work Orders and Shop Schedule live inside Production.
-- Webstores and Wrap Center use icon-only buttons with hover/focus tooltips in the lower Add-ons section of the compact blue rail; Wrap Center uses a vehicle icon.
+- Webstores and Wrap Center use the lower Add-ons rail section; collapsed mode uses icons/tooltips and expanded mode shows labels. Wrap Center uses a vehicle icon.
 - Webstores shown as the first expansion preview, with approved store types in its target description.
 - Pricing Foundation in Settings and Pricing Calculator as a Business/global action.
 - Backend ownership folders: models, routes, services, repositories, integrations, shared.

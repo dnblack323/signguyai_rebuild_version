@@ -121,8 +121,14 @@ function App() {
 }
 
 function WorkspaceRail({ workspace, module, onSelect, onNavigate }) {
+  const collapseAfterPointerLeaves = (event) => {
+    if (event.currentTarget.contains(document.activeElement)) {
+      document.activeElement.blur();
+    }
+  };
+
   return (
-    <aside className="workspace-rail">
+    <aside className="workspace-rail" onMouseLeave={collapseAfterPointerLeaves}>
       <div className="brand" aria-label="SignGuyAI">
         <span>SG</span>
         <strong>SignGuy<span>AI</span></strong>
@@ -144,6 +150,7 @@ function WorkspaceRail({ workspace, module, onSelect, onNavigate }) {
         {addons.map(({ id, label, icon: Icon, workspace: addonWorkspace, module: addonModule }) => (
           <button key={id} className={workspace === addonWorkspace && module === addonModule ? "active" : ""} onClick={() => onNavigate(addonWorkspace, addonModule)} aria-label={label} data-tooltip={label}>
             <Icon size={19} />
+            <span>{label}</span>
           </button>
         ))}
       </div>

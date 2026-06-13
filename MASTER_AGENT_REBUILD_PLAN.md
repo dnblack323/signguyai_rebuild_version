@@ -27,7 +27,7 @@ Operations placement rules:
 - Production contains the Production Board, Work Orders, production tasks, and Shop Schedule.
 - Use the labels Production, Approvals, Doc Library, and Shop Schedule.
 - Customer Portal access belongs inside customer/order records and portal workflows, not top-level Operations navigation.
-- Webstores and Wrap Center are Add-ons. Show icon-only buttons in a lower `Add-ons` section of the compact blue primary rail, with names exposed through hover/focus tooltips. Wrap Center uses a vehicle icon.
+- Webstores and Wrap Center are Add-ons. Show their icons in a lower `Add-ons` section of the compact blue primary rail. Collapsed mode uses icon tooltips; expanded mode shows icons and labels. Wrap Center uses a vehicle icon.
 
 Navigation rules:
 
@@ -36,7 +36,7 @@ Navigation rules:
 - Office-style contextual ribbon exposes actions.
 - Detail tabs select record areas.
 - Filters narrow lists, cards identify attention, boards move work, and Settings controls behavior.
-- Ban large or wide permanent left sidebars everywhere in the app. Use the compact primary workspace rail plus compact horizontal module navigation. Contextual drawers/panels may open temporarily for Settings, Documents, Help, or complex record tasks, but must not permanently consume a wide left column.
+- Ban large or wide permanent left sidebars everywhere in the app. The blue primary workspace rail is icon-only while collapsed and expands with icons and labels when hovered or keyboard-focused. Expansion slides over app content and must never shift or permanently consume content width. Use compact horizontal module navigation. Contextual drawers/panels may open temporarily for Settings, Documents, Help, or complex record tasks.
 
 The Home Command Center uses the accepted compact dark rail, global search, global `+ Create`, notifications, Help/profile area, icon-over-label ribbon, white cards, thin borders, subtle shadows, and teal/navy/white visual language. Its compact ribbon actions are New Order, New Quote, New Customer, Pricing Calc, Send Proof, Request Approval, Send Document, New Invoice, Send Email, New Task, Schedule Install, and Open Calendar.
 
