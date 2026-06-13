@@ -157,7 +157,7 @@ Setup workflow: create and link customer/owner -> send reusable questionnaire/up
 
 WebstoreProduct is separate from InventoryItem and Order Item. Checkout creates WebstoreOrder first, then bridges into canonical Customer, Order, Order Items, Billing, Work Order Summary, and Production Tasks as appropriate. Client-side cart persists locally until confirmed checkout. Public route is `/store/{store_slug}` with globally unique slug. Owner portal exposes store progress, approvals, products, orders, performance, donations, reports, QR/marketing assets, and allowed settings, but never unrelated tenant records, supplier data, or internal costs/margins.
 
-Wrap Command Center is the second full expansion and reuses all shared systems. It covers vehicle intake/questionnaire/photos/measurements, estimating/pricing, proofs/approvals, deposits, scheduling, production, install notes/damage/photos, portal updates, signatures, completion, and warranty/care. Field workflows are mobile responsive from the beginning.
+Wrap Command Center is the second full expansion and reuses all shared systems. It covers vehicle intake/questionnaire/photos/measurements, estimating/pricing, proofs/approvals, deposits, scheduling, production, install notes/damage/photos, portal updates, signatures, completion, and warranty/care.
 
 Later gated add-ons: Smart Pricing Pro; AI Tools Pro/higher AI usage; SMS/MMS; Production Timing Pro; Employee Training/Equipment Certification.
 
