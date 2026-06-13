@@ -12,6 +12,7 @@ This file tracks the running preview against `MASTER_AGENT_REBUILD_PLAN.md`.
 - Operations top-level navigation is limited to Customers, Quotes, Orders, Production, Approvals, and Doc Library.
 - Order Items and Work Order create/download actions live inside Orders. Work Orders and Shop Schedule live inside Production.
 - Webstores and Wrap Center use the lower Add-ons rail section; collapsed mode uses icons/tooltips and expanded mode shows labels. Wrap Center uses a vehicle icon.
+- Removed the tall workspace/title row; a compact section-information banner now sits directly beneath the ribbon.
 - Webstores shown as the first expansion preview, with approved store types in its target description.
 - Pricing Foundation in Settings and Pricing Calculator as a Business/global action.
 - Backend ownership folders: models, routes, services, repositories, integrations, shared.

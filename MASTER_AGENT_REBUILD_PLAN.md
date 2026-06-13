@@ -28,6 +28,7 @@ Operations placement rules:
 - Use the labels Production, Approvals, Doc Library, and Shop Schedule.
 - Customer Portal access belongs inside customer/order records and portal workflows, not top-level Operations navigation.
 - Webstores and Wrap Center are Add-ons. Show their icons in a lower `Add-ons` section of the compact blue primary rail. Collapsed mode uses icon tooltips; expanded mode shows icons and labels. Wrap Center uses a vehicle icon.
+- Do not use a tall workspace/title row above the ribbon. Show a short, single-line section information banner directly beneath the ribbon with the current section name and concise description.
 
 Navigation rules:
 

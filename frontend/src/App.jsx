@@ -89,14 +89,9 @@ function App() {
           notificationOpen={notificationsOpen}
           helpOpen={helpOpen}
         />
-        <div className="workspace-header">
-          <div>
-            <span className="workspace-kicker">{workspaceInfo.label}</span>
-            <strong>{module === "dashboard" ? "Command Center" : activeModule?.[1]}</strong>
-          </div>
-        </div>
         {workspace !== "home" && <ModuleNav workspace={workspace} module={module} onSelect={(id) => setModule(id)} />}
         <AppRibbon isDashboard={workspace === "home" && module === "dashboard"} onNavigate={navigate} onAction={showToast} />
+        <SectionBanner workspace={workspaceInfo} module={module} activeModule={activeModule} />
         <div className="content-shell">
           <main className="main-content">
             {workspace === "home" && module === "dashboard" ? (
@@ -118,6 +113,18 @@ function App() {
       {toast && <div className="toast"><Check size={17} />{toast}</div>}
     </div>
   );
+}
+
+function SectionBanner({ workspace, module, activeModule }) {
+  const detail = activeModule ? moduleDetails[activeModule[0]] : null;
+  const title = module === "dashboard" ? (workspace.label === "Home" ? "Command Center" : `${workspace.label} Overview`) : activeModule?.[1];
+  const description = module === "dashboard"
+    ? workspace.label === "Home"
+      ? "What needs attention across the shop."
+      : `Current priorities and activity for ${workspace.label.toLowerCase()}.`
+    : detail?.description || `${title} workspace`;
+
+  return <section className="section-banner"><strong>{title}</strong><span>{description}</span></section>;
 }
 
 function WorkspaceRail({ workspace, module, onSelect, onNavigate }) {
