@@ -49,20 +49,22 @@ launch controls live inside the selected Store workflow. `Templates` is the
 universal reusable starting-point library; copied templates become
 store-specific products.
 
-Default Home ribbon, maximum 12 actions:
+Home is an overview and triage command center. Its ribbon contains only:
 
 1. New Store
-2. Duplicate Store
-3. Send Questionnaire
-4. Review Answers
-5. Add Product
-6. Add From Template
-7. Generate Descriptions
-8. Preview Store
-9. Send Owner Review
-10. Launch / Pause / Close
-11. View Orders
-12. QR Code / Share
+2. Store List
+3. Questionnaires
+4. Approvals
+5. Needs Action
+6. Launch Blockers
+7. New Orders
+8. Snapshot
+
+Selected-store actions never appear on Home. Clicking a store from a Home queue
+or the Stores list opens Store Detail, which is the workbench for one selected
+store. Store Detail owns setup, questionnaire, store-specific products,
+preview, owner review, orders, payments, reports, activity, launch readiness,
+launch, QR sharing, and pause or close controls.
 
 Each Webstore top tab owns a contextual ribbon of no more than 12 actions that
 are useful for the content currently open. Ribbon labels remain on one line;

@@ -264,15 +264,40 @@ h1, h2 { font-family: Manrope, sans-serif; color: #172033; }
 .webstore-ribbon-group button svg { width: 16px; height: 16px; }
 .webstore-ribbon-group button span { display: block; max-width: 86px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .webstore-ribbon-group small { padding-top: 0; font-size: 9px; line-height: 12px; }
+.store-detail-ribbon .webstore-ribbon-group { padding-left: 2px; padding-right: 2px; }
+.store-detail-ribbon .webstore-ribbon-group button { width: 82px; min-width: 82px; }
+.store-detail-ribbon .webstore-ribbon-group button span { max-width: 80px; }
 .webstore-home-grid .panel-title button, .panel-title button { font-size: 12px; }
 .store-action, .store-due, .activity-list small, .workflow-mini p, .revenue-snapshot p, .compact-empty small { font-size: 12px; }
 .webstore-row strong { font-size: 14px; }.webstore-row small { font-size: 12px; }
 .webstore-kpi small { font-size: 12px; }.webstore-kpi em { font-size: 11px; }
 .new-store-types strong { font-size: 14px; }.new-store-types small { font-size: 12px; }
+.queue-shortcuts { padding: 8px 14px 14px; display: grid; gap: 6px; }
+.queue-shortcuts button { border: 1px solid #dce6ea; border-radius: 7px; background: #f8fbfc; color: #526074; padding: 10px 11px; display: flex; align-items: center; justify-content: space-between; font-size: 12px; font-weight: 700; }
+.queue-shortcuts button:hover { border-color: #9ccbc7; color: #0f766e; background: #eef8f7; }
+.stores-page { overflow: hidden; }
+.stores-page-intro { margin: -4px 18px 12px; color: #647287; font-size: 12px; }
+.store-detail-workbench { display: grid; gap: 12px; }
+.store-detail-summary { border: 1px solid #dce5e9; border-radius: 9px; background: white; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 14px; box-shadow: 0 6px 18px rgba(35,64,81,.06); }
+.store-detail-summary > div { display: flex; align-items: center; gap: 10px; color: #647287; font-size: 12px; }
+.text-button { border: 0; background: transparent; color: #0f766e; padding: 5px 0; font-size: 12px; font-weight: 700; }
+.status-pill { border-radius: 999px; background: #e8f3f2; color: #0f766e; padding: 5px 9px; font-size: 11px; font-weight: 700; }
+.store-detail-tabs { border: 1px solid #dce5e9; border-radius: 9px; background: white; padding: 4px; display: flex; gap: 3px; overflow-x: auto; }
+.store-detail-tabs button { flex: 0 0 auto; border: 0; border-radius: 6px; background: transparent; color: #647287; padding: 8px 10px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+.store-detail-tabs button.active, .store-detail-tabs button:hover { color: #0f766e; background: #e8f3f2; }
+.store-detail-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; }
+.store-detail-grid article { min-height: 78px; border: 1px solid #dce5e9; border-radius: 9px; background: white; padding: 13px 14px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 6px 18px rgba(35,64,81,.05); }
+.store-detail-grid small { color: #748196; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.store-detail-grid strong { color: #263246; font-size: 14px; }
+.store-detail-section { min-height: 210px; border: 1px solid #dce5e9; border-radius: 9px; background: white; padding: 25px; box-shadow: 0 7px 20px rgba(35,64,81,.06); }
+.store-detail-section h2 { margin: 5px 0; font-size: 22px; }.store-detail-section p { margin: 0 0 15px; color: #647287; font-size: 12px; }
+.launch-readiness-note { border: 1px solid #f1d49a; border-radius: 9px; background: #fff9ed; color: #a16207; padding: 12px 14px; display: flex; gap: 10px; align-items: flex-start; }
+.launch-readiness-note div { display: flex; flex-direction: column; gap: 3px; }.launch-readiness-note strong { font-size: 12px; }.launch-readiness-note span { font-size: 11px; }
 
 @media (max-width: 850px) {
   .webstore-home-hero { align-items: flex-start; flex-direction: column; }
   .hero-action-summary { flex-wrap: wrap; }
+  .store-detail-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
 }
 
 /* Day 1 reusable ribbon specification */
