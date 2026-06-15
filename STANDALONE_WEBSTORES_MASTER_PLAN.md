@@ -62,6 +62,13 @@ Default Home ribbon, maximum 12 actions:
 
 Each Webstore top tab owns a contextual ribbon of no more than 12 actions. The Home dashboard is operational, not a specification or education page. It focuses on stores in setup, questionnaires waiting, owner approvals, launch blockers, live stores, new orders, recent activity, revenue, and stores needing action. Store type selection appears only inside New Store. Launch/fee/Stripe rules appear only in relevant Setup, Payments, Owner Portal, Settings, or contextual warning surfaces.
 
+Standalone branding and visual rules:
+
+- Reserve a visible top-header slot for the tenant's uploaded company logo.
+- Use readable larger typography suitable for daily business use.
+- Keep a light interface with color, card depth, subtle shadows, and branded accents. Do not use dark mode as the default.
+- Home may use a light branded operational hero, but it must remain concise and action-focused.
+
 ## Store Lifecycle
 
 Canonical statuses:

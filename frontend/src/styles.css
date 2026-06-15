@@ -209,6 +209,50 @@ h1, h2 { font-family: Manrope, sans-serif; color: #172033; }
   .new-store-types { grid-template-columns: 1fr; }
 }
 
+/* Standalone Webstores visual depth and readability */
+.standalone-shell { background: linear-gradient(180deg, #edf5f4 0, #f5f7fa 220px, #f4f6f8 100%); }
+.standalone-logo-slot { width: 54px !important; height: 34px !important; border: 1px dashed rgba(255,255,255,.48); border-radius: 7px !important; background: rgba(255,255,255,.1) !important; color: #c6d5df; display: grid !important; place-items: center; overflow: hidden; }
+.standalone-logo-slot small { font-size: 7px; font-weight: 700; letter-spacing: .08em; }
+.standalone-brand strong { font-size: 15px; }
+.standalone-product-label strong { font-size: 10px; }.standalone-product-label span { font-size: 9px; }
+.webstore-heading { margin-bottom: 18px; }
+.webstore-heading h1 { font-size: 29px; letter-spacing: -.7px; }
+.webstore-heading p { max-width: 720px; color: #647287; font-size: 13px; line-height: 1.5; }
+.webstore-heading .eyebrow { font-size: 9px; }
+.webstore-heading .primary-button { padding: 11px 15px; font-size: 12px; box-shadow: 0 7px 18px rgba(13,148,136,.2); }
+.webstore-tabs { border-color: #d9e4e7; box-shadow: 0 5px 18px rgba(29,55,72,.06); }
+.webstore-tabs button { padding: 9px 11px; font-size: 10px; }
+.webstore-ribbon { border-color: #d9e4e7; box-shadow: 0 6px 20px rgba(29,55,72,.07); }
+.webstore-ribbon-group button { min-width: 76px; font-size: 9px; }
+.webstore-home-hero { position: relative; min-height: 126px; border: 1px solid #b9ded9; border-radius: 12px; background: linear-gradient(125deg, #ffffff 0%, #e8f6f4 58%, #d9eef2 100%); margin-bottom: 16px; padding: 22px 24px; display: flex; align-items: center; justify-content: space-between; gap: 20px; overflow: hidden; box-shadow: 0 12px 30px rgba(39,85,92,.12); }
+.webstore-home-hero::after { content: ""; position: absolute; width: 220px; height: 220px; border-radius: 50%; top: -135px; right: -35px; background: rgba(13,148,136,.09); }
+.webstore-home-hero h2 { margin: 4px 0 5px; font-size: 22px; letter-spacing: -.35px; }
+.webstore-home-hero p { margin: 0; max-width: 630px; color: #5d6c80; font-size: 11px; line-height: 1.5; }
+.hero-action-summary { position: relative; z-index: 1; display: flex; align-items: center; gap: 9px; }
+.hero-action-summary > span { min-width: 78px; border: 1px solid rgba(255,255,255,.82); border-radius: 8px; background: rgba(255,255,255,.7); padding: 9px 10px; display: flex; flex-direction: column; box-shadow: 0 4px 13px rgba(30,70,78,.07); }
+.hero-action-summary strong { color: #173a43; font: 700 18px Manrope; }.hero-action-summary small { color: #647689; font-size: 8px; margin-top: 1px; }
+.hero-action-summary button { border: 0; border-radius: 7px; background: #0f766e; color: white; padding: 10px 11px; display: flex; align-items: center; gap: 4px; font-size: 9px; font-weight: 700; }
+.webstore-kpis { gap: 12px; }
+.webstore-kpi { min-height: 91px; border-color: #dce6ea; border-radius: 10px; padding: 15px; box-shadow: 0 7px 20px rgba(35,64,81,.07); overflow: hidden; }
+.webstore-kpi::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 3px; background: #0d9488; }
+.webstore-kpi:nth-child(2)::before { background: #3b82f6; }.webstore-kpi:nth-child(3)::before { background: #8b5cf6; }.webstore-kpi:nth-child(4)::before { background: #f59e0b; }.webstore-kpi:nth-child(5)::before { background: #10b981; }.webstore-kpi:nth-child(6)::before { background: #64748b; }
+.webstore-kpi small { font-size: 9px; }.webstore-kpi strong { font-size: 21px; }.webstore-kpi em { font-size: 9px; }
+.webstore-home-grid { gap: 16px; }
+.webstore-home-grid .panel { border-color: #dce5e9; border-radius: 10px; box-shadow: 0 8px 24px rgba(35,64,81,.075); }
+.webstore-home-grid .panel-title { min-height: 48px; padding: 16px 18px 12px; }
+.webstore-home-grid .panel-title h2 { font-size: 14px; }
+.webstore-row { padding: 13px 16px; }.webstore-row strong { font-size: 11px; }.webstore-row small, .store-action, .store-due { font-size: 9px; }
+.revenue-snapshot > strong { color: #173a43; font-size: 27px; }.revenue-snapshot > span { font-size: 9px; }.revenue-snapshot p { font-size: 9px; }
+.compact-empty strong { font-size: 11px; }.compact-empty small { font-size: 9px; }
+.activity-list strong { font-size: 10px; }.activity-list small { font-size: 9px; }
+.workflow-mini p { font-size: 9px; padding: 5px 0; }
+.webstore-context-page { border-color: #dce5e9; box-shadow: 0 9px 28px rgba(35,64,81,.08); }.webstore-context-page h2 { font-size: 21px; }.webstore-context-page p, .context-rule-list p { font-size: 10px; }
+
+@media (max-width: 850px) {
+  .webstore-home-hero { align-items: flex-start; flex-direction: column; }
+  .hero-action-summary { flex-wrap: wrap; }
+}
+
 /* Day 1 reusable ribbon specification */
 .app-ribbon { height: 82px; background: white; border-bottom: 1px solid var(--border); overflow: hidden; }
 .ribbon-scroll { height: 100%; display: flex; align-items: stretch; padding: 0 18px; overflow-x: auto; }

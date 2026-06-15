@@ -56,6 +56,10 @@ function ContextRibbon({tab,action}) {
 
 function HomeDashboard({notify}) {
   return <>
+    <section className="webstore-home-hero">
+      <div><span className="eyebrow">Monday, June 15</span><h2>Keep every store moving toward launch</h2><p>Review setup work, owner approvals, launch blockers, and incoming activity from one place.</p></div>
+      <div className="hero-action-summary"><span><strong>3</strong><small>Need action</small></span><span><strong>2</strong><small>Owner reviews</small></span><button onClick={()=>notify("Launch blockers opened")}>Review priorities<ChevronRight size={15}/></button></div>
+    </section>
     <section className="webstore-kpis">
       <Kpi label="Stores in setup" value="3" detail="2 need action" icon={Store}/>
       <Kpi label="Questionnaires waiting" value="1" detail="New answers received" icon={ClipboardCheck}/>
@@ -95,5 +99,5 @@ function Kpi({label,value,detail,icon:Icon,gated=false}){return <div className={
 function PanelTitle({title,action}){return <div className="panel-title"><div><h2>{title}</h2></div>{action&&<button>{action}<ChevronRight size={14}/></button>}</div>}
 
 export function StandaloneWebstoresShell({onToast,backendStatus}) {
-  return <div className="standalone-shell"><header className="standalone-topbar"><a className="standalone-brand" href="/?mode=webstores"><span>SG</span><strong>Webstores</strong></a><div className="standalone-product-label"><strong>Standalone</strong><span>Build, approve, launch, and operate branded Webstores</span></div><div><span className={`backend-status ${backendStatus}`}><i/>{backendStatus==="connected"?"Functional":backendStatus==="offline"?"Visual only":"Checking"}</span><span className="user-avatar small">BN</span></div></header><main><WebstoresWorkspace standalone onToast={onToast}/></main></div>;
+  return <div className="standalone-shell"><header className="standalone-topbar"><a className="standalone-brand" href="/?mode=webstores"><span className="standalone-logo-slot" title="Uploaded company logo appears here"><small>LOGO</small></span><strong>Webstores</strong></a><div className="standalone-product-label"><strong>Standalone</strong><span>Build, approve, launch, and operate branded Webstores</span></div><div><span className={`backend-status ${backendStatus}`}><i/>{backendStatus==="connected"?"Functional":backendStatus==="offline"?"Visual only":"Checking"}</span><span className="user-avatar small">BN</span></div></header><main><WebstoresWorkspace standalone onToast={onToast}/></main></div>;
 }
