@@ -308,6 +308,33 @@ h1, h2 { font-family: Manrope, sans-serif; color: #172033; }
 .workspace-status { width: max-content; max-width: 100%; border-radius: 999px; background: #edf7f6; color: #0f766e; padding: 4px 7px; font-size: 10px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .workspace-side-panel > button { width: 100%; border: 0; border-top: 1px solid #eef1f4; background: white; color: #526074; padding: 13px 14px; display: flex; align-items: center; justify-content: space-between; text-align: left; }
 .workspace-side-panel > button:hover { background: #f7fbfb; }.workspace-side-panel > button span { display: flex; flex-direction: column; gap: 3px; }.workspace-side-panel strong { color: #354155; font-size: 12px; }.workspace-side-panel small { color: #8a95a6; font-size: 11px; }.workspace-side-panel svg { color: #8a95a6; }
+.wizard-backdrop { padding: 24px 0; place-items: start center; overflow: auto; }
+.wizard-dialog { width: min(1030px, calc(100vw - 36px)); max-height: calc(100vh - 48px); display: flex; flex-direction: column; }
+.wizard-heading h2 { font-size: 20px; }.wizard-heading p { font-size: 12px; }
+.wizard-stepper { padding: 12px 16px; border-bottom: 1px solid #edf0f4; display: grid; grid-template-columns: repeat(6, 1fr); gap: 7px; background: #f8fbfc; }
+.wizard-stepper button { border: 1px solid #dce5e9; border-radius: 8px; background: white; color: #647287; padding: 8px 7px; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 11px; font-weight: 700; }
+.wizard-stepper span { width: 19px; height: 19px; border-radius: 50%; background: #edf2f5; display: grid; place-items: center; font-size: 10px; }
+.wizard-stepper button.active { color: #0f766e; border-color: #9ccbc7; background: #e8f3f2; }.wizard-stepper button.done span { background: #0d9488; color: white; }
+.wizard-body { padding: 18px; overflow: auto; }.wizard-step h3 { margin: 0 0 4px; font-size: 21px; }.wizard-step > p { margin: 0 0 16px; color: #647287; font-size: 13px; line-height: 1.5; }
+.wizard-type-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
+.wizard-type-grid button, .wizard-option-list button { border: 1px solid #dce5e9; border-radius: 9px; background: white; color: #526074; padding: 13px; display: grid; grid-template-columns: auto 1fr; gap: 10px; text-align: left; }
+.wizard-type-grid button.active, .wizard-option-list button.active { border-color: #0d9488; background: #edf8f7; box-shadow: inset 3px 0 #0d9488; }
+.wizard-type-grid strong, .wizard-option-list strong { display: block; color: #263246; font-size: 14px; }.wizard-type-grid small, .wizard-option-list small { display: block; color: #647287; font-size: 12px; line-height: 1.35; margin-top: 3px; }.wizard-type-grid em, .wizard-option-list em { display: block; color: #8a95a6; font-size: 11px; font-style: normal; margin-top: 7px; }
+.wizard-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; }.span-two { grid-column: span 2; }
+.wizard-field { display: flex; flex-direction: column; gap: 5px; color: #526074; font-size: 12px; font-weight: 700; }.wizard-field b { color: #c2410c; margin-left: 3px; }
+.wizard-field input, .wizard-field select, .wizard-field textarea { width: 100%; border: 1px solid #d7e1e6; border-radius: 8px; background: white; color: #263246; padding: 10px 11px; font-size: 13px; outline: 0; }
+.wizard-field textarea { min-height: 86px; resize: vertical; }.wizard-field input:focus, .wizard-field select:focus, .wizard-field textarea:focus { border-color: #0d9488; box-shadow: 0 0 0 3px rgba(13,148,136,.12); }
+.wizard-field em { color: #b91c1c; font-style: normal; font-size: 11px; }.slug-ok { color: #047857; font-size: 11px; }.slug-note { color: #8a95a6; font-size: 11px; }
+.wizard-check, .wizard-check-grid label { border: 1px solid #dce5e9; border-radius: 8px; background: #f8fbfc; color: #526074; padding: 10px 11px; display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; }
+.wizard-check-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; }
+.wizard-helper, .wizard-preview, .wizard-warning { border: 1px solid #cfe4e3; border-radius: 9px; background: #f2faf9; color: #0f766e; padding: 12px 13px; font-size: 12px; line-height: 1.45; margin-top: 14px; }
+.wizard-option-list { display: grid; gap: 9px; }.wizard-preview { display: flex; flex-direction: column; gap: 5px; color: #526074; background: #f8fbfc; }
+.wizard-review-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
+.wizard-review-block { border: 1px solid #dce5e9; border-radius: 9px; background: white; padding: 13px; }.wizard-review-block h4 { margin: 0 0 8px; color: #263246; font-size: 13px; }.wizard-review-block p { border-top: 1px solid #eef1f4; margin: 0; padding: 8px 0 0; display: flex; flex-direction: column; gap: 2px; }.wizard-review-block p + p { margin-top: 8px; }.wizard-review-block strong { color: #354155; font-size: 12px; }.wizard-review-block small { color: #7c8798; font-size: 11px; }
+.wizard-warning { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; color: #a16207; background: #fff9ed; border-color: #f1d49a; margin-top: 0; }
+.wizard-footer { border-top: 1px solid #edf0f4; padding: 13px 18px; display: flex; justify-content: flex-end; gap: 8px; background: #fbfdfe; }.wizard-footer button:disabled { opacity: .45; cursor: not-allowed; }
+.wizard-success { padding: 18px; overflow: auto; }.wizard-success-card { border: 1px solid #b9ded9; border-radius: 10px; background: #edf8f7; color: #0f766e; padding: 16px; display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }.wizard-success-card h3 { margin: 0 0 3px; color: #263246; font-size: 20px; }.wizard-success-card p { margin: 0; color: #526074; font-size: 13px; }
+.wizard-success-actions { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 8px; }
 
 @media (max-width: 850px) {
   .webstore-home-hero { align-items: flex-start; flex-direction: column; }
@@ -315,6 +342,9 @@ h1, h2 { font-family: Manrope, sans-serif; color: #172033; }
   .store-detail-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
   .workspace-metrics { grid-template-columns: repeat(2, minmax(0,1fr)); }
   .workspace-page-grid { grid-template-columns: 1fr; }
+  .wizard-stepper { grid-template-columns: repeat(3, 1fr); }
+  .wizard-type-grid, .wizard-form-grid, .wizard-review-grid { grid-template-columns: 1fr; }
+  .span-two, .wizard-warning { grid-column: auto; }
 }
 
 /* Day 1 reusable ribbon specification */

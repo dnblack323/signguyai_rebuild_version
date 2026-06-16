@@ -58,6 +58,20 @@ const stores = [
   { id: "beacon", name: "Beacon Coffee Merch", type: "General", status: "Questionnaire received", action: "Review new answers", due: "2 days", owner: "Beacon Coffee · Alex Stone", slug: "beacon-coffee-merch", progress: "46%", products: 0, orders: 0, approval: "Not sent", terms: "Not accepted", stripe: "Not started", readiness: "6 blockers", launchReady: false },
 ];
 const storeTypes = ["B2B", "Fundraiser", "Event", "Promotional", "Employee", "General"];
+const storeTypeInfo = {
+  B2B: ["b2b", "For businesses, schools, teams, departments, or organizations that need controlled ordering.", "Private access, approved product list, repeat ordering, optional manager approval."],
+  Fundraiser: ["fundraiser", "For teams, schools, clubs, nonprofits, or groups raising money through product sales and donations.", "Donation prompt, fundraiser goal, deadline, progress bar, fundraiser reporting."],
+  Event: ["event", "For merchandise connected to a specific event, date, location, deadline, or pickup plan.", "Event date, location, order deadline, QR code, pickup instructions, optional auto-close."],
+  Promotional: ["promotional", "For a person, brand, driver, creator, athlete, band, performer, or public-facing personality.", "Brand story, social links, sponsor logos, featured products, public merch layout."],
+  Employee: ["employee", "For businesses that want employees to order approved uniforms, workwear, safety gear, or apparel.", "Private access, department grouping, manager approval, personalization, company pay option."],
+  General: ["general", "For simple stores that do not need a special fundraiser, event, employee, B2B, or promotional setup.", "Basic setup, products, checkout, pickup/shipping, owner approval, QR code."],
+};
+const setupMethods = [
+  ["send_questionnaire", "Send Questionnaire", "Email the owner a simple questionnaire with the main store questions and one extra section for this store type."],
+  ["build_manually", "Build Manually", "Create the draft and go straight to setup so staff can add branding, products, pricing, and pickup details."],
+  ["draft_only", "Create Draft Only", "Create the draft store and return to it later."],
+  ["use_previous", "Use Previous Store", "Copy from a prior store. Full cloning can stay shell-only in V1."],
+];
 const storeDetailTabs = ["Overview", "Setup", "Questionnaire", "Products", "Preview", "Owner Review", "Orders", "Payments", "Reports", "Activity"];
 
 const sectionDescriptions = {
@@ -68,6 +82,45 @@ const sectionDescriptions = {
   reports: "Sales, orders, revenue, products, donations, goals, owner share, and exports.",
   "owner-portal": "Owner invites, approvals, terms acceptance, and owner-facing analytics.",
   settings: "Feature gates, platform fees, Stripe, checkout, templates, approvals, branding, and audit rules.",
+};
+
+const initialWizardData = {
+  storeType: "",
+  ownerMode: "existing",
+  organization: "",
+  ownerName: "",
+  ownerEmail: "",
+  ownerPhone: "",
+  approvalName: "",
+  approvalEmail: "",
+  approvalPhone: "",
+  sameApprover: true,
+  orderUpdates: true,
+  salesSummary: true,
+  questionnaireEmail: true,
+  approvalEmailCopy: true,
+  storeName: "",
+  slug: "",
+  description: "",
+  internalNotes: "",
+  targetLaunchDate: "",
+  orderingDeadline: "",
+  closeAt: "",
+  accessType: "public",
+  setupMethod: "send_questionnaire",
+  logoWanted: false,
+  bannerWanted: false,
+  colors: "",
+  style: "Clean and professional",
+  productNotes: "",
+  needRecommendations: false,
+  useTemplates: true,
+  pickupShipping: "Not sure yet",
+  ownerShareNeeded: false,
+  donationsEnabled: false,
+  customerPaysOnline: true,
+  pricingKnown: false,
+  shopSetsPrices: true,
 };
 
 const workspaceData = {
@@ -221,8 +274,103 @@ function WorkspacePage({ tab, notify }) {
 }
 
 function NewStoreDialog({ close, notify }) {
-  return <div className="modal-backdrop" onMouseDown={close}><div className="new-store-dialog" onMouseDown={e => e.stopPropagation()}><div className="modal-heading"><div><h2>Create New Store</h2><p>Select the store type. Type selection only appears during creation.</p></div><button onClick={close}><X size={18}/></button></div><div className="new-store-types">{storeTypes.map(type => <button key={type} onClick={() => { notify(`${type} store draft created`); close(); }}><Store size={19}/><strong>{type}</strong><small>Create draft and begin setup</small><ChevronRight size={14}/></button>)}</div></div></div>;
+  const [step, setStep] = useState(0);
+  const [created, setCreated] = useState(false);
+  const [data, setData] = useState(initialWizardData);
+  const steps = ["Type", "Owner", "Store Info", "Setup Method", "Starting Details", "Review"];
+  const selectedType = data.storeType ? storeTypeInfo[data.storeType] : null;
+  const selectedMethod = setupMethods.find(([id]) => id === data.setupMethod);
+  const slugAvailable = data.slug && !["northstar-staff-store", "city-arts-summer-fundraiser", "beacon-coffee-merch"].includes(data.slug);
+  const update = (key, value) => setData(current => ({ ...current, [key]: value }));
+  const updateStoreName = (value) => setData(current => ({ ...current, storeName: value, slug: current.slug && current.storeName ? current.slug : slugify(value) }));
+  const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.ownerEmail);
+  const canNext = [
+    !!data.storeType,
+    !!data.ownerName && validEmail,
+    !!data.storeName && !!data.slug && slugAvailable,
+    !!data.setupMethod && data.setupMethod !== "use_previous",
+    true,
+    !!data.storeType && !!data.ownerName && validEmail && !!data.storeName && !!data.slug && slugAvailable,
+  ][step];
+  const createStore = () => {
+    const status = data.setupMethod === "send_questionnaire" ? "questionnaire_sent" : data.setupMethod === "build_manually" ? "setup_in_progress" : "draft";
+    setCreated({ status });
+    notify(data.setupMethod === "send_questionnaire" ? `Questionnaire sent to ${data.ownerEmail}` : `${data.storeName} draft created`);
+  };
+
+  return <div className="modal-backdrop wizard-backdrop" onMouseDown={close}>
+    <div className="new-store-dialog wizard-dialog" onMouseDown={event => event.stopPropagation()}>
+      <div className="modal-heading wizard-heading"><div><h2>{created ? "Store Created" : "Setup Store Wizard"}</h2><p>{created ? "Draft store created. Choose the next workflow." : "Create a draft Webstore quickly. Publishing and checkout are handled later."}</p></div><button onClick={close}><X size={18}/></button></div>
+      {!created && <div className="wizard-stepper">{steps.map((label, index) => <button key={label} className={index === step ? "active" : index < step ? "done" : ""} onClick={() => index <= step && setStep(index)}><span>{index + 1}</span>{label}</button>)}</div>}
+      {created ? <WizardSuccess data={data} status={created.status} close={close} notify={notify}/> : <div className="wizard-body">
+        {step === 0 && <WizardStep title="Choose Store Type" help="Select the type of store you are setting up. This controls the questionnaire, setup checklist, and suggested store fields.">
+          <div className="wizard-type-grid">{storeTypes.map(type => <button key={type} className={data.storeType === type ? "active" : ""} onClick={() => update("storeType", type)}><Store size={18}/><span><strong>{type} Store</strong><small>{storeTypeInfo[type][1]}</small><em>{storeTypeInfo[type][2]}</em></span></button>)}</div>
+        </WizardStep>}
+        {step === 1 && <WizardStep title="Store Owner / Contact Info" help="Connect this store to the person or organization responsible for approving the store and receiving updates.">
+          <div className="wizard-form-grid">
+            <WizardField label="Organization or business name"><input value={data.organization} onChange={e => update("organization", e.target.value)} placeholder="Optional for individual owners"/></WizardField>
+            <WizardField label="Primary contact name" required><input value={data.ownerName} onChange={e => { update("ownerName", e.target.value); if (data.sameApprover) update("approvalName", e.target.value); }} placeholder="Jane Smith"/></WizardField>
+            <WizardField label="Primary contact email" required error={data.ownerEmail && !validEmail ? "Enter a valid email." : ""}><input value={data.ownerEmail} onChange={e => { update("ownerEmail", e.target.value); if (data.sameApprover) update("approvalEmail", e.target.value); }} placeholder="jane@example.com"/></WizardField>
+            <WizardField label="Primary contact phone"><input value={data.ownerPhone} onChange={e => update("ownerPhone", e.target.value)} placeholder="724-555-1234"/></WizardField>
+            <label className="wizard-check span-two"><input type="checkbox" checked={data.sameApprover} onChange={e => update("sameApprover", e.target.checked)}/> Approval contact same as primary contact</label>
+            {!data.sameApprover && <><WizardField label="Approver name"><input value={data.approvalName} onChange={e => update("approvalName", e.target.value)}/></WizardField><WizardField label="Approver email"><input value={data.approvalEmail} onChange={e => update("approvalEmail", e.target.value)}/></WizardField></>}
+            <div className="wizard-check-grid span-two">{["orderUpdates|Receives order updates", "salesSummary|Receives sales summary", "questionnaireEmail|Receives questionnaire email", "approvalEmailCopy|Receives approval email"].map(item => { const [key, label] = item.split("|"); return <label key={key}><input type="checkbox" checked={data[key]} onChange={e => update(key, e.target.checked)}/>{label}</label>; })}</div>
+          </div>
+        </WizardStep>}
+        {step === 2 && <WizardStep title="Basic Store Info" help="Add the basic public and internal details for this store. You can edit these later except the URL slug.">
+          <div className="wizard-form-grid">
+            <WizardField label="Store name" required><input value={data.storeName} onChange={e => updateStoreName(e.target.value)} placeholder="Connellsville Football Spirit Store"/></WizardField>
+            <WizardField label="Store URL slug" required error={data.slug && !slugAvailable ? "Slug already exists." : ""}><input value={data.slug} onChange={e => update("slug", slugify(e.target.value))}/><small className={slugAvailable ? "slug-ok" : "slug-note"}>{slugAvailable ? "Slug available." : "Use lowercase letters, numbers, and hyphens."}</small></WizardField>
+            <WizardField label="Store description"><textarea value={data.description} onChange={e => update("description", e.target.value)} placeholder="Short public description for the store."/></WizardField>
+            <WizardField label="Internal notes"><textarea value={data.internalNotes} onChange={e => update("internalNotes", e.target.value)} placeholder="Not shown to owners or buyers."/></WizardField>
+            <WizardField label="Target launch date"><input type="date" value={data.targetLaunchDate} onChange={e => update("targetLaunchDate", e.target.value)}/></WizardField>
+            <WizardField label="Ordering deadline"><input type="date" value={data.orderingDeadline} onChange={e => update("orderingDeadline", e.target.value)}/></WizardField>
+            <WizardField label="Store close date"><input type="date" value={data.closeAt} onChange={e => update("closeAt", e.target.value)}/></WizardField>
+            <WizardField label="Public or private"><select value={data.accessType} onChange={e => update("accessType", e.target.value)}><option value="public">Public</option><option value="private">Private/password protected</option><option value="invite">Invite-only</option><option value="unsure">Not sure yet</option></select></WizardField>
+          </div>
+          {selectedType && <p className="wizard-helper">{selectedType[2]}</p>}
+        </WizardStep>}
+        {step === 3 && <WizardStep title="How Do You Want To Set This Store Up?" help="Choose whether to collect details from the owner first or start building manually.">
+          <div className="wizard-option-list">{setupMethods.map(([id, title, detail]) => <button key={id} className={data.setupMethod === id ? "active" : ""} onClick={() => update("setupMethod", id)}><strong>{title}</strong><small>{detail}</small>{id === "use_previous" && <em>Store cloning is coming later. Create a draft or use templates for now.</em>}</button>)}</div>
+          {data.setupMethod === "send_questionnaire" && <div className="wizard-preview"><strong>Email preview</strong><span>Questionnaire template: {data.storeType || "Selected type"} Starter</span><span>Recipient: {data.ownerName || "Owner"} {data.ownerEmail && `<${data.ownerEmail}>`}</span><span>Includes extra section: {data.storeType || "Store type"}</span></div>}
+        </WizardStep>}
+        {step === 4 && <WizardStep title="Starting Details" help="Add anything you already know. Skip anything you do not have yet.">
+          <div className="wizard-form-grid">
+            <label className="wizard-check"><input type="checkbox" checked={data.logoWanted} onChange={e => update("logoWanted", e.target.checked)}/> Logo upload needed</label>
+            <label className="wizard-check"><input type="checkbox" checked={data.bannerWanted} onChange={e => update("bannerWanted", e.target.checked)}/> Banner upload needed</label>
+            <WizardField label="Preferred colors"><input value={data.colors} onChange={e => update("colors", e.target.value)} placeholder="Navy, gold, white"/></WizardField>
+            <WizardField label="Store style"><select value={data.style} onChange={e => update("style", e.target.value)}>{["Clean and professional", "Bold and sporty", "Fun and colorful", "Patriotic", "Racing/motorsports", "School spirit", "Simple", "Other"].map(x => <option key={x}>{x}</option>)}</select></WizardField>
+            <WizardField label="Product notes"><textarea value={data.productNotes} onChange={e => update("productNotes", e.target.value)} placeholder="T-shirts, hoodies, decals"/></WizardField>
+            <WizardField label="Pickup / shipping preference"><select value={data.pickupShipping} onChange={e => update("pickupShipping", e.target.value)}>{["Pickup at shop", "Pickup at owner location", "Pickup at event", "Local delivery", "Shipping", "Not sure yet"].map(x => <option key={x}>{x}</option>)}</select></WizardField>
+            <div className="wizard-check-grid span-two">{["needRecommendations|Need product recommendations", "useTemplates|Use product templates after creation", "ownerShareNeeded|Owner/fundraiser share needed", "donationsEnabled|Donation prompt wanted", "customerPaysOnline|Customer pays online", "pricingKnown|Prices already known", "shopSetsPrices|Shop sets prices"].map(item => { const [key, label] = item.split("|"); return <label key={key}><input type="checkbox" checked={data[key]} onChange={e => update(key, e.target.checked)}/>{label}</label>; })}</div>
+          </div>
+        </WizardStep>}
+        {step === 5 && <WizardStep title="Review Draft Store" help="Review before creating. You can edit everything later except the store URL slug.">
+          <div className="wizard-review-grid">
+            <ReviewBlock title="Store Type" rows={[[data.storeType || "Missing", selectedType?.[1] || "Select a type"]]}/>
+            <ReviewBlock title="Owner / Contact" rows={[[data.ownerName || "Missing", data.ownerEmail || "Missing email"], ["Approver", data.sameApprover ? "Same as primary" : data.approvalEmail || "Not set"]]}/>
+            <ReviewBlock title="Store Info" rows={[[data.storeName || "Missing", `/s/${data.slug || "missing-slug"}`], ["Access", data.accessType], ["Target launch", data.targetLaunchDate || "Not set"]]}/>
+            <ReviewBlock title="Setup Method" rows={[[selectedMethod?.[1], selectedMethod?.[2]]]}/>
+            <ReviewBlock title="Starting Details" rows={[["Products", data.productNotes || "No product details yet"], ["Branding", data.logoWanted || data.bannerWanted ? "Upload needed" : "Can be added later"], ["Pickup / shipping", data.pickupShipping]]}/>
+            <div className="wizard-warning"><LockKeyhole size={16}/><span>Stripe is not required to create this draft, but the store cannot launch or accept checkout until readiness checks pass.</span></div>
+          </div>
+        </WizardStep>}
+      </div>}
+      {!created && <div className="wizard-footer"><button className="secondary-button" disabled={step === 0} onClick={() => setStep(step - 1)}>Back</button>{step === 4 && <button className="secondary-button" onClick={() => setStep(5)}>Skip</button>}<button className="primary-button" disabled={!canNext} onClick={() => step === 5 ? createStore() : setStep(step + 1)}>{step === 5 ? data.setupMethod === "send_questionnaire" ? "Create and Send Questionnaire" : data.setupMethod === "build_manually" ? "Create and Continue Setup" : "Create Store" : "Next"}</button></div>}
+    </div>
+  </div>;
 }
+
+function WizardStep({ title, help, children }) { return <section className="wizard-step"><h3>{title}</h3><p>{help}</p>{children}</section>; }
+function WizardField({ label, required, error, children }) { return <label className="wizard-field"><span>{label}{required && <b>*</b>}</span>{children}{error && <em>{error}</em>}</label>; }
+function ReviewBlock({ title, rows }) { return <article className="wizard-review-block"><h4>{title}</h4>{rows.map(([a, b]) => <p key={`${a}-${b}`}><strong>{a}</strong><small>{b}</small></p>)}</article>; }
+function WizardSuccess({ data, status, close, notify }) {
+  const typeValue = data.storeType ? storeTypeInfo[data.storeType][0] : "general";
+  const questionnaireSent = status === "questionnaire_sent";
+  const actions = questionnaireSent ? ["Review Store Detail", "Open Questionnaire Status", "Back to Stores"] : ["Send Questionnaire", "Continue Setup", "Add Products", "Preview Draft Store", "Open Store Detail", "Back to Stores"];
+  return <div className="wizard-success"><div className="wizard-success-card"><Check size={24}/><div><h3>{data.storeName}</h3><p>{questionnaireSent ? `Questionnaire sent to ${data.ownerEmail}.` : "Draft store created. Continue setup when ready."}</p></div></div><div className="wizard-review-grid"><ReviewBlock title="Created Draft" rows={[["Store type", typeValue], ["Status", status], ["Owner", data.ownerName], ["Slug", `/s/${data.slug}`]]}/><ReviewBlock title="Generated Records" rows={[["Setup checklist", "Created"], ["QR code", "Placeholder created"], ["Activity log", "webstore_created"], ["Products", "Store-specific catalog ready"]]}/></div><div className="wizard-success-actions">{actions.map(label => <button key={label} className={label.includes("Continue") || label.includes("Open Store") || label.includes("Review") ? "primary-button" : "secondary-button"} onClick={() => { notify(`${label} selected for ${data.storeName}`); close(); }}>{label}</button>)}</div></div>;
+}
+function slugify(value) { return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""); }
 
 function Kpi({ label, value, detail, icon: Icon }) { return <div className="webstore-kpi"><Icon size={17}/><span><small>{label}</small><strong>{value}</strong><em>{detail}</em></span></div>; }
 function PanelTitle({ title, action, onAction }) { return <div className="panel-title"><div><h2>{title}</h2></div>{action && <button onClick={onAction}>{action}<ChevronRight size={14}/></button>}</div>; }
