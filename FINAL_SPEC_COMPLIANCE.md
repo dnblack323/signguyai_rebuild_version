@@ -2,6 +2,17 @@
 
 This file tracks the running preview against `MASTER_AGENT_REBUILD_PLAN.md`.
 
+## Order Portal Manager Direction
+
+- `Order_Portal_Manager_Master_Build_Spec-1.pdf` is now converted into `ORDER_PORTAL_MANAGER_MASTER_SPEC.md`.
+- Order Portal Manager by Sign Guy AI is the controlling standalone-first product direction for the former Webstores track.
+- Current preview code and UI still use some Webstores naming for compatibility.
+- Existing `webstores` routes/services/files should be renamed only through a safe compatibility pass with tests.
+- The New Store Wizard exists as a preview and must evolve into the New Portal Wizard.
+- The first customer-sellable release must include checkout, Stripe, buyer orders, owner portal, reports, and launch hardening.
+- Early MVPs are internal engineering milestones only, not sellable releases.
+- Future agents must read `ORDER_PORTAL_AGENT_BUILD_RULES.md` before modifying this area.
+
 ## Represented Now
 
 - Final compact shell with icon-only Home entry, Operations, Business, Productivity, AI Hub, and Settings.
@@ -16,7 +27,7 @@ This file tracks the running preview against `MASTER_AGENT_REBUILD_PLAN.md`.
 - Webstores shown as the first expansion preview, with approved store types in its target description.
 - Webstore management is always available in the main app. Publishing and Cart/Checkout are shown as separate feature gates.
 - A standalone Webstores-only shell reuses the same Webstores workspace and entitlement model.
-- Standalone Webstores is now the first commercial release priority under `STANDALONE_WEBSTORES_MASTER_PLAN.md`.
+- Order Portal Manager is now the standalone-first commercial product direction under `ORDER_PORTAL_MANAGER_MASTER_SPEC.md` and `ORDER_PORTAL_RELEASE_PLAN.md`.
 - Standalone Home is operational: setup stores, questionnaires, owner approvals, launch blockers, live stores, new orders, activity, revenue, and stores needing action.
 - Webstore top tabs each use a contextual 12-action ribbon. Store type selection appears only inside New Store.
 - Standalone capability contracts expose the 5% fee, direct Stripe owner payout, draft preview, and blocked launch-readiness checks.

@@ -1,8 +1,25 @@
-# Standalone Webstores Master Rebuild Plan
+# Historical Standalone Webstores Master Rebuild Plan
+
+## Superseded By Order Portal Manager
+
+This file is now a historical compatibility reference. The controlling standalone-first product direction is **Order Portal Manager by Sign Guy AI**.
+
+Use these files for all new planning and implementation:
+
+1. `ORDER_PORTAL_MANAGER_MASTER_SPEC.md`
+2. `ORDER_PORTAL_MAIN_APP_INTEGRATION_SPEC.md`
+3. `ORDER_PORTAL_RELEASE_PLAN.md`
+4. `ORDER_PORTAL_AGENT_BUILD_RULES.md`
+
+Existing `webstores` code, routes, and file names may remain temporarily for compatibility. New user-facing product language should be Order Portal Manager / Order Portals. Do not build a second Webstores-only model or a second main-app copy.
+
+---
+
+# Original Standalone Webstores Master Rebuild Plan
 
 ## Authority
 
-`SignGuy_AI_Webstore_Master_Rebuild_Spec.pdf`, dated June 15, 2026, is the protected source of truth for Webstores. This standalone-first plan controls Webstores implementation sequencing. Older Webstores plans remain historical only.
+This original section is retained for historical context only. It no longer controls product naming, release sequencing, or implementation scope. Use `ORDER_PORTAL_MANAGER_MASTER_SPEC.md`, `ORDER_PORTAL_MAIN_APP_INTEGRATION_SPEC.md`, and `ORDER_PORTAL_RELEASE_PLAN.md` for current work.
 
 ## Commercial Priority
 
