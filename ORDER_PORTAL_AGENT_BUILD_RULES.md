@@ -9,7 +9,7 @@ Use these rules before making any Order Portal Manager change.
 3. `ORDER_PORTAL_RELEASE_PLAN.md`
 4. Topic-specific `ORDER_PORTAL_*_SPEC.md` files
 
-Older Webstores docs are compatibility references only when they do not conflict.
+Older Webstores docs have been removed from this repo. Treat the Order Portal documents above as the active spec set.
 
 ## Non-Negotiable Rules
 

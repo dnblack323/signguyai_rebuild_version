@@ -11,7 +11,7 @@ Frontend edits hot-reload automatically. Restart `Start Review.cmd` after backen
 Double-click `Start Review.cmd` in the repository root.
 
 - Full SignGuyAI app: `http://127.0.0.1:5173/`
-- Webstores standalone: `http://127.0.0.1:5173/?mode=webstores`
+- Order Portal Manager standalone preview: `http://127.0.0.1:5173/?mode=webstores`
 - Backend API documentation: `http://127.0.0.1:8001/docs`
 
 Double-click `Stop Review.cmd` when finished. Logs are stored in `.review/`.

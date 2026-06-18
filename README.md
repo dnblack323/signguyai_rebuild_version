@@ -17,10 +17,10 @@ This release establishes the controlling application shell and first structural 
 - Settings workspace
 - Full Help menu accessed through the `?` icon
 - Final Order Item and Work Order Summary terminology
-- Early Webstores expansion track
-- Always-available Webstores management with separately gated publishing and shopping cart/checkout
-- Focused Webstores standalone preview at `/?mode=webstores`
-- Protected standalone-first execution plan in `STANDALONE_WEBSTORES_MASTER_PLAN.md`
+- Order Portal Manager standalone-first expansion track
+- Always-available portal management with separately gated publishing and shopping cart/checkout
+- Focused Order Portal Manager standalone preview at `/?mode=webstores`
+- Controlling standalone-first product spec in `ORDER_PORTAL_MANAGER_MASTER_SPEC.md`
 - Working sample interactions
 - Honest module status pages for future releases
 
@@ -46,9 +46,9 @@ uvicorn main:app --reload --port 8000
 
 The backend health endpoint is `http://localhost:8000/api/health` for direct backend development. The bundled local review launcher uses port `8001`.
 The dashboard digest contract is `/api/digest`.
-The Webstores capability contract is `/api/webstores/capabilities`.
+The temporary compatibility capability contract is `/api/webstores/capabilities`.
 
-See `MASTER_AGENT_REBUILD_PLAN.md` for the sole controlling rebuild plan, `WEBSTORES_PRODUCT_SPEC.md` for the Webstores entitlement model, and `FINAL_SPEC_COMPLIANCE.md` for current preview coverage.
+See `ORDER_PORTAL_MANAGER_MASTER_SPEC.md` for the controlling product spec, `ORDER_PORTAL_MAIN_APP_INTEGRATION_SPEC.md` for future SignGuyAI OS integration rules, `ORDER_PORTAL_RELEASE_PLAN.md` for build sequencing, and `ORDER_PORTAL_AGENT_BUILD_RULES.md` before modifying this area.
 
 ## Emergent
 
