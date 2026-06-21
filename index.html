@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wrap Lab AI - Vehicle Graphics Operations</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2300e5ff'/%3E%3Cpath d='M15 20h34v7H22v10h20v7H22v7h-7z' fill='%230f131a'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <div id="app-container">
+    <!-- SIDEBAR -->
+    <aside>
+      <div class="sidebar-header">
+        <div class="logo-icon" aria-hidden="true">
+          <svg viewBox="0 0 36 36" role="img">
+            <path d="M7 9.5 18 4l11 5.5v17L18 32 7 26.5z" fill="none" stroke="currentColor" stroke-width="2"/>
+            <path d="m7 9.5 11 6 11-6M18 15.5V32M11 20l7 3.8 7-3.8" fill="none" stroke="currentColor" stroke-width="1.6"/>
+          </svg>
+        </div>
+        <div class="logo-text">
+          <h1>WRAP LAB AI</h1>
+          <span>Vehicle Graphics Ops</span>
+        </div>
+      </div>
+      <nav>
+        <div class="nav-item active" onclick="switchView('dashboard')">
+          <i class="fa-solid fa-chart-line"></i>
+          <span>Dashboard</span>
+        </div>
+        <div class="nav-item" onclick="openNewProjectModal()">
+          <i class="fa-solid fa-circle-plus"></i>
+          <span>New Wrap Job</span>
+        </div>
+        <div id="sidebar-active-project-nav" class="nav-item" style="display: none;" onclick="switchView('project-detail')">
+          <i class="fa-solid fa-car-rear"></i>
+          <span id="active-project-sidebar-title">Project Details</span>
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        <p>Logged in as: <strong>Admin (Shop Mgr)</strong></p>
+        <p style="margin-top: 4px; opacity: 0.7;">Time: <span id="current-time-display">00:00</span></p>
+        <button class="diagnostics-btn" onclick="runDiagnostics()">
+          <i class="fa-solid fa-stethoscope"></i>
+          Run Diagnostics
+        </button>
+        <span id="diagnostics-result" class="diagnostics-status">Checks pending</span>
+      </div>
+    </aside>
+
+    <!-- MAIN VIEWS CONTAINER -->
+    <main>
+      <!-- HEADER -->
+      <header class="main-header">
+        <div class="header-title">
+          <h2 id="header-title-text">Wrap Projects</h2>
+        </div>
+        <div class="header-meta">
+          <div class="shop-info">
+            <span class="shop-status-dot"></span>
+            <span>Production Bay Active</span>
+          </div>
+          <div class="user-profile">
+            <div class="avatar">SM</div>
+            <span>Shop Manager</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- VIEW 1: DASHBOARD -->
+      <div id="view-dashboard" class="view-panel active">
+        <!-- Dashboard Summary Stats -->
+        <div class="summary-grid">
+          <div class="summary-card accent-cyan" onclick="setDashboardFilter('waiting-proof')">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+            <div class="card-value" id="stat-proof-approval">0</div>
+            <div class="card-label">Needing Proof Approval</div>
+          </div>
+          <div class="summary-card accent-amber" onclick="setDashboardFilter('waiting-contract')">
+            <i class="fa-solid fa-file-signature"></i>
+            <div class="card-value" id="stat-contract-signature">0</div>
+            <div class="card-label">Contracts Pending</div>
+          </div>
+          <div class="summary-card accent-indigo" onclick="setDashboardFilter('ready-install')">
+            <i class="fa-solid fa-person-circle-check"></i>
+            <div class="card-value" id="stat-ready-install">0</div>
+            <div class="card-label">Ready for Install</div>
+          </div>
+          <div class="summary-card accent-rose" onclick="setDashboardFilter('waiting-customer')">
+            <i class="fa-solid fa-user-clock"></i>
+            <div class="card-value" id="stat-waiting-customer">0</div>
+            <div class="card-label">Waiting on Customer</div>
+          </div>
+          <div class="summary-card accent-emerald" onclick="setDashboardFilter('completed-month')">
+            <i class="fa-solid fa-circle-check"></i>
+            <div class="card-value" id="stat-completed-month">0</div>
+            <div class="card-label">Completed This Month</div>
+          </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+          <div class="filters-group">
+            <div class="search-wrapper">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="filter-search" class="search-input" placeholder="Search customer, vehicle..." oninput="applyFilters()">
+            </div>
+            
+            <select id="filter-stage" class="filter-control" onchange="applyFilters()">
+              <option value="all">All Stages</option>
+              <option value="Intake">Intake</option>
+              <option value="Quote">Quote</option>
+              <option value="Contract">Contract</option>
+              <option value="Design">Design</option>
+              <option value="Proof Approval">Proof Approval</option>
+              <option value="Inspection">Inspection</option>
+              <option value="Production">Production</option>
+              <option value="Install">Install</option>
+              <option value="Pickup">Pickup</option>
+              <option value="Aftercare">Aftercare</option>
+              <option value="Complete">Complete</option>
+            </select>
+
+            <select id="filter-type" class="filter-control" onchange="applyFilters()">
+              <option value="all">All Wrap Types</option>
+              <option value="Full wrap">Full Wrap</option>
+              <option value="Partial wrap">Partial Wrap</option>
+              <option value="Commercial wrap">Commercial Wrap</option>
+              <option value="Color change wrap">Color Change</option>
+              <option value="Trailer wrap">Trailer Wrap</option>
+              <option value="Box truck wrap">Box Truck</option>
+            </select>
+
+            <select id="filter-installer" class="filter-control" onchange="applyFilters()">
+              <option value="all">All Installers</option>
+              <option value="unassigned">Unassigned</option>
+              <option value="Dave">Dave (Lead)</option>
+              <option value="Alex">Alex (Design/Install)</option>
+              <option value="Marcus">Marcus (Prep/Helper)</option>
+            </select>
+
+            <button class="btn btn-icon" title="Reset Filters" onclick="resetFilters()"><i class="fa-solid fa-arrow-rotate-left"></i></button>
+          </div>
+          
+          <button class="btn btn-primary" onclick="openNewProjectModal()"><i class="fa-solid fa-plus"></i> New Wrap Project</button>
+        </div>
+
+        <!-- Projects Table -->
+        <div class="table-container">
+          <table class="projects-table">
+            <thead>
+              <tr>
+                <th>Order #</th>
+                <th>Customer / Business</th>
+                <th>Vehicle Info</th>
+                <th>Wrap Type</th>
+                <th>Current Stage</th>
+                <th>Install Date</th>
+                <th>Installer</th>
+                <th>Quote Amt</th>
+                <th>Deposit Status</th>
+                <th>Warning / Action</th>
+              </tr>
+            </thead>
+            <tbody id="projects-table-body">
+              <!-- Seeded rows dynamically inserted -->
+            </tbody>
+          </table>
+          <div id="dashboard-empty-state" class="empty-state" style="display: none;">
+            <i class="fa-solid fa-folder-open"></i>
+            <h3>No wrap projects found</h3>
+            <p>Adjust your search filters or create a new wrap project to get started.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 2: PROJECT COMMAND CENTER -->
+      <div id="view-project-detail" class="view-panel">
+        <!-- Project Header Panel -->
+        <div class="project-header-panel">
+          <div class="project-header-info">
+            <div class="ph-left">
+              <div class="ph-left-title">
+                <span id="detail-badge-workflow" class="badge badge-quote">Intake</span>
+                <h3 id="detail-project-id">WRAP-2026-000</h3>
+                <span id="detail-customer-biz" style="font-size: 1.1rem; font-weight: 500;">Customer Name (Business)</span>
+              </div>
+              <div class="ph-vehicle" id="detail-vehicle-summary">2023 Ford Transit 250 - Commercial Wrap</div>
+            </div>
+            
+            <div class="ph-right">
+              <div class="stat-box">
+                <span class="stat-box-label">Quote Total</span>
+                <span class="stat-box-value" id="detail-quote-amt">$0.00</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-box-label">Deposit Received</span>
+                <span class="stat-box-value highlight-green" id="detail-deposit-amt">$0.00</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-box-label">Installer</span>
+                <span class="stat-box-value highlight-cyan" id="detail-assigned-installer">Unassigned</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-box-label">Install Date</span>
+                <span class="stat-box-value highlight-amber" id="detail-install-date">TBD</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stepper Progress Tracker -->
+          <div class="stepper-container">
+            <div class="stepper">
+              <div class="stepper-progress-bar" id="project-stepper-progress"></div>
+              
+              <div class="step" onclick="updateProjectStage(0)">
+                <div class="step-node">1</div>
+                <div class="step-label">Intake</div>
+              </div>
+              <div class="step" onclick="updateProjectStage(1)">
+                <div class="step-node">2</div>
+                <div class="step-label">Quote</div>
+              </div>
+              <div class="step" onclick="updateProjectStage(2)">
+                <div class="step-node">3</div>
+                <div class="step-label">Contract</div>
+              </div>
+              <div class="step" onclick="updateProjectStage(3)">
+                <div class="step-node">4</div>
+                <div class="step-label">Design</div>
+              </div>
+              <div class="step" onclick="updateProjectStage(4)">
+                <div class="step-node">5</div>
+                <div class="step-label">Proofing</div>
+              </div>
+              <div class="step" onclick="updateProjectStage(5)">
+                <div class="step-node">6</div>
+                <div class="step-label">Inspection</div>
+              </div>
+              <div class="step" onclick="updateProjectStage(6)">
+                <div class="step-node">7</div>
+                <div class="step-label">Production</div>
+              </div>
+              <div class="step" onclick="updateProjectStage(7)">
+                <div class="step-node">8</div>
+                <div class="step-label">Install</div>
+              </div>
+              <div class="step" onclick="updateProjectStage(8)">
+                <div class="step-node">9</div>
+                <div class="step-label">Pickup</div>
+              </div>
+              <div class="step" onclick="updateProjectStage(9)">
+                <div class="step-node">10</div>
+                <div class="step-label">Aftercare</div>
+              </div>
+              <div class="step" onclick="updateProjectStage(10)">
+                <div class="step-node">11</div>
+                <div class="step-label">Complete</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Actions Ribbon -->
+          <div class="action-ribbon">
+            <span style="font-weight: 700; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Quick Actions:</span>
+            <button class="btn btn-primary" onclick="simulateSendCommunication('quote')"><i class="fa-solid fa-paper-plane"></i> Send Quote</button>
+            <button class="btn" onclick="simulateSendCommunication('proof')"><i class="fa-solid fa-wand-magic-sparkles"></i> Request Proof Approval</button>
+            <button class="btn" onclick="simulateSendCommunication('contract')"><i class="fa-solid fa-signature"></i> Send Contract</button>
+            <button class="btn" onclick="openInstallSchedulingModal()"><i class="fa-solid fa-calendar-days"></i> Schedule Install</button>
+            <button class="btn btn-success" onclick="openCustomerPortalSim()"><i class="fa-solid fa-user-circle"></i> Open Customer Portal</button>
+            <button class="btn" style="background:#5b347f; border-color:#5b347f; color:#ffffff;" onclick="generateDocument('pre-install-packet')"><i class="fa-solid fa-file-arrow-down"></i> Pre-Install Packet</button>
+            <button class="btn" style="background:#1f6b45; border-color:#1f6b45; color:#ffffff;" onclick="generateDocument('final-packet')"><i class="fa-solid fa-file-circle-check"></i> Final Completion Packet</button>
+            <button class="btn" onclick="generateDocument('packet')"><i class="fa-solid fa-file-pdf"></i> Work Order</button>
+            <button class="btn btn-success" onclick="markCurrentStageComplete()"><i class="fa-solid fa-check"></i> Mark Stage Complete</button>
+          </div>
+
+        </div>
+
+        <!-- Detail Tabs Navigation -->
+        <div class="tabs-navigation">
+          <button class="tab-btn active" onclick="switchDetailTab('intake')"><i class="fa-solid fa-id-card"></i> Intake & Vehicle</button>
+          <button class="tab-btn" onclick="switchDetailTab('measurements')"><i class="fa-solid fa-ruler-combined"></i> Specs & Coverage</button>
+          <button class="tab-btn" onclick="switchDetailTab('pricing')"><i class="fa-solid fa-calculator"></i> Pricing & Cost</button>
+          <button class="tab-btn" onclick="switchDetailTab('design')"><i class="fa-solid fa-pen-nib"></i> Design & Proofs</button>
+          <button class="tab-btn" onclick="switchDetailTab('inspection')"><i class="fa-solid fa-clipboard-check"></i> Damage Inspection</button>
+          <button class="tab-btn" onclick="switchDetailTab('production')"><i class="fa-solid fa-print"></i> Production Check</button>
+          <button class="tab-btn" onclick="switchDetailTab('install')"><i class="fa-solid fa-screwdriver-wrench"></i> Install Log</button>
+          <button class="tab-btn" onclick="switchDetailTab('files')"><i class="fa-solid fa-folder-open"></i> Photos & Files</button>
+          <button class="tab-btn" onclick="switchDetailTab('communication')"><i class="fa-solid fa-comments"></i> Communication</button>
+        </div>
+
+        <!-- TAB 1: INTAKE & VEHICLE -->
+        <div id="tab-intake" class="detail-tab-panel active">
+          <div class="split-layout">
+            <div class="info-card">
+              <h4><i class="fa-solid fa-user"></i> Customer & Business Info</h4>
+              <div class="form-grid">
+                <div class="form-group span-2">
+                  <label>Business / Company Name</label>
+                  <input type="text" id="intake-biz-name" class="form-input" onchange="updateIntakeField('businessName', this.value)">
+                </div>
+                <div class="form-group">
+                  <label>Contact First Name</label>
+                  <input type="text" id="intake-first-name" class="form-input" onchange="updateIntakeField('firstName', this.value)">
+                </div>
+                <div class="form-group">
+                  <label>Contact Last Name</label>
+                  <input type="text" id="intake-last-name" class="form-input" onchange="updateIntakeField('lastName', this.value)">
+                </div>
+                <div class="form-group">
+                  <label>Phone Number</label>
+                  <input type="text" id="intake-phone" class="form-input" onchange="updateIntakeField('phone', this.value)">
+                </div>
+                <div class="form-group">
+                  <label>Email Address</label>
+                  <input type="email" id="intake-email" class="form-input" onchange="updateIntakeField('email', this.value)">
+                </div>
+                <div class="form-group span-2">
+                  <label>Customer Goals / Wrap Objective</label>
+                  <textarea id="intake-goals" class="form-input" style="height: 60px;" onchange="updateIntakeField('goals', this.value)"></textarea>
+                </div>
+              </div>
+            </div>
+
+            <div class="info-card">
+              <h4><i class="fa-solid fa-truck"></i> Vehicle Details</h4>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Vehicle Year</label>
+                  <input type="number" id="intake-veh-year" class="form-input" onchange="updateIntakeField('year', this.value)">
+                </div>
+                <div class="form-group">
+                  <label>Make</label>
+                  <input type="text" id="intake-veh-make" class="form-input" onchange="updateIntakeField('make', this.value)">
+                </div>
+                <div class="form-group">
+                  <label>Model</label>
+                  <input type="text" id="intake-veh-model" class="form-input" onchange="updateIntakeField('model', this.value)">
+                </div>
+                <div class="form-group">
+                  <label>Trim / Cab Type</label>
+                  <input type="text" id="intake-veh-trim" class="form-input" placeholder="e.g. Crew Cab, Cargo" onchange="updateIntakeField('trim', this.value)">
+                </div>
+                <div class="form-group">
+                  <label>Wheelbase (in)</label>
+                  <input type="text" id="intake-veh-wheelbase" class="form-input" placeholder="e.g. 148 in" onchange="updateIntakeField('wheelbase', this.value)">
+                </div>
+                <div class="form-group">
+                  <label>Roof Height</label>
+                  <input type="text" id="intake-veh-roof" class="form-input" placeholder="e.g. High Roof, Mid" onchange="updateIntakeField('roofHeight', this.value)">
+                </div>
+                <div class="form-group">
+                  <label>License Plate</label>
+                  <input type="text" id="intake-veh-plate" class="form-input" onchange="updateIntakeField('licensePlate', this.value)">
+                </div>
+                <div class="form-group">
+                  <label>VIN (17 chars)</label>
+                  <input type="text" id="intake-veh-vin" class="form-input" onchange="updateIntakeField('vin', this.value)">
+                </div>
+                <div class="form-group">
+                  <label>Original Paint Color</label>
+                  <input type="text" id="intake-veh-color" class="form-input" onchange="updateIntakeField('originalColor', this.value)">
+                </div>
+                <div class="form-group">
+                  <label>Turnaround Deadline</label>
+                  <input type="date" id="intake-deadline" class="form-input" onchange="updateIntakeField('turnaroundDate', this.value)">
+                </div>
+                <div class="form-group span-2">
+                  <label>Existing Graphics/Wrap Removal Notes</label>
+                  <input type="text" id="intake-removal-notes" class="form-input" placeholder="Does vehicle have old wrap/vinyl requiring labor charge?" onchange="updateIntakeField('removalNotes', this.value)">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: SPECS & COVERAGE -->
+        <div id="tab-measurements" class="detail-tab-panel">
+          <div class="info-card">
+            <h4><i class="fa-solid fa-ruler-combined"></i> Wrap Area Coverage & Measurements</h4>
+            <div class="table-wrapper">
+              <table class="measurements-table">
+                <thead>
+                  <tr>
+                    <th>Area Name</th>
+                    <th>Width (in)</th>
+                    <th>Height (in)</th>
+                    <th>Raw SqFt</th>
+                    <th>Waste %</th>
+                    <th>Billable SqFt</th>
+                    <th>Material Type / Material Used</th>
+                    <th>Complexity</th>
+                    <th>Include?</th>
+                    <th>Notes</th>
+                  </tr>
+                </thead>
+                <tbody id="measurements-table-body">
+                  <!-- Row inputs inserted dynamically -->
+                </tbody>
+              </table>
+            </div>
+            
+            <div class="totals-summary">
+              <div class="totals-item">
+                <span class="totals-label">Total Included Areas</span>
+                <span class="totals-val text-primary" id="totals-included-count">0</span>
+              </div>
+              <div class="totals-item">
+                <span class="totals-label">Raw Area SqFt</span>
+                <span class="totals-val" id="totals-raw-sqft">0.0</span>
+              </div>
+              <div class="totals-item">
+                <span class="totals-label">Weighted Waste</span>
+                <span class="totals-val" id="totals-waste-pct">0%</span>
+              </div>
+              <div class="totals-item">
+                <span class="totals-label">Billable SqFt</span>
+                <span class="totals-val highlight-cyan" id="totals-billable-sqft">0.0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 3: PRICING & COST -->
+        <div id="tab-pricing" class="detail-tab-panel">
+          <div class="pricing-kpi-row">
+            <div class="pricing-kpi">
+              <span class="pricing-kpi-lbl">Quote Total</span>
+              <span class="pricing-kpi-val" id="pricing-total-quote">$0.00</span>
+            </div>
+            <div class="pricing-kpi">
+              <span class="pricing-kpi-lbl">Total Costs (Material + Labor)</span>
+              <span class="pricing-kpi-val" id="pricing-total-cost">$0.00</span>
+            </div>
+            <div class="pricing-kpi highlight-profit">
+              <span class="pricing-kpi-lbl">Est. Net Profit</span>
+              <span class="pricing-kpi-val" id="pricing-total-profit">$0.00</span>
+            </div>
+            <div class="pricing-kpi highlight-margin">
+              <span class="pricing-kpi-lbl">Gross Margin %</span>
+              <span class="pricing-kpi-val" id="pricing-margin-pct">0%</span>
+            </div>
+          </div>
+
+          <div class="split-layout">
+            <!-- Left: Materials Ledger -->
+            <div class="info-card">
+              <h4><i class="fa-solid fa-scroll"></i> Materials Allocation</h4>
+              <div class="table-wrapper">
+                <table class="measurements-table" id="materials-table">
+                  <thead>
+                    <tr>
+                      <th>Material (Brand/Product)</th>
+                      <th>SqFt Needed</th>
+                      <th>Cost/SqFt</th>
+                      <th>Roll Width</th>
+                      <th>Subtotal Cost</th>
+                      <th>Inventory Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="materials-table-body">
+                    <!-- Inserted dynamically -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Right: Labor Ledger & Overrides -->
+            <div class="info-card">
+              <h4><i class="fa-solid fa-clock"></i> Labor Allocation & Financial Overrides</h4>
+              <div class="table-wrapper">
+                <table class="measurements-table" id="labor-table">
+                  <thead>
+                    <tr>
+                      <th>Labor Type</th>
+                      <th>Est Hrs</th>
+                      <th>Act Hrs</th>
+                      <th>Rate/Hr</th>
+                      <th>Total Cost</th>
+                      <th>Assigned Staff</th>
+                    </tr>
+                  </thead>
+                  <tbody id="labor-table-body">
+                    <!-- Inserted dynamically -->
+                  </tbody>
+                </table>
+              </div>
+              
+              <div class="form-grid" style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 16px;">
+                <div class="form-group">
+                  <label>Override / Manual Adjustments ($)</label>
+                  <input type="number" id="pricing-manual-adjustment" class="form-input" value="0" onchange="adjustManualOverride(this.value)">
+                </div>
+                <div class="form-group">
+                  <label>Required Deposit Percent (%)</label>
+                  <input type="number" id="pricing-deposit-percent" class="form-input" value="50" onchange="adjustDepositPercent(this.value)">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 4: DESIGN & PROOFS -->
+        <div id="tab-design" class="detail-tab-panel">
+          <div class="studio-legacy-bindings" aria-hidden="true">
+            <input type="hidden" id="design-colors">
+            <input type="hidden" id="design-fonts">
+            <input type="hidden" id="design-copy">
+            <textarea id="design-brief"></textarea>
+            <div id="mockup-placeholder-view"></div>
+            <img id="mockup-img" alt="Legacy mockup state">
+            <div id="ai-loading-overlay"></div>
+            <div id="proof-versions-list"></div>
+          </div>
+          <div id="mockup-studio-root" class="mockup-studio-root"></div>
+        </div>
+
+        <!-- TAB 5: DAMAGE INSPECTION -->
+        <div id="tab-inspection" class="detail-tab-panel">
+          <div class="inspection-workspace">
+            <div class="inspection-main-column">
+              <div class="info-card inspection-map-card">
+                <div class="inspection-section-header">
+                  <div>
+                    <h4><i class="fa-solid fa-car-side"></i> Damage Map</h4>
+                    <p>Choose a vehicle and inspection view, then click directly on the surface to document damage.</p>
+                  </div>
+                  <button class="btn" onclick="uploadCustomDiagram()"><i class="fa-solid fa-arrow-up-from-bracket"></i> Upload Custom Photo / Diagram</button>
+                </div>
+
+                <div class="inspection-control-group">
+                  <span class="inspection-control-label">Vehicle Template</span>
+                  <div class="vehicle-type-pills" id="vehicle-type-pills"></div>
+                </div>
+
+                <div class="inspection-control-group">
+                  <span class="inspection-control-label">Inspection View</span>
+                  <div class="inspection-view-tabs" id="inspection-view-tabs"></div>
+                </div>
+
+                <div class="inspection-canvas-frame">
+                  <div class="diagram-canvas-container inspection-primary-canvas" id="diagram-draw-area-main" onclick="handleDiagramClick(event)">
+                    <div id="damage-dots-overlay-main" class="damage-dots-overlay"></div>
+                  </div>
+                  <div class="damage-legend" aria-label="Damage severity legend">
+                    <span><i class="legend-dot critical"></i> Critical</span>
+                    <span><i class="legend-dot major"></i> Major</span>
+                    <span><i class="legend-dot minor"></i> Minor</span>
+                    <span><i class="legend-dot note"></i> Note</span>
+                  </div>
+                </div>
+
+                <div class="template-readiness-note">
+                  <i class="fa-solid fa-ruler-combined"></i>
+                  <span>Professional inspection set: 12 vehicle categories with synchronized driver, passenger, front, rear, and roof views.</span>
+                </div>
+              </div>
+
+              <div class="info-card inspection-photo-card">
+                <h4><i class="fa-solid fa-camera"></i> Required Pre-Install Photos</h4>
+                <div class="photo-grid" id="inspection-photos-prompt"></div>
+              </div>
+            </div>
+
+            <div class="inspection-detail-column">
+              <div class="info-card damage-detail-card">
+                <h4><i class="fa-solid fa-location-dot"></i> Damage Details</h4>
+                <div id="selected-damage-detail" class="selected-damage-detail">
+                  <div class="damage-detail-empty">
+                    <i class="fa-regular fa-hand-pointer"></i>
+                    <strong>Select a pin or damage record</strong>
+                    <span>Details stay synchronized with the active diagram.</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="info-card damage-log-card">
+                <div class="inspection-section-header compact">
+                  <h4><i class="fa-solid fa-list-ol"></i> Damage Log</h4>
+                  <button class="btn btn-small" onclick="openDamageEntryAtCenter()"><i class="fa-solid fa-plus"></i> Add Damage</button>
+                </div>
+                <div class="damage-list-container" id="damage-list-panel"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- TAB 6: PRODUCTION CHECK -->
+        <div id="tab-production" class="detail-tab-panel">
+          <div class="split-layout">
+            <!-- Left: Checklists -->
+            <div class="info-card">
+              <h4><i class="fa-solid fa-list-check"></i> Step-by-Step Production Checklist</h4>
+              <div class="checklist-wrapper" id="production-checklist-panel">
+                <!-- Production checkboxes -->
+              </div>
+            </div>
+
+            <!-- Right: Production Tasks list -->
+            <div class="info-card">
+              <h4><i class="fa-solid fa-gears"></i> Internal Production Task Sheet</h4>
+              <div class="table-wrapper">
+                <table class="measurements-table">
+                  <thead>
+                    <tr>
+                      <th>Task</th>
+                      <th>Assigned Staff</th>
+                      <th>Est Hrs</th>
+                      <th>Act Hrs</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="production-tasks-body">
+                    <!-- Dynamic task rows -->
+                  </tbody>
+                </table>
+              </div>
+              <div style="margin-top: 20px;">
+                <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 6px;">Production Notes</label>
+                <textarea id="production-notes" class="form-input" style="width: 100%; height: 80px;" onchange="updateProductionNotes(this.value)"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 7: INSTALL LOG -->
+        <div id="tab-install" class="detail-tab-panel">
+          <div class="split-layout">
+            <!-- Left: Install checklist -->
+            <div class="info-card">
+              <h4><i class="fa-solid fa-check-double"></i> Installer Prep & Heat Checklists</h4>
+              <div class="checklist-wrapper" id="install-checklist-panel">
+                <!-- Install Checkboxes -->
+              </div>
+            </div>
+
+            <!-- Right: Log details, issues, dropoff -->
+            <div class="info-card">
+              <h4><i class="fa-solid fa-clipboard-question"></i> Install Log & Issue Registry</h4>
+              <div class="form-grid" style="margin-bottom: 20px;">
+                <div class="form-group">
+                  <label>Install Bay / Location</label>
+                  <select id="install-bay-select" class="form-input" onchange="updateInstallField('bay', this.value)">
+                    <option value="Bay 1 - Main">Bay 1 - Main</option>
+                    <option value="Bay 2 - Cleanroom">Bay 2 - Cleanroom (Color Change)</option>
+                    <option value="Bay 3 - Truck Bay">Bay 3 - Truck / Large Vehicle</option>
+                    <option value="On-Site / Mobile">On-Site / Mobile</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Lead Installer</label>
+                  <select id="install-lead-select" class="form-input" onchange="updateInstallField('leadInstaller', this.value)">
+                    <option value="Dave">Dave</option>
+                    <option value="Alex">Alex</option>
+                    <option value="Marcus">Marcus</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Helper / Assistant</label>
+                  <select id="install-helper-select" class="form-input" onchange="updateInstallField('helper', this.value)">
+                    <option value="None">None</option>
+                    <option value="Marcus">Marcus</option>
+                    <option value="Alex">Alex</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Vehicle Drop-Off Logged</label>
+                  <input type="datetime-local" id="install-dropoff" class="form-input" onchange="updateInstallField('dropOffTime', this.value)">
+                </div>
+              </div>
+
+              <!-- Issue logger -->
+              <div style="border-top: 1px solid var(--border); padding-top: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                  <h5 style="font-weight: 700; font-size: 0.85rem; margin: 0;">Install Issues Encountered</h5>
+                  <button class="btn btn-primary" style="padding: 4px 8px; font-size: 0.75rem;" onclick="openAddIssueModal()"><i class="fa-solid fa-triangle-exclamation"></i> Log Issue</button>
+                </div>
+                <div class="issues-log-list" id="install-issues-list">
+                  <!-- Dynamic active issue logs -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 8: PHOTOS & FILES -->
+        <div id="tab-files" class="detail-tab-panel">
+          <div class="info-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 20px;">
+              <h4 style="border: none; padding: 0; margin: 0;"><i class="fa-solid fa-images"></i> Categorized Project File Manager</h4>
+              <button class="btn btn-primary" onclick="openUploadModal()"><i class="fa-solid fa-cloud-arrow-up"></i> Upload File / Image</button>
+            </div>
+            
+            <div class="photo-grid" id="project-files-grid">
+              <!-- Grid of images, proofs, templates, damage photos, etc. -->
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 9: COMMUNICATION -->
+        <div id="tab-communication" class="detail-tab-panel">
+          <div class="split-layout">
+            <!-- Left: Chat log -->
+            <div class="chat-window">
+              <div class="chat-history" id="chat-history-container">
+                <!-- Chat bubbles -->
+              </div>
+              <div class="chat-input-bar">
+                <textarea id="chat-textarea" class="chat-textbox" placeholder="Type a manual SMS or portal update to the customer..."></textarea>
+                <button class="btn btn-primary" style="padding: 8px 12px;" onclick="sendManualChatMessage()"><i class="fa-solid fa-paper-plane"></i> Send</button>
+              </div>
+            </div>
+
+            <!-- Right: Templates shortcuts -->
+            <div class="info-card">
+              <h4><i class="fa-solid fa-bullhorn"></i> Workflow Template Messages</h4>
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 16px;">Trigger formal notifications that request customer action or send crucial documentation.</p>
+              
+              <div class="shortcut-buttons-grid">
+                <button class="shortcut-btn" onclick="simulateSendCommunication('request-photos')"><i class="fa-solid fa-camera"></i> Request Vehicle Photos</button>
+                <button class="shortcut-btn" onclick="simulateSendCommunication('quote')"><i class="fa-solid fa-file-invoice-dollar"></i> Send Quote for Approval</button>
+                <button class="shortcut-btn" onclick="simulateSendCommunication('contract')"><i class="fa-solid fa-signature"></i> Send Contract & Terms</button>
+                <button class="shortcut-btn" onclick="simulateSendCommunication('proof')"><i class="fa-solid fa-wand-magic-sparkles"></i> Send Proof (V1)</button>
+                <button class="shortcut-btn" onclick="simulateSendCommunication('dropoff')"><i class="fa-solid fa-warehouse"></i> Send Drop-Off Info</button>
+                <button class="shortcut-btn" onclick="simulateSendCommunication('pickup')"><i class="fa-solid fa-bell"></i> Ready for Pickup Notification</button>
+                <button class="shortcut-btn" onclick="simulateSendCommunication('aftercare')"><i class="fa-solid fa-shield-halved"></i> Send Wrap Aftercare PDF</button>
+                <button class="shortcut-btn" onclick="simulateSendCommunication('review')"><i class="fa-solid fa-star"></i> Ask for Google Review</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ==========================================================================
+     MODALS FOR ACTION FORMS
+     ========================================================================== */
+
+  <!-- Modal 1: Create New Project Intake -->
+  <div class="modal-overlay" id="modal-new-project">
+    <div class="modal-content" style="max-width: 650px;">
+      <div class="modal-header">
+        <h3>Create New Wrap Project</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal-new-project')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group span-2">
+            <label>Customer Name / Business</label>
+            <input type="text" id="new-proj-business" class="form-input" placeholder="e.g. Apex Plumbing or Jane Doe" required>
+          </div>
+          <div class="form-group">
+            <label>Wrap Type</label>
+            <select id="new-proj-wrap-type" class="form-input">
+              <option value="Full wrap">Full Wrap</option>
+              <option value="Partial wrap">Partial Wrap</option>
+              <option value="Commercial wrap">Commercial Wrap</option>
+              <option value="Color change wrap">Color Change Wrap</option>
+              <option value="Trailer wrap">Trailer Wrap</option>
+              <option value="Box truck wrap">Box Truck Wrap</option>
+              <option value="Spot graphics">Spot Graphics</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Vehicle Year/Make/Model</label>
+            <input type="text" id="new-proj-vehicle" class="form-input" placeholder="e.g. 2024 Ford Transit 250" required>
+          </div>
+          <div class="form-group">
+            <label>Phone Number</label>
+            <input type="text" id="new-proj-phone" class="form-input" placeholder="555-0199">
+          </div>
+          <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" id="new-proj-email" class="form-input" placeholder="name@business.com">
+          </div>
+          <div class="form-group span-2">
+            <label>Notes / Wrap Scope</label>
+            <textarea id="new-proj-notes" class="form-input" placeholder="e.g. Full vinyl wrap including roof, exclusion on rear bumper." style="height: 60px;"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeModal('modal-new-project')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitNewProject()">Create Project</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: Schedule Installation -->
+  <div class="modal-overlay" id="modal-schedule-install">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Schedule Installation</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal-schedule-install')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group span-2">
+            <label>Install Date</label>
+            <input type="date" id="sched-install-date" class="form-input">
+          </div>
+          <div class="form-group">
+            <label>Start Time</label>
+            <input type="time" id="sched-start-time" class="form-input" value="08:00">
+          </div>
+          <div class="form-group">
+            <label>End Time</label>
+            <input type="time" id="sched-end-time" class="form-input" value="17:00">
+          </div>
+          <div class="form-group">
+            <label>Assigned Installer</label>
+            <select id="sched-installer" class="form-input">
+              <option value="Dave">Dave (Lead)</option>
+              <option value="Alex">Alex</option>
+              <option value="Marcus">Marcus</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Helper</label>
+            <select id="sched-helper" class="form-input">
+              <option value="None">None</option>
+              <option value="Marcus">Marcus</option>
+              <option value="Dave">Dave</option>
+              <option value="Alex">Alex</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeModal('modal-schedule-install')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitScheduling()">Save Schedule</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 3: Document Damage Hotspot -->
+  <div class="modal-overlay" id="modal-damage-entry">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Document Pre-existing Damage</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal-damage-entry')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Damage Type</label>
+            <select id="damage-type-select" class="form-input">
+              <option value="Scratch">Scratch</option>
+              <option value="Dent">Dent</option>
+              <option value="Rust">Rust</option>
+              <option value="Paint chip">Paint Chip</option>
+              <option value="Clear coat failure">Clear Coat Failure</option>
+              <option value="Adhesive residue">Adhesive Residue</option>
+              <option value="Loose trim">Loose Trim</option>
+              <option value="Cracked part">Cracked Part</option>
+              <option value="Previous wrap">Previous Wrap</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Severity</label>
+            <select id="damage-severity-select" class="form-input">
+              <option value="Low">Low (Surface/Minor)</option>
+              <option value="Medium">Medium (Visible/prep needed)</option>
+              <option value="High">High (Critical/requires sign-off)</option>
+              <option value="Note">Note (Documentation only)</option>
+            </select>
+          </div>
+          <div class="form-group span-2">
+            <label>Description / Location Notes</label>
+            <input type="text" id="damage-notes-input" class="form-input" placeholder="e.g. Deep scratch behind rear fender, will show under wrap">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeModal('modal-damage-entry')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitDamageMarker()">Record Damage</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 4: File Upload Simulation -->
+  <div class="modal-overlay" id="modal-upload-file">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Upload Project File / Photo</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal-upload-file')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group span-2">
+            <label>File Category</label>
+            <select id="upload-category" class="form-input">
+              <option value="Logos">Logo/Brand Identity</option>
+              <option value="Artwork">Vector Artwork</option>
+              <option value="Vehicle photos">Vehicle Reference Photo</option>
+              <option value="Inspection photos">Inspection Photo</option>
+              <option value="Damage photos">Damage Documentation</option>
+              <option value="Before photos">Before Photo</option>
+              <option value="During photos">During Production/Install</option>
+              <option value="After photos">Final Finished Wrap</option>
+              <option value="Signed documents">Contract/Signed Paperwork</option>
+            </select>
+          </div>
+          <div class="form-group span-2">
+            <label>Simulated File Name / Title</label>
+            <input type="text" id="upload-filename" class="form-input" placeholder="e.g. logo-vectors-revised.ai">
+          </div>
+          <div class="form-group span-2">
+            <div style="border: 2px dashed var(--border); padding: 30px; text-align: center; border-radius: var(--radius-sm); cursor: pointer;" onclick="document.getElementById('upload-dummy-trigger').click()">
+              <i class="fa-solid fa-cloud-arrow-up" style="font-size: 2rem; color: var(--primary); margin-bottom: 8px;"></i>
+              <p style="font-size: 0.8rem; font-weight: 600;">Drag and drop or click here to browse files</p>
+              <p style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">Supports Vector EPS, AI, PDF, JPG, PNG up to 150MB</p>
+              <input type="file" id="upload-dummy-trigger" style="display: none;" onchange="handleFileSelected(event)">
+            </div>
+          </div>
+          <div class="form-group span-2">
+            <div style="display: flex; gap: 20px;">
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" id="upload-cust-visible" checked>
+                <span>Make visible in Customer Portal</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" id="upload-mktg-permission" checked>
+                <span>Permission to use for Social Media/Marketing</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeModal('modal-upload-file')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitFileUpload()">Complete Upload</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 5: Log Install Issue -->
+  <div class="modal-overlay" id="modal-log-issue">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Log Installation Issue</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal-log-issue')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Issue Type</label>
+            <select id="issue-type-select" class="form-input">
+              <option value="Vinyl Tear">Vinyl Tear / Patch Needed</option>
+              <option value="Over-stretch">Over-stretched / Discolored</option>
+              <option value="Dust/Lint contamination">Dust/Lint Spot Under Film</option>
+              <option value="Lamination silvering">Lamination Silvering/Bubbles</option>
+              <option value="Adhesion failure">Lifting in Deep Channels</option>
+              <option value="Damaged vehicle trim">Loose/Broken OEM Trim Part</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Vehicle Area</label>
+            <input type="text" id="issue-area-input" class="form-input" placeholder="e.g. Hood left recess">
+          </div>
+          <div class="form-group span-2">
+            <label>Description of Issue</label>
+            <textarea id="issue-description" class="form-input" style="height: 60px;" placeholder="Describe what happened and how to address..."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeModal('modal-log-issue')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitIssueLog()">Log & Flag Installer</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ==========================================================================
+     CUSTOMER PORTAL SANDBOX OVERLAY
+     ========================================================================== */ -->
+  <div id="customer-portal-overlay">
+    <div class="portal-simulator-bar">
+      <span><i class="fa-solid fa-user-shield"></i> WRAP LAB AI &mdash; CUSTOMER PORTAL PREVIEW</span>
+      <button class="btn btn-danger" style="padding: 4px 10px; font-size: 0.75rem;" onclick="closeCustomerPortalSim()"><i class="fa-solid fa-arrow-left"></i> Return to Admin Command Center</button>
+    </div>
+    
+    <div class="portal-wrapper">
+      <div class="portal-container">
+        <div class="portal-header">
+          <h2 id="portal-business-title">Shop/Business Name</h2>
+          <p>Order <span id="portal-project-id">WRAP-2026-X</span> &mdash; Status Page</p>
+        </div>
+
+        <div class="portal-body">
+          
+          <!-- STEP STATUS TICKER -->
+          <div style="background-color: var(--bg-input); padding: 14px 20px; border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-weight: 700; font-size: 0.85rem; color: var(--text-muted);">Current Stage:</span>
+            <span class="badge badge-quote" id="portal-badge-status">Design Phase</span>
+          </div>
+
+          <!-- SECTION 1: QUOTE APPROVAL -->
+          <div class="portal-section" id="portal-sec-quote">
+            <div class="portal-section-title">
+              <span>1. Quote & Scope of Work</span>
+              <span id="portal-quote-badge" class="badge badge-warning">Awaiting Approval</span>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">Please review the quote totals below for wrap coverage, design drafting, premium vinyl films, and installation labor.</p>
+            <div class="form-grid" style="margin-bottom: 16px;">
+              <div class="form-group">
+                <label>Estimated Quote Total</label>
+                <input type="text" id="portal-quote-total" class="form-input" readonly value="$0.00">
+              </div>
+              <div class="form-group">
+                <label>Required Deposit (Due Now)</label>
+                <input type="text" id="portal-quote-deposit" class="form-input" readonly value="$0.00">
+              </div>
+            </div>
+            <div style="display: flex; gap: 12px; justify-content: flex-end;" id="portal-quote-actions">
+              <button class="btn btn-danger" onclick="portalRequestQuoteRevision()">Request Revision</button>
+              <button class="btn btn-success" onclick="portalApproveQuote()"><i class="fa-solid fa-check"></i> Approve Quote</button>
+            </div>
+          </div>
+
+          <!-- SECTION 2: CONTRACT SIGNATURE -->
+          <div class="portal-section" id="portal-sec-contract">
+            <div class="portal-section-title">
+              <span>2. Wrap Contract & Liability Terms</span>
+              <span id="portal-contract-badge" class="badge badge-warning">Pending Signature</span>
+            </div>
+            <div style="height: 120px; overflow-y: auto; background-color: var(--bg-card); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); font-size: 0.72rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 16px;">
+              <p><strong>VEHICLE WRAP INSTALLATION GENERAL CONTRACT TERMS AND LIABILITY EXCLUSIONS</strong></p>
+              <p style="margin-top: 6px;">1. **Paint and Clearcoat Condition**: Sign shop is not responsible for paint lifting or clear coat failure during installation or subsequent removal of wrap materials. Low-quality paint, repainted body panels, or pre-existing scratches are susceptible to failure. Installation on custom or repainted panels is performed solely at the owner's risk.</p>
+              <p style="margin-top: 6px;">2. **Outgassing Requirements**: Printed graphics require 24-48 hours of outgassing/curing time. The shop will not apply fresh print panels directly. Failure to wait results in vinyl wrinkling or peeling.</p>
+              <p style="margin-top: 6px;">3. **Payment Policies**: A deposit of 50% must be paid prior to commencing graphic layout design work. The outstanding 50% balance must be paid in full upon pick up of the vehicle.</p>
+              <p style="margin-top: 6px;">4. **Care Instructions**: Wraps are temporary films. Regular cleaning (handwashing preferred) and avoiding high-pressure nozzles near seam cuts is required. Use of brush car washes voids wrap warranties.</p>
+            </div>
+
+            <div class="portal-payment-box" id="portal-deposit-box">
+              <div>
+                <span class="portal-payment-label">Required project deposit</span>
+                <strong id="portal-contract-deposit-amount">$0.00</strong>
+                <span id="portal-deposit-status" class="badge badge-warning">Payment Required</span>
+              </div>
+              <button id="portal-pay-deposit-btn" class="btn btn-primary" onclick="portalPayDeposit()">
+                <i class="fa-solid fa-credit-card"></i> Pay Required Deposit
+              </button>
+            </div>
+
+            <!-- Signature Pad UI -->
+            <div class="signature-area" id="portal-signature-box">
+              <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 6px;">Sign Digitally with Mouse/Touchpad:</label>
+              <div class="signature-pad-wrapper">
+                <canvas id="portal-sig-canvas" class="signature-pad"></canvas>
+                <button class="signature-pad-clear" onclick="clearSignatureCanvas()">Clear</button>
+              </div>
+              <div style="display: flex; justify-content: flex-end; margin-top: 12px; gap: 12px;">
+                <button class="btn btn-success" onclick="portalSignContract()"><i class="fa-solid fa-signature"></i> Sign and Authorize</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECTION 3: ARTWORK PROOF REVIEW -->
+          <div class="portal-section" id="portal-sec-proof">
+            <div class="portal-section-title">
+              <span>3. Creative Artwork Layout Proof</span>
+              <span id="portal-proof-badge" class="badge badge-warning">Awaiting Approval</span>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">Review the vector layout mockups prepared by our designers. Inspect logo placement, spelling, numbers, and coverage boundaries.</p>
+            
+            <div class="mockup-viewport" style="margin-bottom: 16px; border-style: solid;">
+              <img id="portal-mockup-img" class="mockup-image-placeholder" alt="Client mockup view" style="display: block; width:100%; height:100%; object-fit:cover;">
+              <div id="portal-mockup-empty" class="mockup-empty-state" style="display: none;">
+                <i class="fa-solid fa-palette"></i>
+                <p>Mockup proofs are currently being designed.</p>
+              </div>
+            </div>
+
+            <div class="form-group span-2" style="margin-bottom: 16px;">
+              <label>Provide revision notes (if requesting change):</label>
+              <textarea id="portal-revision-comments" class="form-input" style="height: 60px;" placeholder="e.g. Please make the phone number bigger on both sides..."></textarea>
+            </div>
+
+            <div style="display: flex; gap: 12px; justify-content: flex-end;" id="portal-proof-actions">
+              <button class="btn btn-danger" onclick="portalRequestProofRevision()">Request Revision</button>
+              <button class="btn btn-success" onclick="portalApproveProof()"><i class="fa-solid fa-circle-check"></i> Approve & Freeze Artwork</button>
+            </div>
+          </div>
+
+          <div class="portal-section" id="portal-sec-concepts">
+            <div class="portal-section-title">
+              <span>4. AI Concept Direction Review</span>
+              <span id="portal-concepts-badge" class="badge badge-warning">No Concepts Sent</span>
+            </div>
+            <div id="portal-concept-studio-root"></div>
+          </div>
+
+          <!-- SECTION 5: PRE-INSTALL INSPECTION ACKNOWLEDGEMENT -->
+          <div class="portal-section" id="portal-sec-inspection">
+            <div class="portal-section-title">
+              <span>5. Documented Vehicle Pre-existing Damage</span>
+              <span id="portal-inspection-badge" class="badge badge-warning">Awaiting Review</span>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">Prior to wrap application, our installers perform a detailed surface check. We have marked the following pre-existing scratches, chips, or rust spots. You acknowledge that these areas exist and may impact final film adhesion.</p>
+            
+            <!-- SVG vehicle inspection mirror (read-only for customer) -->
+            <div class="diagram-canvas-container" style="margin: 0 auto 16px auto; cursor: default; background: #ffffff;">
+              <div id="portal-svg-blueprint-box" style="width:100%; height:100%; display:flex; align-items:center;">
+                <!-- Filled dynamically by copy of admin blueprint -->
+              </div>
+              <div id="portal-damage-dots-overlay" style="position: absolute; inset: 0; pointer-events: none;"></div>
+            </div>
+
+            <div class="damage-list-container" id="portal-damage-list-panel" style="margin-bottom: 16px;">
+              <!-- Customer damage markers listing -->
+            </div>
+
+            <div style="display: flex; justify-content: flex-end;" id="portal-inspection-actions">
+              <button class="btn btn-success" onclick="portalAcknowledgeInspection()"><i class="fa-solid fa-clipboard-check"></i> Acknowledge Marked Damage</button>
+            </div>
+          </div>
+
+          <!-- SECTION 5: FINAL PACKETS & AFTERCARE -->
+          <div class="portal-section" id="portal-sec-aftercare">
+            <div class="portal-section-title">
+              <span>6. Aftercare & Final Wrap Delivery Packets</span>
+              <span id="portal-aftercare-badge" class="badge badge-complete">Completed</span>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">Your vehicle wrap is fully installed! Clean and protect your wrap with the guidelines below.</p>
+            <div style="display: flex; gap: 12px;">
+              <button class="btn" onclick="generateDocument('aftercare')"><i class="fa-solid fa-download"></i> Download Care Sheet (PDF)</button>
+              <button class="btn" onclick="generateDocument('receipt')"><i class="fa-solid fa-receipt"></i> Get Paid Receipt</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ==========================================================================
+     PRINTABLE REPORT OVERLAYS
+     ========================================================================== */ -->
+  <div id="print-overlay">
+    <div class="print-btn-bar">
+      <button class="btn btn-primary" onclick="window.print()"><i class="fa-solid fa-print"></i> Print Document</button>
+      <button class="btn btn-danger" onclick="closePrintView()"><i class="fa-solid fa-circle-xmark"></i> Close Preview</button>
+    </div>
+    
+    <div class="print-document" id="print-document-content">
+      <!-- Inserted dynamically on generation -->
+    </div>
+  </div>
+
+  <!-- Main JavaScript File -->
+  <script src="app.js"></script>
+  <script src="mockup-studio.js"></script>
+</body>
+</html>
