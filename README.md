@@ -20,6 +20,7 @@ This release establishes the controlling application shell and first structural 
 - Order Portal Manager standalone-first expansion track
 - Always-available portal management with separately gated publishing and shopping cart/checkout
 - Focused Order Portal Manager standalone preview at `/?mode=webstores`
+- Full-stack Wrap Lab workspace at `/?mode=wrap-lab`
 - Controlling standalone-first product spec in `ORDER_PORTAL_MANAGER_MASTER_SPEC.md`
 - Working sample interactions
 - Honest module status pages for future releases
@@ -47,6 +48,17 @@ uvicorn main:app --reload --port 8000
 The backend health endpoint is `http://localhost:8000/api/health` for direct backend development. The bundled local review launcher uses port `8001`.
 The dashboard digest contract is `/api/digest`.
 The temporary compatibility capability contract is `/api/webstores/capabilities`.
+
+## Wrap Lab
+
+Wrap Center opens the React Wrap Lab workspace. Its dashboard, project command center, pricing,
+design/proofing, damage inspection, production, installation, files, communication, customer
+portal, and AI mockup studio are backed by `/api/wrap-lab`.
+
+Wrap Lab project records are tenant scoped and stored in MongoDB. Copy `.env.example` to `.env`
+or provide `MONGO_URL` and `MONGO_DB_NAME` through the runtime environment. When MongoDB is not
+available, the frontend clearly enters local preview mode so visual review remains possible;
+production persistence requires MongoDB.
 
 See `ORDER_PORTAL_MANAGER_MASTER_SPEC.md` for the controlling product spec, `ORDER_PORTAL_MAIN_APP_INTEGRATION_SPEC.md` for future SignGuyAI OS integration rules, `ORDER_PORTAL_RELEASE_PLAN.md` for build sequencing, and `ORDER_PORTAL_AGENT_BUILD_RULES.md` before modifying this area.
 

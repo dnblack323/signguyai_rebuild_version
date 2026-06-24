@@ -63,4 +63,5 @@ if (-not ($health -and $frontendReady)) {
 Write-Host "SignGuyAI review environment is ready."
 Write-Host "Full app: http://127.0.0.1:5173/"
 Write-Host "Webstores standalone: http://127.0.0.1:5173/?mode=webstores"
+Write-Host "Wrap Lab: http://127.0.0.1:5173/?mode=wrap-lab"
 Write-Host "Backend API docs: http://127.0.0.1:8001/docs"

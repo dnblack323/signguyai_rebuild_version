@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import {
   Bell,
   Check,
@@ -29,6 +29,7 @@ import { StandaloneWebstoresShell, WebstoresWorkspace } from "./components/webst
 import { api } from "./lib/api";
 
 const statusTone = { ready: "green", preview: "blue", planned: "gray" };
+const WrapLabApp = lazy(() => import("./components/wrap-lab/WrapLabApp"));
 
 function App() {
   const standaloneWebstores = new URLSearchParams(window.location.search).get("mode") === "webstores";
@@ -76,6 +77,7 @@ function App() {
   }, []);
 
   const navigate = (nextWorkspace, nextModule) => {
+    if (nextModule === "wraps") window.history.pushState({}, "", "?mode=wrap-lab");
     setWorkspace(nextWorkspace);
     setModule(nextModule);
     setSearchOpen(false);
@@ -90,6 +92,10 @@ function App() {
 
   if (standaloneWebstores) {
     return <><StandaloneWebstoresShell onToast={showToast} backendStatus={backendStatus} />{toast && <div className="toast"><Check size={17} />{toast}</div>}</>;
+  }
+
+  if (module === "wraps" || new URLSearchParams(window.location.search).get("mode") === "wrap-lab") {
+    return <Suspense fallback={<div className="app-loading">Loading Wrap Lab...</div>}><WrapLabApp onExit={() => { window.location.href = "/"; }}/></Suspense>;
   }
 
   return (
