@@ -4,10 +4,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 try:
+    from .routes.customers import router as customers_router
     from .routes.health import router as health_router
     from .routes.webstores import router as webstores_router
     from .routes.wrap_lab import router as wrap_lab_router
 except ImportError:
+    from routes.customers import router as customers_router
     from routes.health import router as health_router
     from routes.webstores import router as webstores_router
     from routes.wrap_lab import router as wrap_lab_router
@@ -27,5 +29,6 @@ app.add_middleware(
 )
 
 app.include_router(health_router, prefix="/api")
+app.include_router(customers_router, prefix="/api")
 app.include_router(webstores_router, prefix="/api")
 app.include_router(wrap_lab_router, prefix="/api")

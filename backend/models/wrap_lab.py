@@ -22,6 +22,7 @@ class WrapProjectPayload(BaseModel):
     model_config = ConfigDict(extra="allow")
 
     id: str | None = None
+    customerId: str = ""
     customerName: str = ""
     businessName: str = ""
     stage: WrapStage = "Intake"
@@ -66,6 +67,7 @@ class WrapWorkflowAction(BaseModel):
     action: Literal[
         "approve_quote", "request_quote_revision", "pay_deposit", "sign_contract",
         "approve_proof", "request_proof_revision", "acknowledge_inspection",
+        "sign_pre_install_packet", "sign_final_packet", "customer_concept_feedback",
         "advance_stage", "complete_stage", "send_message", "resolve_issue",
     ]
     payload: dict[str, Any] = Field(default_factory=dict)

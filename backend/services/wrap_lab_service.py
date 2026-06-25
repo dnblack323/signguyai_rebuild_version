@@ -17,7 +17,9 @@ def public_project(project: dict[str, Any]) -> dict[str, Any]:
         "lastName", "year", "make", "model", "bodyType", "wrapType", "stage", "stageIndex",
         "quoteAmount", "depositAmount", "quoteStatus", "contractStatus", "paymentStatus",
         "proofs", "mockupImage", "damageMarkers", "inspectionAcknowledged", "files",
-        "chatHistory", "finalSignoff", "mockupStudio",
+        "chatHistory", "finalSignoff", "mockupStudio", "preInstallPacketSigned",
+        "preInstallPacketSignedBy", "preInstallPacketSignedAt", "finalPacketSigned",
+        "finalPacketSignedBy", "finalPacketSignedAt",
     }
     result = {key: value for key, value in project.items() if key in allowed}
     result["files"] = [
@@ -62,6 +64,45 @@ def apply_workflow_action(project: dict[str, Any], action: str, payload: dict[st
     elif action == "acknowledge_inspection":
         project["inspectionAcknowledged"] = True
         project["inspectionAcknowledgedAt"] = now
+    elif action == "sign_pre_install_packet":
+        signed_by = str(payload.get("signedBy", "")).strip()
+        if not signed_by:
+            raise HTTPException(status_code=422, detail="Signer name is required")
+        project["preInstallPacketSigned"] = True
+        project["preInstallPacketSignedBy"] = signed_by
+        project["preInstallPacketSignedAt"] = now
+        history.append({"sender": "customer", "text": "Pre-install packet signed.", "time": now})
+    elif action == "sign_final_packet":
+        signed_by = str(payload.get("signedBy", "")).strip()
+        if not signed_by:
+            raise HTTPException(status_code=422, detail="Signer name is required")
+        project["finalPacketSigned"] = True
+        project["finalPacketSignedBy"] = signed_by
+        project["finalPacketSignedAt"] = now
+        project["finalSignoff"] = True
+        history.append({"sender": "customer", "text": "Final completion packet signed.", "time": now})
+    elif action == "customer_concept_feedback":
+        concept_id = payload.get("conceptId")
+        studio = dict(project.get("mockupStudio") or {})
+        concepts = list(studio.get("concepts") or [])
+        matched = False
+        for index, concept in enumerate(concepts):
+            if concept.get("id") == concept_id:
+                concepts[index] = {
+                    **concept,
+                    "customerSelected": payload.get("customerSelected", concept.get("customerSelected", False)),
+                    "customerComment": payload.get("customerComment", concept.get("customerComment", "")),
+                    "feedbackTags": payload.get("feedbackTags", concept.get("feedbackTags", [])),
+                    "annotations": payload.get("annotations", concept.get("annotations", [])),
+                    "questions": payload.get("questions", concept.get("questions", [])),
+                }
+                matched = True
+                break
+        if not matched:
+            raise HTTPException(status_code=404, detail="Concept not found")
+        studio["concepts"] = concepts
+        project["mockupStudio"] = studio
+        history.append({"sender": "customer", "text": "Concept feedback submitted.", "time": now})
     elif action in {"advance_stage", "complete_stage"}:
         current = int(project.get("stageIndex", 0))
         target = min(10, int(payload.get("stageIndex", current + 1)))
