@@ -60,7 +60,7 @@ const common = {
 
 export const SEED_PROJECTS = [
   {
-    ...structuredClone(common), id: "WRAP-2026-001", businessName: "Apex Plumbing", firstName: "John", lastName: "Miller",
+    ...structuredClone(common), id: "WRAP-2026-001", customerId: "CUST-APEX", businessName: "Apex Plumbing", firstName: "John", lastName: "Miller",
     phone: "555-0144", email: "john@apexplumbing.com", year: 2023, make: "Ford", model: "Transit 250",
     trim: "Cargo Van", bodyType: "cargo-van", licensePlate: "APX-982", vin: "1FTZR2CK4PK89218",
     wrapType: "Commercial wrap", stage: "Contract", stageIndex: 2, quoteAmount: 3450, depositAmount: 0,
@@ -69,7 +69,7 @@ export const SEED_PROJECTS = [
     chatHistory: [{ sender: "shop", text: "Your quote is ready for review in the portal.", time: "2026-06-12 14:00" }],
   },
   {
-    ...structuredClone(common), id: "WRAP-2026-002", businessName: "Green Orchard Markets", firstName: "Sylvia", lastName: "Reed",
+    ...structuredClone(common), id: "WRAP-2026-002", customerId: "CUST-GREEN-ORCHARD", businessName: "Green Orchard Markets", firstName: "Sylvia", lastName: "Reed",
     phone: "555-0188", email: "sylvia@greenorchard.example", year: 2024, make: "Mercedes-Benz", model: "Sprinter 2500",
     trim: "High Roof", bodyType: "high-roof-van", licensePlate: "GRN-221", wrapType: "Full wrap", stage: "Proof Approval",
     stageIndex: 4, quoteAmount: 5240, depositAmount: 2620, balanceDue: 2620, paymentStatus: "deposit_paid",
@@ -77,7 +77,7 @@ export const SEED_PROJECTS = [
     proofs: [{ version: "v2", date: "2026-06-20", notes: "Updated color and logo scale.", status: "Pending" }],
   },
   {
-    ...structuredClone(common), id: "WRAP-2026-003", businessName: "Sarah Jenkins", firstName: "Sarah", lastName: "Jenkins",
+    ...structuredClone(common), id: "WRAP-2026-003", customerId: "CUST-SARAH-JENKINS", businessName: "Sarah Jenkins", firstName: "Sarah", lastName: "Jenkins",
     phone: "555-0193", email: "sarah.jenkins@example.com", year: 2023, make: "Tesla", model: "Model Y",
     trim: "Long Range", bodyType: "suv", licensePlate: "EV-404", wrapType: "Color change wrap", stage: "Production",
     stageIndex: 6, quoteAmount: 3900, depositAmount: 1950, balanceDue: 1950, paymentStatus: "deposit_paid",

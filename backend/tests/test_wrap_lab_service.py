@@ -45,6 +45,22 @@ class WrapLabWorkflowTests(unittest.TestCase):
         self.assertNotIn("costSnapshot", result)
         self.assertEqual([file["name"] for file in result["files"]], ["visible.pdf"])
 
+    def test_packet_and_concept_actions_persist(self):
+        project = self.project() | {
+            "mockupStudio": {"concepts": [{"id": "concept-1", "customerSelected": False}]}
+        }
+        apply_workflow_action(project, "sign_pre_install_packet", {"signedBy": "Test Customer"})
+        apply_workflow_action(project, "sign_final_packet", {"signedBy": "Test Customer"})
+        result = apply_workflow_action(project, "customer_concept_feedback", {
+            "conceptId": "concept-1",
+            "customerSelected": True,
+            "customerComment": "Use this one",
+            "feedbackTags": ["Keep layout"],
+        })
+        self.assertTrue(result["preInstallPacketSigned"])
+        self.assertTrue(result["finalSignoff"])
+        self.assertTrue(result["mockupStudio"]["concepts"][0]["customerSelected"])
+
 
 if __name__ == "__main__":
     unittest.main()

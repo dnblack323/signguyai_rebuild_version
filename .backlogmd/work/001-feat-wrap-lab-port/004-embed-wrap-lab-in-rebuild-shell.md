@@ -2,10 +2,10 @@
 
 ```yaml
 task: Embed Wrap Lab in the rebuild shell
-status: in-progress
+status: done
 priority: 40
 dep: ["work/001-feat-wrap-lab-port/003-verify-wrap-lab-parity.md"]
-assignee: "/root"
+assignee: ""
 requiresHumanReview: false
 expiresAt: null
 ```
@@ -18,8 +18,8 @@ Correct the integration so the existing Wrap Center placeholder renders Wrap Lab
 
 ## Acceptance criteria
 
-- [ ] Core rebuild navigation, modules, Webstores, header, banner, and ribbon remain visible
-- [ ] Wrap Center renders the Wrap Lab dashboard in the module content area
-- [ ] The rebuild ribbon exposes Wrap Lab contextual actions
-- [ ] Wrap Lab styling is isolated from the core shell
-- [ ] Embedded desktop and mobile views are browser verified
+- [x] Core rebuild navigation, modules, Webstores, header, banner, and ribbon remain visible
+- [x] Wrap Center renders the Wrap Lab dashboard in the module content area
+- [x] The rebuild ribbon exposes Wrap Lab contextual actions
+- [x] Wrap Lab styling is isolated from the core shell
+- [x] Embedded desktop and mobile views are browser verified

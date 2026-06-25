@@ -2,15 +2,21 @@ import React from "react";
 import {
   CalendarDays,
   Calculator,
+  CarFront,
   CheckSquare,
   FileCheck2,
   FilePlus2,
   FileText,
+  FolderOpen,
   Mail,
   ReceiptText,
   Send,
   ShoppingBag,
+  Stethoscope,
+  Upload,
   UserPlus,
+  UserRound,
+  WandSparkles,
 } from "lucide-react";
 
 const dashboardGroups = [
@@ -55,8 +61,34 @@ const moduleGroups = [
   },
 ];
 
-export function AppRibbon({ isDashboard, onNavigate, onAction }) {
-  const groups = isDashboard ? dashboardGroups : moduleGroups;
+const wrapGroups = [
+  {
+    label: "Wrap Projects",
+    actions: [
+      ["New Wrap Project", CarFront],
+      ["Projects", FolderOpen],
+      ["Customer Portal", UserRound],
+    ],
+  },
+  {
+    label: "Design",
+    actions: [
+      ["Generate Concepts", WandSparkles],
+      ["Upload Files", Upload],
+      ["Work Order", FileText],
+    ],
+  },
+  {
+    label: "Production",
+    actions: [
+      ["Schedule Install", CalendarDays],
+      ["Diagnostics", Stethoscope],
+    ],
+  },
+];
+
+export function AppRibbon({ isDashboard, module, onNavigate, onAction }) {
+  const groups = module === "wraps" ? wrapGroups : isDashboard ? dashboardGroups : moduleGroups;
 
   return (
     <section className="app-ribbon" aria-label="Page actions">
@@ -66,11 +98,11 @@ export function AppRibbon({ isDashboard, onNavigate, onAction }) {
             {groupIndex > 0 && <span className="ribbon-divider" />}
             <div className="ribbon-group">
               <div className="ribbon-actions">
-                {group.actions.map(([label, Icon, workspace, module]) => (
+                {group.actions.map(([label, Icon, targetWorkspace, targetModule]) => (
                   <button
                     className="ribbon-button"
                     key={label}
-                    onClick={() => workspace ? onNavigate(workspace, module) : onAction(`${label} selected`)}
+                    onClick={() => targetWorkspace ? onNavigate(targetWorkspace, targetModule) : onAction(module === "wraps" ? label : `${label} selected`)}
                   >
                     <Icon size={20} />
                     <span>{label}</span>

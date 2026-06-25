@@ -24,6 +24,7 @@ import {
   workspaces,
 } from "./data";
 import { AppRibbon } from "./components/ribbon/AppRibbon";
+import { CustomersWorkspace } from "./components/customers/CustomersWorkspace";
 import { Dashboard } from "./components/dashboard/Dashboard";
 import { StandaloneWebstoresShell, WebstoresWorkspace } from "./components/webstores/WebstoresWorkspace";
 import { api } from "./lib/api";
@@ -33,8 +34,9 @@ const WrapLabApp = lazy(() => import("./components/wrap-lab/WrapLabApp"));
 
 function App() {
   const standaloneWebstores = new URLSearchParams(window.location.search).get("mode") === "webstores";
-  const [workspace, setWorkspace] = useState("home");
-  const [module, setModule] = useState("dashboard");
+  const initialMode = new URLSearchParams(window.location.search).get("mode");
+  const [workspace, setWorkspace] = useState(initialMode === "wrap-lab" ? "operations" : "home");
+  const [module, setModule] = useState(initialMode === "wrap-lab" ? "wraps" : "dashboard");
   const [searchOpen, setSearchOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -43,6 +45,7 @@ function App() {
   const [query, setQuery] = useState("");
   const [toast, setToast] = useState("");
   const [backendStatus, setBackendStatus] = useState("checking");
+  const [wrapRibbonCommand, setWrapRibbonCommand] = useState(null);
 
   const workspaceInfo = workspace === "home" ? { label: "Home" } : workspaces.find((item) => item.id === workspace);
   const activeAddon = addons.find((item) => item.workspace === workspace && item.module === module);
@@ -77,7 +80,6 @@ function App() {
   }, []);
 
   const navigate = (nextWorkspace, nextModule) => {
-    if (nextModule === "wraps") window.history.pushState({}, "", "?mode=wrap-lab");
     setWorkspace(nextWorkspace);
     setModule(nextModule);
     setSearchOpen(false);
@@ -90,12 +92,16 @@ function App() {
     window.setTimeout(() => setToast(""), 2600);
   };
 
+  const handleRibbonAction = (message) => {
+    if (module === "wraps") {
+      setWrapRibbonCommand({ command: message, id: Date.now() });
+      return;
+    }
+    showToast(message);
+  };
+
   if (standaloneWebstores) {
     return <><StandaloneWebstoresShell onToast={showToast} backendStatus={backendStatus} />{toast && <div className="toast"><Check size={17} />{toast}</div>}</>;
-  }
-
-  if (module === "wraps" || new URLSearchParams(window.location.search).get("mode") === "wrap-lab") {
-    return <Suspense fallback={<div className="app-loading">Loading Wrap Lab...</div>}><WrapLabApp onExit={() => { window.location.href = "/"; }}/></Suspense>;
   }
 
   return (
@@ -113,7 +119,7 @@ function App() {
           backendStatus={backendStatus}
         />
         {workspace !== "home" && <ModuleNav workspace={workspace} module={module} onSelect={(id) => setModule(id)} />}
-        <AppRibbon isDashboard={workspace === "home" && module === "dashboard"} onNavigate={navigate} onAction={showToast} />
+        <AppRibbon isDashboard={workspace === "home" && module === "dashboard"} module={module} onNavigate={navigate} onAction={handleRibbonAction} />
         <SectionBanner workspace={workspaceInfo} module={module} activeModule={activeModule} />
         <div className="content-shell">
           <main className="main-content">
@@ -123,6 +129,12 @@ function App() {
               <WorkspaceDashboard workspace={workspaceInfo} />
             ) : module === "webstores" ? (
               <WebstoresWorkspace onToast={showToast} />
+            ) : module === "customers" ? (
+              <CustomersWorkspace onToast={showToast} onNavigate={navigate} />
+            ) : module === "wraps" ? (
+              <Suspense fallback={<div className="app-loading">Loading Wrap Lab...</div>}>
+                <WrapLabApp embedded ribbonCommand={wrapRibbonCommand} onOpenCustomers={() => navigate("operations", "customers")} />
+              </Suspense>
             ) : (
               <ModulePage item={activeModule} onAction={showToast} />
             )}

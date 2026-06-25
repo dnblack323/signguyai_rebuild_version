@@ -66,6 +66,29 @@ class WrapLabApiTests(unittest.TestCase):
         self.assertEqual(result.status_code, 200)
         self.assertEqual(result.json()["quoteStatus"], "approved")
 
+    def test_customer_concept_feedback_action_persists(self):
+        payload = {
+            "id": "WRAP-API-3",
+            "businessName": "Apex",
+            "stage": "Design",
+            "stageIndex": 3,
+            "mockupStudio": {"concepts": [{"id": "concept-1", "sentToPortal": True, "customerSelected": False}]},
+        }
+        self.client.post("/api/wrap-lab/projects", json=payload)
+        result = self.client.post("/api/wrap-lab/projects/WRAP-API-3/actions", json={
+            "action": "customer_concept_feedback",
+            "payload": {
+                "conceptId": "concept-1",
+                "customerSelected": True,
+                "customerComment": "Use this direction",
+                "feedbackTags": ["Keep layout"],
+            },
+        })
+        self.assertEqual(result.status_code, 200)
+        concept = result.json()["mockupStudio"]["concepts"][0]
+        self.assertTrue(concept["customerSelected"])
+        self.assertEqual(concept["customerComment"], "Use this direction")
+
 
 if __name__ == "__main__":
     unittest.main()
