@@ -1,9 +1,9 @@
 from datetime import datetime
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
-from .base import utc_now
+from .base import PreviewEnvelope, utc_now
 
 
 WrapStage = Literal[
@@ -12,14 +12,12 @@ WrapStage = Literal[
 ]
 
 
-class WrapProjectPayload(BaseModel):
+class WrapProjectPayload(PreviewEnvelope):
     """Flexible domain envelope matching the complete Wrap Lab project record.
 
     The standalone prototype has a broad nested schema. Known workflow fields
     are typed here while extra fields remain round-trippable during migration.
     """
-
-    model_config = ConfigDict(extra="allow")
 
     id: str | None = None
     customerId: str = ""
@@ -50,8 +48,8 @@ class WrapProjectDocument(WrapProjectPayload):
     version: int = 1
 
 
-class WrapProjectPatch(BaseModel):
-    model_config = ConfigDict(extra="allow")
+class WrapProjectPatch(PreviewEnvelope):
+    pass
 
 
 class WrapFileUpload(BaseModel):

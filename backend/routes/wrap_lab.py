@@ -1,16 +1,18 @@
-from datetime import datetime, timezone
-
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 
 try:
     from ..core_runtime import get_database, get_tenant_id
     from ..models.wrap_lab import WrapFileUpload, WrapProjectPayload, WrapWorkflowAction
     from ..repositories.wrap_projects import WrapProjectRepository
+    from ..shared.dates import utc_now
+    from ..shared.ids import new_id
     from ..services.wrap_lab_service import apply_workflow_action, public_project
 except ImportError:
     from core_runtime import get_database, get_tenant_id
     from models.wrap_lab import WrapFileUpload, WrapProjectPayload, WrapWorkflowAction
     from repositories.wrap_projects import WrapProjectRepository
+    from shared.dates import utc_now
+    from shared.ids import new_id
     from services.wrap_lab_service import apply_workflow_action, public_project
 
 router = APIRouter(prefix="/wrap-lab", tags=["Wrap Lab"])
@@ -72,10 +74,12 @@ async def add_file(project_id: str, request: WrapFileUpload, tenant_id: str = De
     if not project:
         raise HTTPException(status_code=404, detail="Wrap project not found")
     files = list(project.get("files", []))
+    uploaded_at = utc_now()
     files.append({
         **request.model_dump(by_alias=True),
-        "id": f"file-{len(files) + 1}",
-        "date": datetime.now(timezone.utc).date().isoformat(),
+        "id": new_id(),
+        "uploaded_at": uploaded_at,
+        "date": uploaded_at.date().isoformat(),
     })
     return await repo.patch(tenant_id, project_id, {"files": files})
 

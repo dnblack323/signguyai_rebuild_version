@@ -1,7 +1,13 @@
-from datetime import datetime, timezone
-from uuid import uuid4
+from pymongo import ReturnDocument
 
-from pymongo import ASCENDING, DESCENDING, ReturnDocument
+try:
+    from ..shared.dates import utc_now
+    from ..shared.ids import new_id
+    from ..shared.indexes import ensure_collection_indexes
+except ImportError:
+    from shared.dates import utc_now
+    from shared.ids import new_id
+    from shared.indexes import ensure_collection_indexes
 
 
 class WrapProjectRepository:
@@ -9,8 +15,7 @@ class WrapProjectRepository:
         self.collection = database.wrap_projects
 
     async def ensure_indexes(self):
-        await self.collection.create_index([("tenant_id", ASCENDING), ("id", ASCENDING)], unique=True)
-        await self.collection.create_index([("tenant_id", ASCENDING), ("updated_at", DESCENDING)])
+        await ensure_collection_indexes(self.collection, "wrap_projects")
 
     async def list(self, tenant_id: str):
         return await self.collection.find(
@@ -23,10 +28,10 @@ class WrapProjectRepository:
         )
 
     async def create(self, tenant_id: str, project: dict):
-        now = datetime.now(timezone.utc)
+        now = utc_now()
         document = {
             **project,
-            "id": project.get("id") or f"WRAP-{now.year}-{str(uuid4())[:6].upper()}",
+            "id": project.get("id") or new_id(),
             "tenant_id": tenant_id,
             "created_at": now,
             "updated_at": now,
@@ -45,7 +50,7 @@ class WrapProjectRepository:
             "id": project_id,
             "tenant_id": tenant_id,
             "created_at": current["created_at"],
-            "updated_at": datetime.now(timezone.utc),
+            "updated_at": utc_now(),
             "version": int(current.get("version", 1)) + 1,
         }
         return await self.collection.find_one_and_replace(
@@ -57,7 +62,7 @@ class WrapProjectRepository:
 
     async def patch(self, tenant_id: str, project_id: str, fields: dict):
         fields = {k: v for k, v in fields.items() if k not in {"id", "tenant_id", "tenantId", "created_at", "createdAt"}}
-        fields["updated_at"] = datetime.now(timezone.utc)
+        fields["updated_at"] = utc_now()
         return await self.collection.find_one_and_update(
             {"tenant_id": tenant_id, "id": project_id},
             {"$set": fields, "$inc": {"version": 1}},

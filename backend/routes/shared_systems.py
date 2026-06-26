@@ -1,5 +1,3 @@
-from uuid import uuid4
-
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 try:
@@ -7,11 +5,13 @@ try:
     from ..models.base import utc_now
     from ..models.shared_systems import AIGeneratePayload, CommunityPostPayload, CommunityReplyPayload, NotePayload
     from ..repositories.shared_records import SharedRecordRepository
+    from ..shared.ids import new_id
 except ImportError:
     from core_runtime import get_database, get_tenant_id
     from models.base import utc_now
     from models.shared_systems import AIGeneratePayload, CommunityPostPayload, CommunityReplyPayload, NotePayload
     from repositories.shared_records import SharedRecordRepository
+    from shared.ids import new_id
 
 router = APIRouter(tags=["Shared Systems"])
 
@@ -99,7 +99,7 @@ async def reply_to_community_post(post_id: str, payload: CommunityReplyPayload, 
     if not post:
         raise HTTPException(status_code=404, detail="Community post not found")
     reply = payload.model_dump(exclude_none=True)
-    reply["id"] = reply.get("id") or f"REPLY-{str(uuid4())[:8].upper()}"
+    reply["id"] = reply.get("id") or new_id()
     replies = [*post.get("replies", []), reply]
     return await repo.update(tenant_id, post_id, {"replies": replies, "is_answered": any(row.get("is_official") for row in replies)})
 

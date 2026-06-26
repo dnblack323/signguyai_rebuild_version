@@ -1,11 +1,13 @@
-from uuid import uuid4
-
-from pymongo import ASCENDING, DESCENDING
+from pymongo import DESCENDING
 
 try:
     from ..models.base import utc_now
+    from ..shared.ids import new_id
+    from ..shared.indexes import ensure_collection_indexes
 except ImportError:
     from models.base import utc_now
+    from shared.ids import new_id
+    from shared.indexes import ensure_collection_indexes
 
 
 class SharedRecordRepository:
@@ -14,10 +16,7 @@ class SharedRecordRepository:
         self.id_prefix = id_prefix
 
     async def ensure_indexes(self):
-        await self.collection.create_index([("tenant_id", ASCENDING), ("id", ASCENDING)], unique=True)
-        await self.collection.create_index([("tenant_id", ASCENDING), ("created_at", DESCENDING)])
-        await self.collection.create_index([("tenant_id", ASCENDING), ("category", ASCENDING)])
-        await self.collection.create_index([("tenant_id", ASCENDING), ("status", ASCENDING)])
+        await ensure_collection_indexes(self.collection, self.collection.name)
 
     async def list(self, tenant_id: str, filters: dict | None = None, limit: int = 100) -> list[dict]:
         query = {"tenant_id": tenant_id, **(filters or {})}
@@ -32,7 +31,7 @@ class SharedRecordRepository:
         now = utc_now()
         document = {
             **payload,
-            "id": payload.get("id") or f"{self.id_prefix}-{str(uuid4())[:8].upper()}",
+            "id": payload.get("id") or new_id(),
             "tenant_id": tenant_id,
             "created_at": payload.get("created_at") or now,
             "updated_at": now,

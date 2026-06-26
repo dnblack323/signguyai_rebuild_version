@@ -1,14 +1,12 @@
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import Field
 
-from .base import utc_now
+from .base import PreviewEnvelope, utc_now
 
 
-class CommunityReplyPayload(BaseModel):
-    model_config = ConfigDict(extra="allow")
-
+class CommunityReplyPayload(PreviewEnvelope):
     id: str | None = None
     body: str
     author_name: str = "Shop Admin"
@@ -17,9 +15,7 @@ class CommunityReplyPayload(BaseModel):
     created_at: datetime = Field(default_factory=utc_now)
 
 
-class CommunityPostPayload(BaseModel):
-    model_config = ConfigDict(extra="allow")
-
+class CommunityPostPayload(PreviewEnvelope):
     id: str | None = None
     title: str
     body: str
@@ -36,9 +32,7 @@ class CommunityPostPayload(BaseModel):
     linked_record_id: str = ""
 
 
-class NotePayload(BaseModel):
-    model_config = ConfigDict(extra="allow")
-
+class NotePayload(PreviewEnvelope):
     id: str | None = None
     title: str
     body: str = ""
@@ -56,9 +50,7 @@ class NotePayload(BaseModel):
     created_by: str = "Shop Admin"
 
 
-class AIGeneratePayload(BaseModel):
-    model_config = ConfigDict(extra="allow")
-
+class AIGeneratePayload(PreviewEnvelope):
     tool_id: str
     input_data: dict[str, Any] = Field(default_factory=dict)
     customer_id: str = ""
