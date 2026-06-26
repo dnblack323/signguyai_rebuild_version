@@ -28,6 +28,9 @@ import {
 import { AppRibbon } from "./components/ribbon/AppRibbon";
 import { CustomersWorkspace } from "./components/customers/CustomersWorkspace";
 import { Dashboard } from "./components/dashboard/Dashboard";
+import { AISuiteWorkspace } from "./components/shared/AISuiteWorkspace";
+import { CommunityWorkspace } from "./components/shared/CommunityWorkspace";
+import { NotesWorkspace } from "./components/shared/NotesWorkspace";
 import { StandaloneWebstoresShell, WebstoresWorkspace } from "./components/webstores/WebstoresWorkspace";
 import { api } from "./lib/api";
 
@@ -134,6 +137,14 @@ function App() {
               <WebstoresWorkspace onToast={showToast} />
             ) : module === "customers" ? (
               <CustomersWorkspace onToast={showToast} onNavigate={navigate} />
+            ) : module === "community" ? (
+              <CommunityWorkspace onToast={showToast} />
+            ) : module === "notes" ? (
+              <NotesWorkspace onToast={showToast} />
+            ) : module === "assistant" ? (
+              <AISuiteWorkspace assistantOnly onToast={showToast} />
+            ) : module === "ai-suite" ? (
+              <AISuiteWorkspace onToast={showToast} />
             ) : module === "wraps" ? (
               <Suspense fallback={<div className="app-loading">Loading Wrap Lab...</div>}>
                 <WrapLabApp embedded ribbonCommand={wrapRibbonCommand} onOpenCustomers={() => navigate("operations", "customers")} />

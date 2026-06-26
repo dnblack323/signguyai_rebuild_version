@@ -18,6 +18,7 @@ This release establishes the controlling application shell and first structural 
 - Add-ons section with Sell It! and Wrap It!
 - Settings workspace
 - Help workspace
+- Community Hub, shared notes, and AI Suite transfer previews
 - Final Order Item and Work Order Summary terminology
 - Order Portal Manager standalone-first expansion track
 - Always-available portal management with separately gated publishing and shopping cart/checkout
@@ -50,6 +51,7 @@ uvicorn main:app --reload --port 8000
 The backend health endpoint is `http://localhost:8000/api/health` for direct backend development. The bundled local review launcher uses port `8001`.
 The dashboard digest contract is `/api/digest`.
 The temporary compatibility capability contract is `/api/webstores/capabilities`.
+The transferred shared-system contracts include `/api/community/posts`, `/api/notes`, and `/api/ai/tools`.
 
 ## Wrap It!
 
