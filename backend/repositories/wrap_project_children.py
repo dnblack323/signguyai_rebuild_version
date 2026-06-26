@@ -22,6 +22,12 @@ WRAP_CHILD_ARRAY_FIELDS: tuple[str, ...] = (
     "chatHistory",
 )
 
+MOCKUP_STUDIO_CHILD_FIELDS: tuple[str, ...] = (
+    "assets",
+    "concepts",
+    "activity",
+)
+
 
 class WrapProjectChildRepository:
     """Normalized child records for unbounded Wrap Lab project arrays."""
@@ -134,11 +140,19 @@ class WrapProjectChildRepository:
             value = parent.pop(field, None)
             if isinstance(value, list):
                 children[field] = [dict(row) for row in value if isinstance(row, dict)]
+        studio = parent.get("mockupStudio")
+        if isinstance(studio, dict):
+            studio_parent = dict(studio)
+            for field in MOCKUP_STUDIO_CHILD_FIELDS:
+                value = studio_parent.pop(field, None)
+                if isinstance(value, list):
+                    children[f"mockupStudio.{field}"] = [dict(row) for row in value if isinstance(row, dict)]
+            parent["mockupStudio"] = studio_parent
         return parent, children
 
     def attach_children(self, project: dict[str, Any], children: list[dict]) -> dict:
         hydrated = dict(project)
-        grouped = {field: [] for field in WRAP_CHILD_ARRAY_FIELDS}
+        grouped = {field: [] for field in (*WRAP_CHILD_ARRAY_FIELDS, *(f"mockupStudio.{field}" for field in MOCKUP_STUDIO_CHILD_FIELDS))}
         seen_types: set[str] = set()
         for child in children:
             record_type = child.get("record_type")
@@ -150,4 +164,11 @@ class WrapProjectChildRepository:
                 hydrated[field] = grouped[field]
             elif field not in hydrated:
                 hydrated[field] = []
+        if any(f"mockupStudio.{field}" in seen_types for field in MOCKUP_STUDIO_CHILD_FIELDS):
+            studio = dict(hydrated.get("mockupStudio") or {})
+            for field in MOCKUP_STUDIO_CHILD_FIELDS:
+                studio[field] = grouped[f"mockupStudio.{field}"]
+            hydrated["mockupStudio"] = studio
+        elif "mockupStudio" not in hydrated:
+            hydrated["mockupStudio"] = None
         return hydrated

@@ -475,6 +475,48 @@ h1, h2 { font-family: Manrope, sans-serif; color: #172033; }
 .ai-actions { display: flex; gap: 8px; }
 .ai-response { white-space: pre-wrap; margin: 0; border: 1px solid var(--border); border-radius: 10px; background: #f8fafc; color: #263246; padding: 14px; font: 12px/1.55 "DM Sans"; }
 
+.doculink-workspace { display: flex; flex-direction: column; gap: 14px; }
+.doculink-hero { border: 1px solid var(--border); border-radius: 13px; background: linear-gradient(135deg, #ffffff, #eefaf8); padding: 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.doculink-hero span { color: var(--teal-dark); font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
+.doculink-hero h1 { margin: 3px 0 5px; font-size: 26px; }
+.doculink-hero p { margin: 0; color: var(--muted); font-size: 12px; max-width: 740px; line-height: 1.5; }
+.doculink-hero label.primary-button { cursor: pointer; white-space: nowrap; }
+.doculink-tabs { display: flex; flex-wrap: wrap; gap: 7px; }
+.doculink-tabs button { border: 1px solid var(--border); border-radius: 999px; background: white; color: #526074; padding: 8px 11px; font-size: 11px; font-weight: 800; }
+.doculink-tabs button.active, .doculink-tabs button:hover { border-color: #9ccbc7; background: #e9f7f5; color: var(--teal-dark); }
+.doculink-filters { display: grid; grid-template-columns: minmax(240px, 1fr) 160px 160px auto; gap: 9px; }
+.doculink-filters label { display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); border-radius: 9px; background: white; padding: 0 11px; color: var(--muted); }
+.doculink-filters input, .doculink-filters select, .doculink-card input, .doculink-card select { width: 100%; border: 1px solid var(--border); border-radius: 8px; background: white; color: #172033; padding: 10px; font: inherit; font-size: 12px; outline: 0; }
+.doculink-filters label input { border: 0; padding-left: 0; }
+.doculink-filters button { border: 1px solid #b9d9d6; border-radius: 8px; background: white; color: var(--teal-dark); padding: 9px 12px; font-weight: 800; }
+.doculink-grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(310px, .75fr); gap: 14px; align-items: start; }
+.doculink-panel, .doculink-card { border: 1px solid var(--border); border-radius: 12px; background: white; }
+.doculink-panel { overflow: hidden; }
+.doculink-panel-title { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #edf0f4; padding: 14px 16px; }
+.doculink-panel-title h2, .doculink-card h2 { margin: 0; font-size: 14px; }
+.doculink-panel-title span { color: var(--muted); font-size: 10px; font-weight: 800; }
+.doculink-list { display: flex; flex-direction: column; padding: 8px; gap: 7px; }
+.doculink-list button, .doculink-list a { width: 100%; border: 1px solid #edf0f4; border-radius: 9px; background: #fbfcfd; color: #526074; padding: 11px; display: grid; grid-template-columns: auto 1fr auto; gap: 9px; align-items: center; text-align: left; text-decoration: none; }
+.doculink-list button:hover, .doculink-list button.active, .doculink-list a:hover { border-color: #9ccbc7; background: #eef9f7; color: var(--teal-dark); }
+.doculink-list strong { display: block; color: #263246; font-size: 12px; }
+.doculink-list small { display: block; color: var(--muted); font-size: 10px; margin-top: 2px; }
+.doculink-side { display: flex; flex-direction: column; gap: 12px; }
+.doculink-card { padding: 14px; display: flex; flex-direction: column; gap: 9px; }
+.doculink-card p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
+.doculink-card p strong { color: #263246; margin-right: 6px; }
+.doculink-card p small { display: block; color: #8b96a7; margin-top: 2px; }
+.doculink-detail { display: flex; flex-direction: column; gap: 7px; }
+.doculink-detail > strong { color: #263246; font-size: 13px; }
+.doculink-detail > span { color: #8b96a7; font-size: 9px; word-break: break-all; }
+.doculink-detail p { display: flex; align-items: center; gap: 5px; }
+.doculink-detail em { border-radius: 999px; background: #fff7ed; color: #b45309; padding: 4px 6px; font-size: 8px; font-style: normal; font-weight: 800; }
+.doculink-actions { display: flex; flex-wrap: wrap; gap: 7px; }
+.doculink-actions button { border: 1px solid var(--border); border-radius: 8px; background: white; color: #405064; padding: 8px 9px; display: flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 800; }
+.doculink-actions button:hover { border-color: #9ccbc7; color: var(--teal-dark); }
+.doculink-empty { min-height: 260px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 7px; color: #8190a3; padding: 26px; }
+.doculink-empty h2 { margin: 0; font-size: 15px; }
+.doculink-empty p { margin: 0; max-width: 460px; color: var(--muted); font-size: 11px; line-height: 1.5; }
+
 /* Day 1 dashboard specification */
 .compact-heading { margin-bottom: 17px; }
 .dashboard-kpi-strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 16px; }

@@ -31,6 +31,7 @@ import { Dashboard } from "./components/dashboard/Dashboard";
 import { AISuiteWorkspace } from "./components/shared/AISuiteWorkspace";
 import { CommunityWorkspace } from "./components/shared/CommunityWorkspace";
 import { NotesWorkspace } from "./components/shared/NotesWorkspace";
+import { DocuLinkWorkspace } from "./components/doculink/DocuLinkWorkspace";
 import { StandaloneWebstoresShell, WebstoresWorkspace } from "./components/webstores/WebstoresWorkspace";
 import { api } from "./lib/api";
 
@@ -137,6 +138,8 @@ function App() {
               <WebstoresWorkspace onToast={showToast} />
             ) : module === "customers" ? (
               <CustomersWorkspace onToast={showToast} onNavigate={navigate} />
+            ) : module === "documents" ? (
+              <DocuLinkWorkspace onToast={showToast} />
             ) : module === "community" ? (
               <CommunityWorkspace onToast={showToast} />
             ) : module === "notes" ? (

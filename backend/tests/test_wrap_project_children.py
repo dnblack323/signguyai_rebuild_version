@@ -13,21 +13,30 @@ class WrapProjectChildNormalizationTests(unittest.TestCase):
             "files": [{"id": "file-1", "name": "before.jpg"}],
             "proofs": [{"id": "proof-1", "status": "Pending"}],
             "chatHistory": [{"id": "msg-1", "text": "hello"}],
+            "mockupStudio": {
+                "settings": {"count": 3},
+                "assets": [{"id": "asset-1", "name": "logo.ai"}],
+                "concepts": [{"id": "concept-1", "title": "Bold Motion"}],
+                "activity": [{"message": "Concept generated"}],
+            },
         })
-        self.assertEqual(parent, {"id": "WRAP-1", "businessName": "Apex"})
-        self.assertEqual(set(children), {"files", "proofs", "chatHistory"})
+        self.assertEqual(parent, {"id": "WRAP-1", "businessName": "Apex", "mockupStudio": {"settings": {"count": 3}}})
+        self.assertEqual(set(children), {"files", "proofs", "chatHistory", "mockupStudio.assets", "mockupStudio.concepts", "mockupStudio.activity"})
 
     def test_attach_children_restores_frontend_compatible_arrays(self):
         repo = WrapProjectChildRepository.__new__(WrapProjectChildRepository)
         hydrated = repo.attach_children(
-            {"id": "WRAP-1", "businessName": "Apex"},
+            {"id": "WRAP-1", "businessName": "Apex", "mockupStudio": {"settings": {"count": 3}}},
             [
                 {"record_type": "files", "payload": {"id": "file-1", "name": "before.jpg"}},
                 {"record_type": "chatHistory", "payload": {"id": "msg-1", "text": "hello"}},
+                {"record_type": "mockupStudio.concepts", "payload": {"id": "concept-1", "title": "Bold Motion"}},
             ],
         )
         self.assertEqual(hydrated["files"][0]["name"], "before.jpg")
         self.assertEqual(hydrated["chatHistory"][0]["text"], "hello")
+        self.assertEqual(hydrated["mockupStudio"]["concepts"][0]["title"], "Bold Motion")
+        self.assertEqual(hydrated["mockupStudio"]["settings"], {"count": 3})
         for field in WRAP_CHILD_ARRAY_FIELDS:
             self.assertIn(field, hydrated)
 

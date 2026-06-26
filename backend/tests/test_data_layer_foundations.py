@@ -33,7 +33,7 @@ class DataLayerFoundationTests(unittest.TestCase):
             to_minor_units(12.34)
 
     def test_manifest_declares_tenant_id_unique_index_for_current_collections(self):
-        for collection_name in ["customers", "wrap_projects", "community_posts", "shared_notes", "ai_responses"]:
+        for collection_name in ["customers", "customer_child_records", "wrap_projects", "wrap_project_child_records", "shared_record_child_records", "community_posts", "shared_notes", "ai_responses"]:
             indexes = collection_indexes(collection_name)
             self.assertIn(TENANT_ID_INDEX, indexes)
             self.assertIn(collection_name, INDEX_MANIFEST)
