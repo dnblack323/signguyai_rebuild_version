@@ -34,8 +34,8 @@ export function CustomersWorkspace({ onToast, onNavigate }) {
     <div className="customers-workspace">
       <section className="customers-toolbar">
         <div>
-          <h1>Customers</h1>
-          <p>Shared customer records used by Wrap Lab, orders, quotes, webstores, and future modules.</p>
+          <h2>Shared customer records</h2>
+          <p>Used by Wrap It!, orders, quotes, Sell It!, and future modules.</p>
         </div>
         <span className={`backend-status ${connection}`}><i />{connection === "connected" ? "Mongo customers" : connection === "offline" ? "Local customers" : "Checking"}</span>
         <button className="primary-button" onClick={() => setDraftOpen(true)}><Plus size={16} />New customer</button>
@@ -51,13 +51,13 @@ export function CustomersWorkspace({ onToast, onNavigate }) {
             <div>
               <h3>{customerDisplayName(customer)}</h3>
               <p>{customer.firstName || customer.lastName ? `${customer.firstName || ""} ${customer.lastName || ""}`.trim() : "Primary contact not set"}</p>
-              <span>{customer.email || "No email"} · {customer.phone || "No phone"}</span>
+              <span>{customer.email || "No email"} - {customer.phone || "No phone"}</span>
             </div>
             <dl>
               <div><dt>Open work</dt><dd>{customer.openOrders || 0}</dd></div>
               <div><dt>Lifetime</dt><dd>{new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(customer.lifetimeValue || 0)}</dd></div>
             </dl>
-            <button onClick={() => onNavigate?.("operations", "wraps")}>Open in Wrap Center<ChevronRight size={15} /></button>
+            <button onClick={() => onNavigate?.("operations", "wraps")}>Open in Wrap It!<ChevronRight size={15} /></button>
           </article>
         ))}
       </section>

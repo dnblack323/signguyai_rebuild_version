@@ -8,8 +8,18 @@ def get_health():
 
 def get_release():
     return {
-        "name": "Webstores Foundation Preview",
-        "workspaces": ["operations", "business", "productivity", "ai-hub", "settings"],
+        "name": "SignGuy AI Rebuild Preview",
+        "workspaces": [
+            "home",
+            "operations",
+            "business-management",
+            "team",
+            "tools",
+            "sell-it",
+            "wrap-it",
+            "settings",
+            "help",
+        ],
         "active_capabilities": [
             "reusable-action-ribbon",
             "single-call-dashboard-digest",
@@ -17,8 +27,8 @@ def get_release():
             "global-create",
             "notifications",
             "module-registry",
-            "webstores-management",
-            "webstores-entitlement-gates",
-            "webstores-standalone-shell",
+            "sell-it-management",
+            "wrap-it-management",
+            "add-on-shell",
         ],
     }

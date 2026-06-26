@@ -10,12 +10,14 @@ This release establishes the controlling application shell and first structural 
 - Notifications
 - Reusable office-style action ribbon with grouped page actions
 - Day 1 specified dashboard KPI and snapshot layout
+- Home workspace
 - Operations workspace
-- Business workspace
-- Productivity workspace
-- AI Hub
+- Business Management workspace
+- Team workspace
+- Tools workspace
+- Add-ons section with Sell It! and Wrap It!
 - Settings workspace
-- Full Help menu accessed through the `?` icon
+- Help workspace
 - Final Order Item and Work Order Summary terminology
 - Order Portal Manager standalone-first expansion track
 - Always-available portal management with separately gated publishing and shopping cart/checkout
@@ -49,9 +51,9 @@ The backend health endpoint is `http://localhost:8000/api/health` for direct bac
 The dashboard digest contract is `/api/digest`.
 The temporary compatibility capability contract is `/api/webstores/capabilities`.
 
-## Wrap Lab
+## Wrap It!
 
-Wrap Center opens the React Wrap Lab workspace. Its dashboard, project command center, pricing,
+Wrap It! opens the React Wrap Lab workspace. Its dashboard, project command center, pricing,
 design/proofing, damage inspection, production, installation, files, communication, customer
 portal, and AI mockup studio are backed by `/api/wrap-lab`.
 

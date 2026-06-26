@@ -15,12 +15,14 @@ import {
 } from "lucide-react";
 import {
   addons,
+  moduleChildren,
   moduleDetails,
   modules,
   notifications,
   quickCreate,
   searchRecords,
   statusLabels,
+  utilityWorkspaces,
   workspaces,
 } from "./data";
 import { AppRibbon } from "./components/ribbon/AppRibbon";
@@ -47,7 +49,8 @@ function App() {
   const [backendStatus, setBackendStatus] = useState("checking");
   const [wrapRibbonCommand, setWrapRibbonCommand] = useState(null);
 
-  const workspaceInfo = workspace === "home" ? { label: "Home" } : workspaces.find((item) => item.id === workspace);
+  const allWorkspaces = [...workspaces, ...utilityWorkspaces];
+  const workspaceInfo = workspace === "home" ? { label: "Home" } : allWorkspaces.find((item) => item.id === workspace);
   const activeAddon = addons.find((item) => item.workspace === workspace && item.module === module);
   const activeModule = workspace === "home"
     ? null
@@ -118,9 +121,9 @@ function App() {
           helpOpen={helpOpen}
           backendStatus={backendStatus}
         />
+        <SectionBanner workspace={workspaceInfo} module={module} activeModule={activeModule} />
         {workspace !== "home" && <ModuleNav workspace={workspace} module={module} onSelect={(id) => setModule(id)} />}
         <AppRibbon isDashboard={workspace === "home" && module === "dashboard"} module={module} onNavigate={navigate} onAction={handleRibbonAction} />
-        <SectionBanner workspace={workspaceInfo} module={module} activeModule={activeModule} />
         <div className="content-shell">
           <main className="main-content">
             {workspace === "home" && module === "dashboard" ? (
@@ -203,6 +206,14 @@ function WorkspaceRail({ workspace, module, onSelect, onNavigate }) {
           </button>
         ))}
       </div>
+      <div className="rail-addons rail-utilities">
+        {utilityWorkspaces.map(({ id, label, icon: Icon }) => (
+          <button key={id} className={workspace === id ? "active" : ""} onClick={() => onNavigate(id, "dashboard")} aria-label={label} data-tooltip={label}>
+            <Icon size={19} />
+            <span>{label}</span>
+          </button>
+        ))}
+      </div>
       <div className="rail-bottom">
         <div className="user-avatar">BN</div>
       </div>
@@ -233,15 +244,21 @@ function TopBar({ onSearch, onCreate, onNotifications, onHelp, onMenu, notificat
 }
 
 function WorkspaceDashboard({ workspace }) {
+  const workspaceModules = modules[workspace.id] || [];
   return (
     <div className="module-page">
-      <section className="page-heading compact-heading">
-        <div><h1>{workspace.label} Dashboard</h1><p>Contextual workspace summary. The global command center remains under the Home icon.</p></div>
-      </section>
-      <section className="empty-workspace">
-        <LayoutDashboard size={28} />
-        <h2>{workspace.label} dashboard foundation</h2>
-        <p>This dashboard will use the shared shell and digest pattern while showing only {workspace.label.toLowerCase()}-specific actions and cards.</p>
+      <section className="workspace-overview-grid">
+        {workspaceModules.map(([id, label, Icon, status]) => {
+          const detail = moduleDetails[id];
+          return (
+            <article className="workspace-overview-card" key={id}>
+              <div className="module-icon small"><Icon size={20} /></div>
+              <span className={`status ${statusTone[status]}`}>{statusLabels[status]}</span>
+              <h2>{label}</h2>
+              <p>{detail?.description || `${label} workspace`}</p>
+            </article>
+          );
+        })}
       </section>
     </div>
   );
@@ -274,14 +291,35 @@ function ModulePage({ item, onAction }) {
     : id === "production"
       ? ["Production Board", "Work Orders", "Shop Schedule"]
       : [];
+  const childGroups = moduleChildren[id] || [];
 
   return (
     <div className="module-page">
       <section className="module-hero">
         <div className="module-icon"><Icon size={26} /></div>
-        <div><div className={`status ${statusTone[status]}`}>{statusLabels[status]}</div><h1>{detail.title}</h1><p>{detail.description}</p></div>
+        <div><div className={`status ${statusTone[status]}`}>{statusLabels[status]}</div><h2>{detail.title}</h2><p>{detail.description}</p></div>
         <button className="primary-button" onClick={() => onAction(`${detail.action} selected`)}>{detail.action}<ChevronRight size={16} /></button>
       </section>
+      {childGroups.length > 0 && (
+        <section className="module-substructure">
+          <div className="module-substructure-heading">
+            <span>Page sections</span>
+            <strong>{label} structure</strong>
+          </div>
+          <div className="module-section-grid">
+            {childGroups.map((group) => (
+              <article key={group.label}>
+                <h3>{group.label}</h3>
+                {group.children?.length ? (
+                  <div>{group.children.map((child) => <button key={child} onClick={() => onAction(`${child} selected`)}>{child}<ChevronRight size={14} /></button>)}</div>
+                ) : (
+                  <button onClick={() => onAction(`${group.label} selected`)}>Open {group.label}<ChevronRight size={14} /></button>
+                )}
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
       <section className="module-summary">
         <div><span>Current state</span><strong>{detail.metric}</strong><p>{status === "planned" ? "This module shell establishes navigation, permissions, route ownership, and target behavior before implementation." : "This preview demonstrates the intended module location and interaction pattern."}</p></div>
         <div className="scope-list"><h2>Target capability</h2>{["Stable workspace location", "Permission-filtered actions", "Shared notes and activity", "Global search registration", "Contextual documentation"].map((text) => <p key={text}><Check size={15} />{text}</p>)}</div>
@@ -319,7 +357,7 @@ function SearchPalette({ query, setQuery, onClose, onNavigate }) {
 function CreatePalette({ onClose, onNavigate, onToast }) {
   return (
     <ModalShell onClose={onClose}>
-      <div className="create-palette"><div className="modal-heading"><div><h2>Create</h2><p>Start common work from anywhere.</p></div><button onClick={onClose}><X size={18} /></button></div><div className="create-grid">{quickCreate.map(([label, workspace, module, Icon], index) => <button key={label} onClick={() => { index < 6 ? onNavigate(workspace, module) : onToast(`${label} will activate in a later release`); onClose(); }}><Icon size={20} /><span><strong>{label}</strong><small>{index < 6 ? "Available in preview" : "Coming soon"}</small></span><ChevronRight size={15} /></button>)}</div></div>
+      <div className="create-palette"><div className="modal-heading"><div><h2>Create</h2><p>Start common work from anywhere.</p></div><button onClick={onClose}><X size={18} /></button></div><div className="create-grid">{quickCreate.map(([label, workspace, module, Icon]) => <button key={label} onClick={() => { onNavigate(workspace, module); onClose(); }}><Icon size={20} /><span><strong>{label}</strong><small>Available in preview</small></span><ChevronRight size={15} /></button>)}</div></div>
     </ModalShell>
   );
 }
@@ -332,11 +370,8 @@ const helpLinks = [
   ["Current page tips", "documentation"],
   ["Documentation", "documentation"],
   ["Onboarding", "onboarding"],
-  ["Contact support", "help"],
-  ["Report a bug", "bug-reports"],
-  ["Request a feature", "feature-requests"],
-  ["Roadmap", "roadmap"],
-  ["Release notes", "release-notes"],
+  ["Contact support", "help-center"],
+  ["Community", "community"],
 ];
 
 function HelpPanel({ onClose, onNavigate }) {
@@ -344,13 +379,13 @@ function HelpPanel({ onClose, onNavigate }) {
     <aside className="help-panel">
       <div className="modal-heading"><div><h2>Help</h2><p>Guidance and support without taking navigation space</p></div><button onClick={onClose}><X size={18} /></button></div>
       <div className="page-tip"><HelpCircle size={18} /><span><strong>Current page tip</strong><small>Use the ribbon for page actions, the left rail for major workspaces, and global search to find records.</small></span></div>
-      {helpLinks.map(([label, moduleId]) => <button key={label} onClick={() => { onNavigate("ai-hub", moduleId); onClose(); }}><span>{label}</span><ChevronRight size={15} /></button>)}
+      {helpLinks.map(([label, moduleId]) => <button key={label} onClick={() => { onNavigate("help", moduleId); onClose(); }}><span>{label}</span><ChevronRight size={15} /></button>)}
     </aside>
   );
 }
 
 function MobileNavigation({ workspace, module, onClose, onNavigate }) {
-  return <div className="mobile-nav"><div className="modal-heading"><strong>SignGuyAI</strong><button onClick={onClose}><X size={19} /></button></div><button className={workspace === "home" ? "workspace-mobile active" : "workspace-mobile"} onClick={() => onNavigate("home", "dashboard")}><Home size={18} />Home / Command Center</button>{workspaces.map(({ id, label, icon: Icon }) => <div key={id}><button className={workspace === id ? "workspace-mobile active" : "workspace-mobile"} onClick={() => onNavigate(id, "dashboard")}><Icon size={18} />{label}</button>{workspace === id && modules[id].map(([moduleId, moduleLabel]) => <button className={module === moduleId ? "module-mobile active" : "module-mobile"} key={moduleId} onClick={() => onNavigate(id, moduleId)}>{moduleLabel}</button>)}</div>)}<p className="mobile-addon-label">Add-ons</p>{addons.map(({ id, label, icon: Icon, workspace: addonWorkspace, module: addonModule }) => <button key={id} className={module === addonModule ? "workspace-mobile active" : "workspace-mobile"} onClick={() => onNavigate(addonWorkspace, addonModule)}><Icon size={18} />{label}</button>)}</div>;
+  return <div className="mobile-nav"><div className="modal-heading"><strong>SignGuyAI</strong><button onClick={onClose}><X size={19} /></button></div><button className={workspace === "home" ? "workspace-mobile active" : "workspace-mobile"} onClick={() => onNavigate("home", "dashboard")}><Home size={18} />Home / Command Center</button>{workspaces.map(({ id, label, icon: Icon }) => <div key={id}><button className={workspace === id ? "workspace-mobile active" : "workspace-mobile"} onClick={() => onNavigate(id, "dashboard")}><Icon size={18} />{label}</button>{workspace === id && modules[id].map(([moduleId, moduleLabel]) => <button className={module === moduleId ? "module-mobile active" : "module-mobile"} key={moduleId} onClick={() => onNavigate(id, moduleId)}>{moduleLabel}</button>)}</div>)}<p className="mobile-addon-label">Add-ons</p>{addons.map(({ id, label, icon: Icon, workspace: addonWorkspace, module: addonModule }) => <button key={id} className={module === addonModule ? "workspace-mobile active" : "workspace-mobile"} onClick={() => onNavigate(addonWorkspace, addonModule)}><Icon size={18} />{label}</button>)}<p className="mobile-addon-label">Account</p>{utilityWorkspaces.map(({ id, label, icon: Icon }) => <div key={id}><button className={workspace === id ? "workspace-mobile active" : "workspace-mobile"} onClick={() => onNavigate(id, "dashboard")}><Icon size={18} />{label}</button>{workspace === id && modules[id].map(([moduleId, moduleLabel]) => <button className={module === moduleId ? "module-mobile active" : "module-mobile"} key={moduleId} onClick={() => onNavigate(id, moduleId)}>{moduleLabel}</button>)}</div>)}</div>;
 }
 
 function ModalShell({ children, onClose }) {

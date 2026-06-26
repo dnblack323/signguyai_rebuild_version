@@ -26,25 +26,25 @@ const dashboardGroups = [
       ["New Order", ShoppingBag, "operations", "orders"],
       ["New Quote", FilePlus2, "operations", "quotes"],
       ["New Customer", UserPlus, "operations", "customers"],
-      ["Pricing Calc", Calculator, "business", "pricing-calculator"],
+      ["Calculator", Calculator, "tools", "calculators"],
     ],
   },
   {
     label: "Customer",
     actions: [
-      ["Send Proof", Send, "operations", "approvals"],
-      ["Request Approval", FileCheck2, "operations", "approvals"],
-      ["Send Document", FileText, "operations", "artwork"],
-      ["New Invoice", ReceiptText, "business", "invoices"],
+      ["Send Proof", Send, "operations", "asset-library"],
+      ["Request Approval", FileCheck2, "operations", "asset-library"],
+      ["Send Document", FileText, "operations", "asset-library"],
+      ["New Invoice", ReceiptText, "business-management", "billing"],
     ],
   },
   {
     label: "Workflow",
     actions: [
-      ["Send Email", Mail, "productivity", "messages"],
-      ["New Task", CheckSquare, "productivity", "tasks"],
+      ["Send Message", Mail, "team", "messaging"],
+      ["Production Tracking", CheckSquare, "team", "production-tracking"],
       ["Schedule Install", CalendarDays, "operations", "production"],
-      ["Open Calendar", CalendarDays, "productivity", "calendar"],
+      ["Team Schedule", CalendarDays, "team", "team-schedule"],
     ],
   },
 ];

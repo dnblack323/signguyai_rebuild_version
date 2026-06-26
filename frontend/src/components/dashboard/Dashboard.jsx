@@ -81,7 +81,7 @@ export function Dashboard({ onNavigate }) {
           <PanelTitle title="Shop health" action="Reports" />
           <HealthRow label="On-time delivery" value="92%" status="Healthy" tone="green" />
           <HealthRow label="Average margin" value="44%" status="On target" tone="teal" />
-          <HealthRow label="Low stock" value="—" status="Coming soon" tone="gray" onClick={() => onNavigate("business", "inventory")} />
+          <HealthRow label="Low stock" value="—" status="Coming soon" tone="gray" onClick={() => onNavigate("business-management", "materials")} />
           <HealthRow label="Unread messages" value="7" status="Needs review" tone="amber" />
         </section>
 
@@ -90,7 +90,7 @@ export function Dashboard({ onNavigate }) {
           <div className="onboarding-progress"><span><strong>4 of 7</strong><small>setup steps complete</small></span><b>57%</b></div>
           <div className="progress-track"><span /></div>
           {["Company profile", "Pricing Foundation", "Production stages"].map((item) => <p key={item}><CheckCircle2 size={14} />{item}</p>)}
-          <button onClick={() => onNavigate("ai-hub", "onboarding")}>Continue setup<ChevronRight size={14} /></button>
+          <button onClick={() => onNavigate("help", "onboarding")}>Continue setup<ChevronRight size={14} /></button>
         </section>
 
         <section className="panel recent-orders span-two">
@@ -98,7 +98,7 @@ export function Dashboard({ onNavigate }) {
           <div className="table-head"><span>Order</span><span>Stage</span><span>Due</span></div>
           {orders.slice(0, 3).map((order) => (
             <button className="order-row" key={order.id} onClick={() => onNavigate("operations", "orders")}>
-              <span><strong>{order.id}</strong><small>{order.customer} · {order.item}</small></span>
+              <span><strong>{order.id}</strong><small>{order.customer} - {order.item}</small></span>
               <span className={`tag ${order.tone}`}>{order.stage}</span>
               <span className={order.due === "Today" ? "due-today" : ""}>{order.due}</span>
             </button>
@@ -107,9 +107,9 @@ export function Dashboard({ onNavigate }) {
 
         <section className="panel future-signals">
           <PanelTitle title="Future signals" />
-          <FutureRow icon={Boxes} title="Inventory alerts" detail="Activates with Inventory" onClick={() => onNavigate("business", "inventory")} />
-          <FutureRow icon={Bot} title="AI suggestions" detail="Activates with AI Assistant" onClick={() => onNavigate("ai-hub", "assistant")} />
-          <FutureRow icon={ClipboardCheck} title="Material shortages" detail="Activates with work order materials" onClick={() => onNavigate("business", "purchasing")} />
+          <FutureRow icon={Boxes} title="Inventory alerts" detail="Activates with Materials" onClick={() => onNavigate("business-management", "materials")} />
+          <FutureRow icon={Bot} title="AI suggestions" detail="Activates with Assistant" onClick={() => onNavigate("tools", "assistant")} />
+          <FutureRow icon={ClipboardCheck} title="Material shortages" detail="Activates with work order materials" onClick={() => onNavigate("business-management", "materials")} />
         </section>
       </div>
     </div>
