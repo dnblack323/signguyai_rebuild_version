@@ -17,7 +17,7 @@ except ImportError:
 
 
 orders_router = APIRouter(prefix="/orders", tags=["Orders"])
-items_router = APIRouter(prefix="/job-tickets", tags=["Order Items"])
+items_router = APIRouter(prefix="/order-items", tags=["Order Items"])
 
 
 def repository() -> OrdersRepository:
@@ -121,7 +121,7 @@ async def order_financials(order_id: str, tenant_id: str = Depends(get_tenant_id
         "order_id": order_id,
         "estimated_total_minor": order.get("estimated_total_minor", 0),
         "payment_status": order.get("payment_status", "unpaid"),
-        "item_count": order.get("job_ticket_count", 0),
+        "item_count": order.get("order_item_count", 0),
         "quote_draft_count": len(quote_drafts),
         "latest_quote_draft": quote_drafts[0] if quote_drafts else None,
         "invoice_draft_count": len(invoice_drafts),
@@ -215,14 +215,14 @@ async def start_production(order_id: str, tenant_id: str = Depends(get_tenant_id
 
 
 @items_router.get("")
-async def list_job_tickets(tenant_id: str = Depends(get_tenant_id), order_id: str = "", category: str = ""):
+async def list_order_items_direct(tenant_id: str = Depends(get_tenant_id), order_id: str = "", category: str = ""):
     repo = repository()
     await repo.ensure_indexes()
     return await repo.list_items(tenant_id, order_id=order_id, category=category)
 
 
 @items_router.post("", status_code=status.HTTP_201_CREATED)
-async def create_job_ticket(payload: OrderItemPayload, tenant_id: str = Depends(get_tenant_id)):
+async def create_order_item_direct(payload: OrderItemPayload, tenant_id: str = Depends(get_tenant_id)):
     repo = repository()
     await repo.ensure_indexes()
     try:
@@ -237,7 +237,7 @@ async def get_category_schema(category: str):
 
 
 @items_router.get("/{item_id}")
-async def get_job_ticket(item_id: str, tenant_id: str = Depends(get_tenant_id)):
+async def get_order_item(item_id: str, tenant_id: str = Depends(get_tenant_id)):
     item = await repository().get_item(tenant_id, item_id)
     if not item:
         raise HTTPException(status_code=404, detail="Order item not found")
@@ -245,7 +245,7 @@ async def get_job_ticket(item_id: str, tenant_id: str = Depends(get_tenant_id)):
 
 
 @items_router.put("/{item_id}")
-async def update_job_ticket(item_id: str, payload: OrderItemPatch, tenant_id: str = Depends(get_tenant_id)):
+async def update_order_item(item_id: str, payload: OrderItemPatch, tenant_id: str = Depends(get_tenant_id)):
     updated = await repository().update_item(tenant_id, item_id, payload.model_dump(exclude_none=True))
     if not updated:
         raise HTTPException(status_code=404, detail="Order item not found")
@@ -253,19 +253,19 @@ async def update_job_ticket(item_id: str, payload: OrderItemPatch, tenant_id: st
 
 
 @items_router.delete("/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_job_ticket(item_id: str, tenant_id: str = Depends(get_tenant_id)):
+async def delete_order_item(item_id: str, tenant_id: str = Depends(get_tenant_id)):
     if not await repository().delete_item(tenant_id, item_id):
         raise HTTPException(status_code=404, detail="Order item not found")
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @items_router.post("/{item_id}/clone", status_code=status.HTTP_201_CREATED)
-async def clone_job_ticket(item_id: str, tenant_id: str = Depends(get_tenant_id)):
+async def clone_order_item(item_id: str, tenant_id: str = Depends(get_tenant_id)):
     repo = repository()
     source = await repo.get_item(tenant_id, item_id)
     if not source:
         raise HTTPException(status_code=404, detail="Order item not found")
-    clone = {key: value for key, value in source.items() if key not in {"id", "ticket_number", "created_at", "updated_at", "version", "latest_pricing_snapshot"}}
+    clone = {key: value for key, value in source.items() if key not in {"id", "item_number", "created_at", "updated_at", "version", "latest_pricing_snapshot"}}
     clone["item_name"] = f"{clone.get('item_name', 'Item')} Copy"
     return await repo.create_item(tenant_id, clone)
 

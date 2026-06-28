@@ -102,14 +102,14 @@ class OrdersRepository:
             raise LookupError("Order not found")
         now = utc_now()
         item_id = payload.get("id") or new_id()
-        ticket_number = payload.get("ticket_number") or await self._next_ticket_number(tenant_id, order["id"], order["order_number"])
+        item_number = payload.get("item_number") or await self._next_item_number(tenant_id, order["id"], order["order_number"])
         specs = payload.pop("specs", {})
         document = {
             **payload,
             "id": item_id,
             "tenant_id": tenant_id,
             "customer_id": order.get("customer_id", ""),
-            "ticket_number": ticket_number,
+            "item_number": item_number,
             "created_at": now,
             "updated_at": now,
             "version": 1,
@@ -124,7 +124,7 @@ class OrdersRepository:
         if not existing:
             return None
         specs = patch.pop("specs", None)
-        patch = {key: value for key, value in patch.items() if value is not None and key not in {"id", "tenant_id", "created_at", "order_id", "ticket_number"}}
+        patch = {key: value for key, value in patch.items() if value is not None and key not in {"id", "tenant_id", "created_at", "order_id", "item_number"}}
         updated = {
             **existing,
             **patch,
@@ -274,7 +274,7 @@ class OrdersRepository:
             subtotal += unit_total
             line_items.append({
                 "order_item_id": item["id"],
-                "ticket_number": item.get("ticket_number", ""),
+                "item_number": item.get("item_number", ""),
                 "item_name": item.get("item_name", ""),
                 "item_category": item.get("item_category", ""),
                 "quantity": item.get("quantity", 1),
@@ -329,7 +329,7 @@ class OrdersRepository:
         if source_quote:
             line_items = [{
                 "source_quote_line": item.get("order_item_id", ""),
-                "ticket_number": item.get("ticket_number", ""),
+                "item_number": item.get("item_number", ""),
                 "description": item.get("item_name", ""),
                 "quantity": item.get("quantity", 1),
                 "amount_minor": int(item.get("selling_price_minor", 0) or 0),
@@ -346,7 +346,7 @@ class OrdersRepository:
                 raise ValueError("Add at least one order item before generating an invoice")
             line_items = [{
                 "order_item_id": item["id"],
-                "ticket_number": item.get("ticket_number", ""),
+                "item_number": item.get("item_number", ""),
                 "description": item.get("item_name", ""),
                 "quantity": item.get("quantity", 1),
                 "amount_minor": int(item.get("estimated_price_minor", 0) or 0),
@@ -402,7 +402,7 @@ class OrdersRepository:
         for position, item in enumerate(items, start=1):
             production_items.append({
                 "order_item_id": item["id"],
-                "ticket_number": item.get("ticket_number", ""),
+                "item_number": item.get("item_number", ""),
                 "item_name": item.get("item_name", ""),
                 "item_category": item.get("item_category", ""),
                 "quantity": item.get("quantity", 1),
@@ -453,13 +453,13 @@ class OrdersRepository:
         items = await self.items.find({"tenant_id": tenant_id, "order_id": order["id"]}, {"_id": 0}).to_list(length=1000)
         total = sum(int(item.get("estimated_price_minor", 0)) for item in items)
         completed = sum(1 for item in items if item.get("status") == "completed")
-        return {**order, "job_ticket_count": len(items), "overall_progress": round((completed / len(items)) * 100, 2) if items else 0, "estimated_total_minor": total}
+        return {**order, "order_item_count": len(items), "overall_progress": round((completed / len(items)) * 100, 2) if items else 0, "estimated_total_minor": total}
 
     async def _next_order_number(self, tenant_id: str) -> str:
         count = await self.orders.count_documents({"tenant_id": tenant_id})
         return f"ORD-{count + 1:04d}"
 
-    async def _next_ticket_number(self, tenant_id: str, order_id: str, order_number: str) -> str:
+    async def _next_item_number(self, tenant_id: str, order_id: str, order_number: str) -> str:
         count = await self.items.count_documents({"tenant_id": tenant_id, "order_id": order_id})
         return f"{order_number}-{count + 1:02d}"
 

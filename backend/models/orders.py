@@ -135,7 +135,7 @@ class OrderItemPayload(PreviewEnvelope):
 
 
 class OrderItemDocument(OrderItemPayload, TenantDocument):
-    ticket_number: str
+    item_number: str
 
 
 class OrderItemPatch(PreviewEnvelope):

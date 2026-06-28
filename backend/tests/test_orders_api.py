@@ -33,7 +33,7 @@ class FakeOrdersRepository:
             "tenant_id": tenant_id,
             "order_number": payload.get("order_number") or f"ORD-{len(self.orders) + 1:04d}",
             "status": payload.get("status", "draft"),
-            "job_ticket_count": 0,
+            "order_item_count": 0,
             "overall_progress": 0,
             "estimated_total_minor": 0,
         }
@@ -78,7 +78,7 @@ class FakeOrdersRepository:
             **payload,
             "id": item_id,
             "tenant_id": tenant_id,
-            "ticket_number": f"{self.orders[(tenant_id, payload['order_id'])]['order_number']}-{len(self.items) + 1:02d}",
+            "item_number": f"{self.orders[(tenant_id, payload['order_id'])]['order_number']}-{len(self.items) + 1:02d}",
             "specs": payload.get("specs", {}),
             "latest_pricing_snapshot": None,
         }
@@ -156,7 +156,7 @@ class FakeOrdersRepository:
         for item in order["items"]:
             price = int(item.get("estimated_price_minor", 0))
             total += price
-            line_items.append({"order_item_id": item["id"], "ticket_number": item["ticket_number"], "item_name": item["item_name"], "selling_price_minor": price})
+            line_items.append({"order_item_id": item["id"], "item_number": item["item_number"], "item_name": item["item_name"], "selling_price_minor": price})
         quote = {
             "id": self._id("QUOTE"),
             "tenant_id": tenant_id,
@@ -227,7 +227,7 @@ class FakeOrdersRepository:
             raise ValueError("Add at least one order item before generating a work order")
         production_items = [{
             "order_item_id": item["id"],
-            "ticket_number": item["ticket_number"],
+            "item_number": item["item_number"],
             "item_name": item["item_name"],
             "item_category": item.get("item_category", "custom"),
             "tasks": [{"task_key": "review_specs", "status": "not_started"}, {"task_key": "produce", "status": "not_started"}, {"task_key": "quality_check", "status": "not_started"}],
@@ -293,19 +293,19 @@ class OrdersApiTests(unittest.TestCase):
             "quantity": 2,
             "specs": {"width": 8, "height": 3, "unit_of_measure": "feet", "banner_material_key": "banner_13oz"},
         }).json()
-        schema = self.client.get("/api/job-tickets/schema/banners").json()
+        schema = self.client.get("/api/order-items/schema/banners").json()
         self.assertEqual(schema["category"], "banners")
 
-        result = self.client.post(f"/api/job-tickets/{item['id']}/save-pricing", json={"specs": {}}).json()
+        result = self.client.post(f"/api/order-items/{item['id']}/save-pricing", json={"specs": {}}).json()
         self.assertGreater(result["calculation"]["selling_price_minor"], 0)
-        updated = self.client.get(f"/api/job-tickets/{item['id']}").json()
+        updated = self.client.get(f"/api/order-items/{item['id']}").json()
         self.assertGreater(updated["estimated_price_minor"], 0)
 
-    def test_job_ticket_specs_can_be_updated_before_pricing(self):
+    def test_order_item_specs_can_be_updated_before_pricing(self):
         order = self.client.post("/api/orders", json={"customer_name": "Apex", "customer_id": "CUST-1"}).json()
         item = self.client.post(f"/api/orders/{order['id']}/items", json={"item_name": "Yard sign", "item_category": "rigid_signs"}).json()
 
-        updated = self.client.put(f"/api/job-tickets/{item['id']}", json={
+        updated = self.client.put(f"/api/order-items/{item['id']}", json={
             "specs": {"width": 24, "height": 18, "unit_of_measure": "inches", "substrate_type_key": "coroplast_4mm"}
         }).json()
 
@@ -325,7 +325,7 @@ class OrdersApiTests(unittest.TestCase):
         item = self.client.post(f"/api/orders/{order['id']}/items", json={"item_name": "Banner", "item_category": "banners"}).json()
 
         updated_order = self.client.put(f"/api/orders/{order['id']}", json={"status": "approved"}).json()
-        updated_item = self.client.put(f"/api/job-tickets/{item['id']}", json={"status": "in_production"}).json()
+        updated_item = self.client.put(f"/api/order-items/{item['id']}", json={"status": "in_production"}).json()
         activity = self.client.get(f"/api/orders/{order['id']}/activity").json()
 
         self.assertEqual(updated_order["status"], "approved")
@@ -336,7 +336,7 @@ class OrdersApiTests(unittest.TestCase):
     def test_generate_quote_draft_from_order_item_pricing(self):
         order = self.client.post("/api/orders", json={"customer_name": "Apex", "customer_id": "CUST-1"}).json()
         item = self.client.post(f"/api/orders/{order['id']}/items", json={"item_name": "Banner", "item_category": "banners"}).json()
-        self.client.post(f"/api/job-tickets/{item['id']}/save-pricing", json={"specs": {"width": 4, "height": 8, "unit_of_measure": "feet"}})
+        self.client.post(f"/api/order-items/{item['id']}/save-pricing", json={"specs": {"width": 4, "height": 8, "unit_of_measure": "feet"}})
 
         quote = self.client.post(f"/api/orders/{order['id']}/generate-quote").json()
         quotes = self.client.get(f"/api/orders/{order['id']}/quotes").json()
@@ -351,7 +351,7 @@ class OrdersApiTests(unittest.TestCase):
     def test_quote_draft_can_be_edited_without_changing_order_items(self):
         order = self.client.post("/api/orders", json={"customer_name": "Apex", "customer_id": "CUST-1"}).json()
         item = self.client.post(f"/api/orders/{order['id']}/items", json={"item_name": "Banner", "item_category": "banners"}).json()
-        self.client.post(f"/api/job-tickets/{item['id']}/save-pricing", json={"specs": {"width": 4, "height": 8, "unit_of_measure": "feet"}})
+        self.client.post(f"/api/order-items/{item['id']}/save-pricing", json={"specs": {"width": 4, "height": 8, "unit_of_measure": "feet"}})
         quote = self.client.post(f"/api/orders/{order['id']}/generate-quote").json()
 
         edited = self.client.put(f"/api/orders/{order['id']}/quotes/{quote['id']}", json={
@@ -362,7 +362,7 @@ class OrdersApiTests(unittest.TestCase):
             "tax_minor": 125,
         }).json()
         activity = self.client.get(f"/api/orders/{order['id']}/activity").json()
-        unchanged_item = self.client.get(f"/api/job-tickets/{item['id']}").json()
+        unchanged_item = self.client.get(f"/api/order-items/{item['id']}").json()
 
         self.assertEqual(edited["status"], "ready_for_review")
         self.assertEqual(edited["notes"], "Customer-facing scope note.")
@@ -373,7 +373,7 @@ class OrdersApiTests(unittest.TestCase):
     def test_generate_invoice_draft_from_approved_quote(self):
         order = self.client.post("/api/orders", json={"customer_name": "Apex", "customer_id": "CUST-1"}).json()
         item = self.client.post(f"/api/orders/{order['id']}/items", json={"item_name": "Banner", "item_category": "banners"}).json()
-        self.client.post(f"/api/job-tickets/{item['id']}/save-pricing", json={"specs": {"width": 4, "height": 8, "unit_of_measure": "feet"}})
+        self.client.post(f"/api/order-items/{item['id']}/save-pricing", json={"specs": {"width": 4, "height": 8, "unit_of_measure": "feet"}})
         quote = self.client.post(f"/api/orders/{order['id']}/generate-quote").json()
         approved = self.client.put(f"/api/orders/{order['id']}/quotes/{quote['id']}", json={"status": "approved", "discount_minor": 250}).json()
 

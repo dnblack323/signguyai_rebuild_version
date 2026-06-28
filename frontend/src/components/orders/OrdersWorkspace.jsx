@@ -97,19 +97,19 @@ export function OrdersWorkspace({ onToast, onNavigate }) {
     if (!activeOrder) return onToast?.("Open an order first");
     if (!itemDraft.item_name.trim()) return onToast?.("Item name is required");
     const created = await api(`/orders/${activeOrder.id}/items`, { method: "POST", body: JSON.stringify(itemDraft) });
-    setActiveOrder((current) => ({ ...current, items: [...(current.items || []), created], job_ticket_count: (current.job_ticket_count || 0) + 1 }));
+    setActiveOrder((current) => ({ ...current, items: [...(current.items || []), created], order_item_count: (current.order_item_count || 0) + 1 }));
     setItemDraft(emptyItemDraft);
     onToast?.("Order item created");
   };
 
   const saveItemSpecs = async (item, specs) => {
-    await api(`/job-tickets/${item.id}`, { method: "PUT", body: JSON.stringify({ specs }) });
+    await api(`/order-items/${item.id}`, { method: "PUT", body: JSON.stringify({ specs }) });
     await refreshOrder();
     onToast?.("Item specs saved");
   };
 
   const calculateItem = async (item, specs = item.specs || {}) => {
-    const result = await api(`/job-tickets/${item.id}/save-pricing`, { method: "POST", body: JSON.stringify({ specs }) });
+    const result = await api(`/order-items/${item.id}/save-pricing`, { method: "POST", body: JSON.stringify({ specs }) });
     await refreshOrder();
     onToast?.(`Price calculated: ${money(result.calculation.selling_price_minor)}`);
   };
@@ -130,9 +130,9 @@ export function OrdersWorkspace({ onToast, onNavigate }) {
 
   const updateItemStatus = async (item, status) => {
     if (status === item.status) return;
-    await api(`/job-tickets/${item.id}`, { method: "PUT", body: JSON.stringify({ status }) });
+    await api(`/order-items/${item.id}`, { method: "PUT", body: JSON.stringify({ status }) });
     await refreshOrder();
-    onToast?.(`${item.ticket_number} moved to ${label(status)}`);
+    onToast?.(`${item.item_number} moved to ${label(status)}`);
   };
 
   const uploadOrderFile = async (file) => {
@@ -194,7 +194,7 @@ export function OrdersWorkspace({ onToast, onNavigate }) {
   return (
     <div className="orders-workspace">
       <section className="orders-hero">
-        <div><span>Operations</span><h1>Orders</h1><p>Order to Order Items / Job Tickets to quotes, invoices, work orders, and production tasks.</p></div>
+        <div><span>Operations</span><h1>Orders</h1><p>Order to Order Items to quotes, invoices, work orders, and production tasks.</p></div>
         <button className="primary-button" onClick={createOrder}><Plus size={16} />Create Order</button>
       </section>
 
@@ -219,9 +219,9 @@ export function OrdersWorkspace({ onToast, onNavigate }) {
         </aside>
 
         <main className="order-detail-panel">
-          {!activeOrder ? <Empty title="No order selected" text="Create or select an order to manage job tickets." /> : <>
+          {!activeOrder ? <Empty title="No order selected" text="Create or select an order to manage order items." /> : <>
             <header className="order-detail-header">
-              <div><span>{label(activeOrder.status)}</span><h2>{activeOrder.order_number} {activeOrder.order_title || activeOrder.name}</h2><p>{activeOrder.customer_name} · {activeOrder.job_ticket_count || 0} items · {activeOrder.overall_progress || 0}% complete</p></div>
+              <div><span>{label(activeOrder.status)}</span><h2>{activeOrder.order_number} {activeOrder.order_title || activeOrder.name}</h2><p>{activeOrder.customer_name} · {activeOrder.order_item_count || 0} items · {activeOrder.overall_progress || 0}% complete</p></div>
               <div className="order-status-controls"><strong>{money(activeOrder.estimated_total_minor)}</strong><select value={activeOrder.status} onChange={(event) => updateOrderStatus(event.target.value)}>{actionableOrderStatuses.map((status) => <option key={status} value={status}>{label(status)}</option>)}</select><button onClick={nextOrderStep}>Next Step</button></div>
             </header>
             <nav className="order-detail-tabs">{detailTabs.map((tab) => <button key={tab} className={activeTab === tab ? "active" : ""} onClick={() => setActiveTab(tab)}>{tab}</button>)}</nav>
@@ -241,9 +241,9 @@ export function OrdersWorkspace({ onToast, onNavigate }) {
 
 function OrderItemsTab({ order, draft, setDraft, createItem, saveItemSpecs, calculateItem, updateItemStatus }) {
   return <section className="order-tab-panel">
-    <div className="order-item-create"><input value={draft.item_name} onChange={(event) => setDraft({ ...draft, item_name: event.target.value })} placeholder="Item name / job ticket description" /><select value={draft.item_category} onChange={(event) => setDraft({ ...draft, item_category: event.target.value })}>{categories.map((category) => <option key={category}>{category}</option>)}</select><input type="number" value={draft.quantity} onChange={(event) => setDraft({ ...draft, quantity: Number(event.target.value) })} /><button onClick={createItem}><Plus size={15} />Add Item</button></div>
+    <div className="order-item-create"><input value={draft.item_name} onChange={(event) => setDraft({ ...draft, item_name: event.target.value })} placeholder="Item name / order item description" /><select value={draft.item_category} onChange={(event) => setDraft({ ...draft, item_category: event.target.value })}>{categories.map((category) => <option key={category}>{category}</option>)}</select><input type="number" value={draft.quantity} onChange={(event) => setDraft({ ...draft, quantity: Number(event.target.value) })} /><button onClick={createItem}><Plus size={15} />Add Item</button></div>
     <div className="order-items-grid">{(order.items || []).map((item) => <OrderItemCard key={item.id} item={item} saveItemSpecs={saveItemSpecs} calculateItem={calculateItem} updateItemStatus={updateItemStatus} />)}</div>
-    {!order.items?.length && <Empty title="No order items yet" text="Add the first job ticket to start pricing and production planning." />}
+    {!order.items?.length && <Empty title="No order items yet" text="Add the first order item to start pricing and production planning." />}
   </section>;
 }
 
@@ -255,13 +255,13 @@ function OrderItemCard({ item, saveItemSpecs, calculateItem, updateItemStatus })
   useEffect(() => { setSpecs(item.specs || {}); }, [item.id, item.specs]);
   useEffect(() => {
     if (!expanded) return;
-    api(`/job-tickets/schema/${item.item_category}`).then((row) => setSchema(row.fields || [])).catch(() => setSchema([]));
+    api(`/order-items/schema/${item.item_category}`).then((row) => setSchema(row.fields || [])).catch(() => setSchema([]));
   }, [expanded, item.item_category]);
 
   const setSpec = (key, value, type) => setSpecs((current) => ({ ...current, [key]: type === "number" ? Number(value || 0) : type === "toggle" ? Boolean(value) : value }));
 
   return <article>
-    <div><strong>{item.ticket_number}</strong><span>{item.item_category}</span></div>
+    <div><strong>{item.item_number}</strong><span>{item.item_category}</span></div>
     <h3>{item.item_name}</h3>
     <p>{item.description || "No item description yet."}</p>
     <dl><div><dt>Qty</dt><dd>{item.quantity}</dd></div><div><dt>Status</dt><dd>{label(item.status)}</dd></div><div><dt>Price</dt><dd>{money(item.estimated_price_minor)}</dd></div></dl>
@@ -288,12 +288,12 @@ function ProductionTab({ workOrderDrafts, generateWorkOrderDraft }) {
   const latest = workOrderDrafts[0];
   return <section className="order-tab-panel">
     <div className="order-quote-panel production-panel">
-      <div><span>Work Order Drafts</span><h3>Snapshot job tickets for production</h3><p>This creates a production handoff from current Order Items. The full production board can later consume these tasks without reusing quote or invoice records.</p></div>
+      <div><span>Work Order Drafts</span><h3>Snapshot order items for production</h3><p>This creates a production handoff from current Order Items. The full production board can later consume these tasks without reusing quote or invoice records.</p></div>
       <button onClick={generateWorkOrderDraft}><PackagePlus size={15} />Generate Work Order Draft</button>
     </div>
     {latest && <div className="work-order-summary"><strong>{latest.work_order_number}</strong><span>{label(latest.status)}</span><b>{latest.item_count || latest.production_items?.length || 0} production items</b></div>}
     <div className="work-order-list">
-      {workOrderDrafts.map((workOrder) => <article key={workOrder.id}><div><strong>{workOrder.work_order_number}</strong><span>{label(workOrder.status)}</span></div>{(workOrder.production_items || []).map((item) => <p key={item.order_item_id}><span>{item.ticket_number}</span><strong>{item.item_name}</strong><small>{item.tasks?.length || 0} tasks</small></p>)}</article>)}
+      {workOrderDrafts.map((workOrder) => <article key={workOrder.id}><div><strong>{workOrder.work_order_number}</strong><span>{label(workOrder.status)}</span></div>{(workOrder.production_items || []).map((item) => <p key={item.order_item_id}><span>{item.item_number}</span><strong>{item.item_name}</strong><small>{item.tasks?.length || 0} tasks</small></p>)}</article>)}
     </div>
     {!workOrderDrafts.length && <Empty icon={PackagePlus} title="No work order drafts yet" text="Generate a draft when the order is ready to hand off to production." />}
   </section>;
@@ -316,7 +316,7 @@ function FinancialTab({ order, quoteDrafts, invoiceDrafts, generateQuoteDraft, s
       <article><span>Latest Quote Draft</span><strong>{latest ? money(latest.total_minor) : "$0.00"}</strong><p>{latest ? `${latest.quote_number} - ${label(latest.status)}` : "No quote draft generated yet."}</p></article>
     </div>
     <div className="order-quote-panel">
-      <div><span>Internal Quote Drafts</span><h3>Snapshot current order pricing</h3><p>This creates an internal quote draft from current Job Ticket prices. Customer approval, revision, signing, and sending will come with the full Quotes module.</p></div>
+      <div><span>Internal Quote Drafts</span><h3>Snapshot current order pricing</h3><p>This creates an internal quote draft from current Order Item prices. Customer approval, revision, signing, and sending will come with the full Quotes module.</p></div>
       <button onClick={generateQuoteDraft}><FilePlus2 size={15} />Generate Quote Draft</button>
     </div>
     <div className="order-quote-panel invoice-panel">
@@ -362,7 +362,7 @@ function QuoteDraftEditor({ quote, saveQuoteDraft }) {
       <label className="span-two"><span>Internal Notes</span><textarea value={draft.internal_notes || ""} onChange={(event) => setDraft({ ...draft, internal_notes: event.target.value })} /></label>
     </div>
     <div className="quote-line-items">
-      {(quote.line_items || []).map((item) => <p key={item.order_item_id}><span>{item.ticket_number}</span><strong>{item.item_name}</strong><b>{money(item.selling_price_minor)}</b></p>)}
+      {(quote.line_items || []).map((item) => <p key={item.order_item_id}><span>{item.item_number}</span><strong>{item.item_name}</strong><b>{money(item.selling_price_minor)}</b></p>)}
     </div>
     <div className="quote-editor-actions"><button onClick={save}><Save size={14} />Save Quote Draft</button></div>
   </div>;
