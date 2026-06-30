@@ -218,6 +218,12 @@ INDEX_MANIFEST: dict[str, tuple[IndexSpec, ...]] = {
         IndexSpec(keys=(("tenant_id", ASCENDING), ("tool", ASCENDING)), name="tenant_id_1_tool_1"),
         IndexSpec(keys=(("tenant_id", ASCENDING), ("source_module", ASCENDING)), name="tenant_id_1_source_module_1"),
     ),
+    "pricing_foundations": (
+        TENANT_ID_INDEX,
+        IndexSpec(keys=(("tenant_id", ASCENDING), ("key", ASCENDING)), name="tenant_id_1_key_1_unique", unique=True),
+        IndexSpec(keys=(("tenant_id", ASCENDING), ("status", ASCENDING)), name="tenant_id_1_status_1"),
+        IndexSpec(keys=(("tenant_id", ASCENDING), ("updated_at", DESCENDING)), name="tenant_id_1_updated_at_-1"),
+    ),
 }
 
 

@@ -2,6 +2,8 @@
 
 First preview version of the clean SignGuyAI rebuild.
 
+Current Phase 0 rebuild decisions are captured in `PHASE_0_DECISIONS.md`. Use that file as the latest source of truth for V1 scope, release order, terminology, mandatory integrations, and commercial launch gates.
+
 This release establishes the controlling application shell and first structural preview:
 
 - Icon-only Home / Global Command Center

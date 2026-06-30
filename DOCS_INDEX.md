@@ -14,6 +14,9 @@ Source SHA-256: `1220c11cd909eade18dcf6f96be6d8b73a58cb3c461e20a14ef15b2027edb27
 
 ## Files
 
+0. `PHASE_0_DECISIONS.md`  
+   Current rebuild decisions from the user's Phase 0 answers. Treat this as the latest control document for V1 scope, release order, terminology, launch integrations, and launch gates.
+
 1. `ORDER_PORTAL_MANAGER_MASTER_SPEC.md`  
    Controlling standalone-first product spec.
 

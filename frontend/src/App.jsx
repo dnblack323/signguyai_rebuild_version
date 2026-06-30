@@ -31,6 +31,7 @@ import { Dashboard } from "./components/dashboard/Dashboard";
 import { AISuiteWorkspace } from "./components/shared/AISuiteWorkspace";
 import { CommunityWorkspace } from "./components/shared/CommunityWorkspace";
 import { NotesWorkspace } from "./components/shared/NotesWorkspace";
+import { PricingFoundationWorkspace } from "./components/settings/PricingFoundationWorkspace";
 import { DocuLinkWorkspace } from "./components/doculink/DocuLinkWorkspace";
 import { OrdersWorkspace } from "./components/orders/OrdersWorkspace";
 import { StandaloneWebstoresShell, WebstoresWorkspace } from "./components/webstores/WebstoresWorkspace";
@@ -151,6 +152,8 @@ function App() {
               <AISuiteWorkspace assistantOnly onToast={showToast} />
             ) : module === "ai-suite" ? (
               <AISuiteWorkspace onToast={showToast} />
+            ) : module === "pricing-foundation" ? (
+              <PricingFoundationWorkspace onToast={showToast} />
             ) : module === "wraps" ? (
               <Suspense fallback={<div className="app-loading">Loading Wrap Lab...</div>}>
                 <WrapLabApp embedded ribbonCommand={wrapRibbonCommand} onOpenCustomers={() => navigate("operations", "customers")} />
