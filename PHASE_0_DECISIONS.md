@@ -1,6 +1,7 @@
 ---
 status: current phase-0 decision record
 source: user answers captured 2026-06-30
+pricing_source: CHAT'S FEE STRUCTURE.pdf, last read 2026-06-30
 applies_to: SignGuyAI rebuild production planning
 ---
 
@@ -187,9 +188,77 @@ Required:
 - Money stored as integer cents.
 - Pricing and billing tests before launch.
 
-The exact subscription plan table is still unresolved in this record because the answer referenced an attachment that was not present in the received files.
+## 8. Founder Launch Pricing
 
-## 8. Customer Portal Decisions
+Launch with one complete Founder Edition first. Do not make early buyers choose between Core, Webstores, Wrap Command Center, and bundle variations before real usage data exists.
+
+Founder Edition:
+
+- First 25 signed shops only.
+- $119/month for the first 3 months using a single Founder Launch promo code.
+- $189/month beginning in month 4, locked while the account remains continuously active and current.
+- Includes Core SignGuy AI OS, Webstores, Wrap Command Center, Customer Portal, documents, approvals, production tools, pricing, invoicing, and standard platform improvements.
+- Includes 850 AI credits per month at launch.
+- 0% SignGuy platform fee on invoices/payment links and Webstore payments for the first 3 months.
+- Stripe processing fees still apply separately.
+- After the promo period: 0.5% SignGuy fee on invoices/payment links and 1.5% on Webstore sales.
+- No permanent 0% transaction-fee promise.
+
+Implementation rule:
+
+- Keep the $119 intro as a Stripe coupon, not as a separate permanent product price.
+- Store founder status, promotion start date, post-promo fee schedule, and founder account number on the tenant record.
+- Founder pricing can stay locked for active founders, but new pricing can apply to new customers after Founder Edition closes.
+
+## 9. General Availability Pricing
+
+After Founder availability closes, the public bundle becomes the clearest main offer.
+
+| Product | Founder Base Rate | General Availability | Included Monthly Credits |
+| --- | ---: | ---: | ---: |
+| SignGuy AI OS - Core | $99/month | $149/month | 300 |
+| Webstores Add-On | $59/month | $89/month | 200 Founder / 300 GA |
+| Wrap Command Center Add-On | $79/month | $119/month | 350 Founder / 500 GA |
+| Complete Bundle | $189/month | $279/month | 850 Founder / 1,100 GA |
+
+Bundle rule:
+
+- The bundle must always be the obvious best value.
+- Standalone module pricing should exist internally and later publicly, but it should not distract from the initial Founder launch.
+
+## 10. Platform Transaction Fees
+
+Charge SignGuy platform fees separately from Stripe processing fees. Both must be disclosed before checkout or payout.
+
+| Account Status | Invoice / Payment Link Fee | Webstore Sale Fee | Notes |
+| --- | ---: | ---: | --- |
+| Founder months 1-3 | 0% | 0% | Founder fee holiday. Stripe processing still applies. |
+| Founder month 4+ | 0.5% | 1.5% | Lower founder rate, locked while active. |
+| General Availability | 1.0% | 2.0% | Standard fee schedule after founders close. |
+| Custom enterprise / high volume | Custom | Custom | Only after real volume and support demand justify negotiation. |
+
+## 11. AI Credits And Guardrails
+
+Included credits can expire at the end of the billing cycle. Purchased credits remain available for at least 12 months.
+
+Credit packs:
+
+| Pack | Credits | Launch Price | Expiration |
+| --- | ---: | ---: | --- |
+| Quick Fix Pack | 100 | $19 | 12 months |
+| Growth Boost Pack | 300 | $45 | 12 months |
+| Power Pack | 800 | $99 | 12 months |
+
+Launch guardrails:
+
+- Limit image generation to 20 images per tenant per day.
+- Limit AI Business Assistant usage to 50 messages per tenant per day.
+- Limit historical invoice analysis to 3 runs per tenant per day.
+- Show a low-credit warning at 20% remaining.
+- Block paid AI actions when credit balance reaches zero.
+- Log actual AI/model cost per tenant, feature, model, and month before scaling beyond the founder group.
+
+## 12. Customer Portal Decisions
 
 V1 includes Customer Portal Lite.
 
@@ -217,7 +286,7 @@ Never expose:
 - Margin/profit details.
 - Staff-only production comments.
 
-## 9. Roles And Permissions
+## 13. Roles And Permissions
 
 Required launch roles:
 
@@ -233,11 +302,13 @@ Owner impersonation of staff/customers is not required for V1.
 
 Platform support impersonation is required for launch, with a strict admin audit log.
 
-## 10. Billing And Dunning
+## 14. Billing And Dunning
 
 Business model:
 
 - SaaS subscription with tiered pricing.
+- Founder launch sells only the complete Founder Edition to the first 25 shops.
+- General Availability opens later with the $279/month complete bundle and standalone module prices.
 - 7-day trial.
 - No mandatory setup fee.
 
@@ -252,9 +323,17 @@ Successful payment -> auto-reactivate tenant
 
 Stripe webhook signatures must be verified before launch.
 
-The exact plan/pricing table is pending because the referenced pricing attachment was not present.
+## 15. Pricing Rollout Decision Rules
 
-## 11. Data And Multi-Tenancy
+Rollout:
+
+- Phase 1: Founder launch. Sell only the complete Founder Edition to the first 25 shops.
+- Phase 2: Review after 10-20 active paying shops. Review adoption, feature usage, AI cost, support burden, payment volume, churn, and Webstore demand.
+- Phase 3: Public pricing. Open General Availability using the $279/month complete bundle plus standalone module prices.
+
+Do not change active founder pricing casually. New pricing can apply to new customers after Founder Edition closes.
+
+## 16. Data And Multi-Tenancy
 
 Every business record must be tenant-scoped from day one.
 
@@ -270,7 +349,7 @@ Rules:
 - Immutable audit/activity events for important business actions.
 - Backend owns business math.
 
-## 12. Documents, Files, And Signatures
+## 17. Documents, Files, And Signatures
 
 Required V1 document types:
 
@@ -292,7 +371,7 @@ E-signatures are required in V1 for commercial launch.
 
 Structured drawings and signature requests are launch features because contracts and approvals need legally meaningful records.
 
-## 13. Required Launch Integrations
+## 18. Required Launch Integrations
 
 Required for launch:
 
@@ -310,7 +389,7 @@ Deferred:
 - BNPL/Affirm.
 - Zapier.
 
-## 14. Platform Admin Requirements
+## 19. Platform Admin Requirements
 
 The Platform Admin Portal is a launch feature.
 
@@ -327,7 +406,7 @@ It must support:
 - AI token/usage tracking.
 - Admin audit log.
 
-## 15. Launch Quality Bar
+## 20. Launch Quality Bar
 
 The Commercial Launch Gate requires:
 
@@ -344,11 +423,10 @@ The Commercial Launch Gate requires:
 
 If tenant data can bleed across accounts, the launch is blocked.
 
-## 16. Open Items
+## 21. Open Items
 
 These items still need answers or source files:
 
-1. Final subscription plan/pricing table. The answer referenced `SEE ATTACHED`, but no pricing attachment was available in this turn.
-2. Exact list of all V1 pricing categories and calculator behaviors. The answer says `ALL`; this needs conversion into a concrete category matrix.
-3. Final public product naming for `Webstores` versus `Order Portal Manager`, because current rebuild docs prefer Order Portal language while the latest answers still use Webstores.
-4. Final UI label for the production unit created from an Order Item. Current decision: do not use `Job Ticket` publicly.
+1. Exact list of all V1 pricing categories and calculator behaviors. The answer says `ALL`; this needs conversion into a concrete category matrix.
+2. Final public product naming for `Webstores` versus `Order Portal Manager`, because current rebuild docs prefer Order Portal language while the latest answers still use Webstores.
+3. Final UI label for the production unit created from an Order Item. Current decision: do not use `Job Ticket` publicly.

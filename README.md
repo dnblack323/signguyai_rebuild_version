@@ -2,7 +2,7 @@
 
 First preview version of the clean SignGuyAI rebuild.
 
-Current Phase 0 rebuild decisions are captured in `PHASE_0_DECISIONS.md`. Use that file as the latest source of truth for V1 scope, release order, terminology, mandatory integrations, and commercial launch gates.
+Current Phase 0 rebuild decisions are captured in `PHASE_0_DECISIONS.md`. The Phase 0 AI-agent manual outline is captured in `PHASE_0_AGENT_MANUAL_OUTLINE.md`. The current-state recovery plan is captured in `REBUILD_RECOVERY_PLAN.md`. Use these files as the latest source of truth for V1 scope, release order, terminology, mandatory integrations, commercial launch gates, and where the rebuild should resume.
 
 This release establishes the controlling application shell and first structural preview:
 
