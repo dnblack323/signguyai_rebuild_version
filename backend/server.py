@@ -4,6 +4,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 try:
+    from .core_runtime import get_database
+    from .repositories.tenants import TenantRepository
+    from .repositories.users import UserRepository
     from .routes.activity import router as activity_router
     from .routes.auth import auth_router, users_router
     from .routes.billing import router as billing_router
@@ -19,7 +22,11 @@ try:
     from .routes.tenants import router as tenants_router
     from .routes.webstores import router as webstores_router
     from .routes.wrap_lab import router as wrap_lab_router
+    from .services.auth_service import hash_password, verify_password
 except ImportError:
+    from core_runtime import get_database
+    from repositories.tenants import TenantRepository
+    from repositories.users import UserRepository
     from routes.activity import router as activity_router
     from routes.auth import auth_router, users_router
     from routes.billing import router as billing_router
@@ -35,6 +42,7 @@ except ImportError:
     from routes.tenants import router as tenants_router
     from routes.webstores import router as webstores_router
     from routes.wrap_lab import router as wrap_lab_router
+    from services.auth_service import hash_password, verify_password
 
 app = FastAPI(title="SignGuyAI Rebuild API", version="0.2.0")
 
@@ -71,3 +79,35 @@ app.include_router(shared_systems_router, prefix="/api")
 app.include_router(tenants_router, prefix="/api")
 app.include_router(webstores_router, prefix="/api")
 app.include_router(wrap_lab_router, prefix="/api")
+
+
+@app.on_event("startup")
+async def seed_admin_account() -> None:
+    admin_email = os.getenv("ADMIN_EMAIL", "").strip().lower()
+    admin_password = os.getenv("ADMIN_PASSWORD", "").strip()
+    if not admin_email or not admin_password:
+        return
+
+    database = get_database()
+    user_repo = UserRepository(database)
+    tenant_repo = TenantRepository(database)
+    await user_repo.ensure_indexes()
+    await tenant_repo.ensure_indexes()
+
+    existing = await user_repo.find_by_email(admin_email)
+    if existing is None:
+        tenant_id = "signguyai-demo-shop"
+        await tenant_repo.upsert_current(
+            tenant_id,
+            {"name": "SignGuyAI Demo Shop", "owner_email": admin_email},
+            actor_id="seed",
+        )
+        await user_repo.create(
+            tenant_id=tenant_id,
+            email=admin_email,
+            password_hash=hash_password(admin_password),
+            full_name="Demo Owner",
+            role="owner",
+        )
+    elif not verify_password(admin_password, existing["password_hash"]):
+        await user_repo.update_password(existing["id"], hash_password(admin_password))

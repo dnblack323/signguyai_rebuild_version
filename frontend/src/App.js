@@ -35,6 +35,7 @@ import { PricingFoundationWorkspace } from "./components/settings/PricingFoundat
 import { DocuLinkWorkspace } from "./components/doculink/DocuLinkWorkspace";
 import { OrdersWorkspace } from "./components/orders/OrdersWorkspace";
 import { StandaloneWebstoresShell, WebstoresWorkspace } from "./components/webstores/WebstoresWorkspace";
+import { useAuth } from "./context/AuthContext";
 import { api } from "./lib/api";
 
 const statusTone = { ready: "green", preview: "blue", planned: "gray" };
@@ -241,6 +242,10 @@ function WorkspaceRail({ workspace, module, onSelect, onNavigate }) {
 }
 
 function TopBar({ onSearch, onCreate, onNotifications, onHelp, onMenu, notificationOpen, helpOpen, backendStatus }) {
+  const { user, logout } = useAuth();
+  const displayName = user?.email ? user.email.split("@")[0] : "Account";
+  const initials = displayName.slice(0, 2).toUpperCase();
+
   return (
     <header className="top-bar">
       <button className="mobile-menu" onClick={onMenu}><Menu size={20} /></button>
@@ -256,7 +261,9 @@ function TopBar({ onSearch, onCreate, onNotifications, onHelp, onMenu, notificat
           <Bell size={19} /><span className="notification-dot" />
         </button>
         <button className={helpOpen ? "icon-button active" : "icon-button"} onClick={onHelp} aria-label="Help menu" title="Help"><HelpCircle size={19} /></button>
-        <button className="profile-button"><span className="user-avatar small">BN</span><span>Bill Nelson</span><ChevronDown size={14} /></button>
+        <button className="profile-button" onClick={logout} title="Sign out" data-testid="topbar-logout-button">
+          <span className="user-avatar small">{initials}</span><span>{displayName}</span><ChevronDown size={14} />
+        </button>
       </div>
     </header>
   );

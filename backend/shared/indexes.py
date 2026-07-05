@@ -37,7 +37,7 @@ INDEX_MANIFEST: dict[str, tuple[IndexSpec, ...]] = {
             keys=(("tenant_id", ASCENDING), ("normalized_email", ASCENDING)),
             name="tenant_id_1_normalized_email_1_partial_unique",
             unique=True,
-            partial_filter_expression={"normalized_email": {"$type": "string", "$ne": ""}},
+            partial_filter_expression={"normalized_email": {"$type": "string", "$gt": ""}},
         ),
         IndexSpec(
             keys=(("tenant_id", ASCENDING), ("normalized_name", ASCENDING)),
@@ -265,6 +265,17 @@ INDEX_MANIFEST: dict[str, tuple[IndexSpec, ...]] = {
         IndexSpec(keys=(("account_status", ASCENDING), ("updated_at", DESCENDING)), name="account_status_updated"),
         IndexSpec(keys=(("billing_status", ASCENDING), ("updated_at", DESCENDING)), name="billing_status_updated"),
         IndexSpec(keys=(("slug", ASCENDING),), name="slug_unique", unique=True),
+    ),
+    "users": (
+        IndexSpec(keys=(("email", ASCENDING),), name="email_unique", unique=True),
+        IndexSpec(keys=(("tenant_id", ASCENDING), ("id", ASCENDING)), name="tenant_id_1_id_1"),
+    ),
+    "login_attempts": (
+        IndexSpec(keys=(("email", ASCENDING), ("created_at", DESCENDING)), name="email_1_created_at_-1"),
+    ),
+    "password_reset_tokens": (
+        IndexSpec(keys=(("token_hash", ASCENDING),), name="token_hash_unique", unique=True),
+        IndexSpec(keys=(("user_id", ASCENDING), ("used", ASCENDING)), name="user_id_1_used_1"),
     ),
     "platform_admin_audit_events": (
         IndexSpec(keys=(("target_tenant_id", ASCENDING), ("created_at", DESCENDING)), name="target_tenant_created"),
