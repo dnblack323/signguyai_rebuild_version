@@ -19,6 +19,13 @@ function skipRootAbsoluteCssUrls(rules) {
   });
 }
 
+function findOneOfRule(rules) {
+  for (const rule of rules) {
+    if (Array.isArray(rule.oneOf)) return rule.oneOf;
+  }
+  return null;
+}
+
 module.exports = {
   style: {
     postcss: {
@@ -32,6 +39,16 @@ module.exports = {
   webpack: {
     configure: (webpackConfig) => {
       skipRootAbsoluteCssUrls(webpackConfig.module.rules);
+      const oneOf = findOneOfRule(webpackConfig.module.rules);
+      if (oneOf) {
+        // Vite-style `?inline` CSS imports (e.g. wrap-lab.css?inline) expect the
+        // raw CSS text as a plain string, not css-loader's CSS-module array export.
+        oneOf.unshift({
+          test: /\.css$/,
+          resourceQuery: /inline/,
+          type: "asset/source",
+        });
+      }
       return webpackConfig;
     },
   },

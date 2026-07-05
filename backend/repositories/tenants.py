@@ -67,7 +67,9 @@ class TenantRepository:
 
     def _slug(self, name: str, tenant_id: str) -> str:
         base = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
-        return base or tenant_id.lower()
+        base = base or tenant_id.lower()
+        suffix = re.sub(r"[^a-z0-9]", "", tenant_id.lower())[-6:] or "shop"
+        return f"{base}-{suffix}"
 
     def _public(self, document: dict) -> dict:
         return {key: value for key, value in document.items() if key != "_id"}

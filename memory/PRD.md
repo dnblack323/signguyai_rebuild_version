@@ -41,5 +41,35 @@ Repo `signguyai_rebuild_version` pulled into Emergent. User requested a VERIFICA
 - P2: Webstores/Order Portal real backend (currently preview/spec only).
 - P2: Wrap Lab kept as add-on track, revisit after Release 1.
 
+## Session 2 (2026-02) — Dual-Repo Investigation + Auth/Tenants/Users Module Build
+
+### Documents reviewed (uploaded by user)
+- `emergent masterplan.pdf` — governance rules: integer-cents money, thin-routes/thick-services, canonical status enums, tenant isolation at query level, JWT HS256, two Stripe contexts (direct invoices vs. Stripe Connect for Webstores).
+- `SignGuyAI_Rebuild_Master.docx` (v2, supersedes v1) — confirmed current rebuild's dashboard IS the accepted "Codex dashboard" baseline; static audit of legacy repo flags anti-patterns (monolithic server.py, DB logic in routes, broad CORS) that must NOT be copied when porting legacy business logic; **3 canonical migration conflicts flagged**: (1) Orders/Order Items vs. legacy Jobs/Job Tickets naming — RESOLVED, rebuild uses Orders/Order Items; (2) Plans/product-lines vs. tiers/founders billing — see fee structure doc below; (3) canonical vs. legacy pricing engine — still open, needs legacy `pricing.py` (112KB) review when Pricing Calculator is built.
+- `CHAT'S FEE STRUCTURE.pdf` — SignGuyAI's own SaaS subscription/billing pricing (Founder Edition $119→$189/mo, GA tiers, Stripe platform fees, AI credit packs). This is the **Billing/Founders-Plan module spec**, NOT the customer-facing job/quote pricing calculator. Filed for later Billing module work.
+
+### Legacy repo investigation (github.com/dnblack323/signguyai)
+- 2,375-commit, production-tested monolith with full Auth, Billing+Stripe, Employees/Payroll, AI tools (185KB `ai.py`), Pricing engine (112KB `pricing.py`), Webstores, Documents, Order Drawings/Signatures, Platform Admin, Questionnaires, Inventory, Email deliverability.
+- **Key discovery**: `memory/` folder contains pre-written `*_REBUILD_DOC.md` blueprint specs for every module (Auth 87KB, Tenants 102KB, Users/Roles 72KB, Settings 69KB, Orders 40KB, Webstores 57KB, Files 62KB, Email 26KB, Inventory 24KB, Finance 28KB) plus `EXTERNAL_REBUILD_IMPORT_PREP_INSTRUCTIONS.md` confirming this rebuild repo was deliberately stripped down (Vite→CRA, TS→JS) with Auth/Tenant/Billing left as placeholders on purpose, for Emergent to build for real using the legacy app as source of truth.
+- Extraction strategy: rewrite legacy business logic into rebuild's thin-routes/services/repository pattern — never copy legacy monolith files directly.
+
+### Confirmed scope ("core features first")
+Auth + Tenants/Users/Roles + Customers + Quotes + Orders/Order Items + Invoices + Pricing Calculator. Webstores deferred (Release 2), AI/Payroll/Wrap-Lab-depth deferred.
+
+### Built this session: Auth + Tenants + Users/Roles/Permissions (real, replacing preview-header fake auth)
+- Backend: `repositories/users.py`, `services/auth_service.py` (bcrypt, brute-force lockout 5 attempts/15min, forgot/reset password via console-logged link), extended `routes/auth.py` (register/login/logout/forgot-password/reset-password), reused existing `core_runtime.py` HS256 bearer-token infra and `models/access.py` canonical Role/Permission enums (already correctly scaffolded pre-session).
+- `SIGNGUYAI_AUTH_MODE` flipped from `preview` to `enforced` — all API routes except `/api/health`, `/api/release`, `/api/digest`, `/api/auth/*` now require a real Bearer token.
+- Startup seed: `owner@signguyai.test` demo account (see test_credentials.md).
+- Frontend: real `AuthContext.js`, `pages/auth/{Login,Register,ForgotPassword,ResetPassword,AuthShell}.js`, React Router added (`/login`, `/register`, `/forgot-password`, `/reset-password`, protected `/*`), `lib/api.js` auto-attaches Bearer token, TopBar shows real user + logout.
+- Fixed 2 pre-existing bugs surfaced during smoke-testing: MongoDB partial-index `$ne` operator unsupported (customers.py index), missing `ASCENDING` import in `repositories/customers.py` (both were blocking `GET /api/customers` entirely, unrelated to auth).
+- **Testing agent pass 1**: 16/16 backend pytest passing, frontend auth flows (register/login/logout/error-states/lockout/forgot/reset) all verified via Playwright. Found & fixed: (1) CRITICAL tenant-slug `DuplicateKeyError` 500 on company-name collision → fixed via tenant_id-suffixed slugs; (2) stale `FRONTEND_URL` in `.env` → corrected; (3) Wrap Lab regression — `wrap-lab.css?inline` (Vite-style import, incompatible with CRA's css-loader) threw `.replaceAll is not a function` → fixed via craco webpack rule using `asset/source` for `?inline` CSS imports. All 3 verified fixed post-fix (curl + screenshot).
+
 ## Credentials
-No auth credentials were created or modified in this session (verification-only pass; auth work is explicitly deferred).
+See `/app/memory/test_credentials.md` — real auth is now live (`SIGNGUYAI_AUTH_MODE=enforced`), seeded demo account `owner@signguyai.test`, plus freshly-registered test accounts created during testing.
+
+## Next Action Items
+- P0: Deepen Quotes → Orders → Invoices workflow (Quote-to-Order conversion, line items, production_required flag) using legacy `NEW_ORDER_WORKFLOW_REBUILD_DOC.md` as blueprint.
+- P0: Pricing Calculator — needs legacy `pricing.py` (112KB) + `PRICING_FOUNDATION_*.md` docs reviewed to resolve migration conflict #3 (canonical vs. legacy pricing engine).
+- P1: Add data-testid coverage across the main App shell nav rail/workspace-switch buttons (currently only `topbar-logout-button` has one) — flagged by testing agent as limiting further automated UI regression testing; defer full sweep until actively touching that navigation code for Customers/Orders/Quotes work.
+- P1: Billing/Founders-Plan module using `CHAT'S FEE STRUCTURE.pdf` as spec, once core workflow is solid.
+- P2: Webstores (Release 2), Wrap Lab depth, AI Hub, Employees/Payroll — all deferred per confirmed scope.
