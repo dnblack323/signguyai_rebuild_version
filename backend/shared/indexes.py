@@ -106,6 +106,7 @@ INDEX_MANIFEST: dict[str, tuple[IndexSpec, ...]] = {
     "file_links": (
         TENANT_ID_INDEX,
         IndexSpec(keys=(("tenant_id", ASCENDING), ("entity_type", ASCENDING), ("entity_id", ASCENDING)), name="tenant_id_1_entity_type_1_entity_id_1"),
+        IndexSpec(keys=(("tenant_id", ASCENDING), ("entity_type", ASCENDING), ("entity_id", ASCENDING), ("customer_visible", ASCENDING)), name="tenant_file_link_visibility"),
         IndexSpec(keys=(("tenant_id", ASCENDING), ("file_id", ASCENDING)), name="tenant_id_1_file_id_1"),
         IndexSpec(keys=(("tenant_id", ASCENDING), ("file_id", ASCENDING), ("entity_type", ASCENDING), ("entity_id", ASCENDING)), name="tenant_file_entity_unique", unique=True),
     ),
@@ -223,6 +224,41 @@ INDEX_MANIFEST: dict[str, tuple[IndexSpec, ...]] = {
         IndexSpec(keys=(("tenant_id", ASCENDING), ("key", ASCENDING)), name="tenant_id_1_key_1_unique", unique=True),
         IndexSpec(keys=(("tenant_id", ASCENDING), ("status", ASCENDING)), name="tenant_id_1_status_1"),
         IndexSpec(keys=(("tenant_id", ASCENDING), ("updated_at", DESCENDING)), name="tenant_id_1_updated_at_-1"),
+    ),
+    "tenant_settings": (
+        TENANT_ID_INDEX,
+        IndexSpec(keys=(("tenant_id", ASCENDING), ("namespace", ASCENDING), ("key", ASCENDING)), name="tenant_namespace_key_unique", unique=True),
+        IndexSpec(keys=(("tenant_id", ASCENDING), ("namespace", ASCENDING), ("updated_at", DESCENDING)), name="tenant_namespace_updated"),
+        IndexSpec(keys=(("tenant_id", ASCENDING), ("status", ASCENDING)), name="tenant_status"),
+    ),
+    "activity_events": (
+        TENANT_ID_INDEX,
+        IndexSpec(keys=(("tenant_id", ASCENDING), ("created_at", DESCENDING)), name="tenant_created_at"),
+        IndexSpec(keys=(("tenant_id", ASCENDING), ("module", ASCENDING), ("created_at", DESCENDING)), name="tenant_module_created_at"),
+        IndexSpec(keys=(("tenant_id", ASCENDING), ("entity_type", ASCENDING), ("entity_id", ASCENDING), ("created_at", DESCENDING)), name="tenant_entity_created_at"),
+        IndexSpec(keys=(("tenant_id", ASCENDING), ("actor_id", ASCENDING), ("created_at", DESCENDING)), name="tenant_actor_created_at"),
+        IndexSpec(keys=(("tenant_id", ASCENDING), ("event_type", ASCENDING), ("created_at", DESCENDING)), name="tenant_event_type_created_at"),
+    ),
+    "email_activity": (
+        TENANT_ID_INDEX,
+        IndexSpec(keys=(("tenant_id", ASCENDING), ("created_at", DESCENDING)), name="tenant_email_created_at"),
+        IndexSpec(keys=(("tenant_id", ASCENDING), ("delivery_status", ASCENDING), ("created_at", DESCENDING)), name="tenant_delivery_status_created_at"),
+        IndexSpec(keys=(("tenant_id", ASCENDING), ("recipient_email", ASCENDING), ("created_at", DESCENDING)), name="tenant_recipient_created_at"),
+        IndexSpec(keys=(("tenant_id", ASCENDING), ("template_key", ASCENDING), ("created_at", DESCENDING)), name="tenant_template_created_at"),
+        IndexSpec(keys=(("tenant_id", ASCENDING), ("provider_message_id", ASCENDING)), name="tenant_provider_message_id"),
+        IndexSpec(keys=(("tenant_id", ASCENDING), ("related_entity_type", ASCENDING), ("related_entity_id", ASCENDING)), name="tenant_email_related_entity"),
+    ),
+    "notifications": (
+        TENANT_ID_INDEX,
+        IndexSpec(keys=(("tenant_id", ASCENDING), ("recipient_type", ASCENDING), ("recipient_id", ASCENDING), ("status", ASCENDING), ("created_at", DESCENDING)), name="tenant_recipient_status_created_at"),
+        IndexSpec(keys=(("tenant_id", ASCENDING), ("related_entity_type", ASCENDING), ("related_entity_id", ASCENDING)), name="tenant_notification_related_entity"),
+        IndexSpec(keys=(("tenant_id", ASCENDING), ("severity", ASCENDING), ("created_at", DESCENDING)), name="tenant_notification_severity_created_at"),
+    ),
+    "feature_entitlements": (
+        TENANT_ID_INDEX,
+        IndexSpec(keys=(("tenant_id", ASCENDING), ("feature_key", ASCENDING)), name="tenant_feature_key_unique", unique=True),
+        IndexSpec(keys=(("tenant_id", ASCENDING), ("status", ASCENDING), ("feature_key", ASCENDING)), name="tenant_status_feature_key"),
+        IndexSpec(keys=(("tenant_id", ASCENDING), ("source_product_id", ASCENDING)), name="tenant_source_product"),
     ),
 }
 

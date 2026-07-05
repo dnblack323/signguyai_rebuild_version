@@ -4,10 +4,18 @@ except ImportError:
     from models.webstores import LaunchCheck, WebstoreCapabilities, WebstoreLaunchReadiness
 
 
-def get_webstore_capabilities(product_mode: str = "full_app") -> WebstoreCapabilities:
+def get_webstore_capabilities(product_mode: str = "full_app", entitlement: dict | None = None) -> WebstoreCapabilities:
     """Return tenant entitlement read model without changing store records."""
     normalized_mode = "standalone" if product_mode == "standalone" else "full_app"
-    return WebstoreCapabilities(product_mode=normalized_mode)
+    status = (entitlement or {}).get("status", "preview")
+    enabled = status in {"enabled", "trial"}
+    return WebstoreCapabilities(
+        product_mode=normalized_mode,
+        management_available=enabled or status == "preview",
+        publishing_enabled=enabled,
+        cart_checkout_enabled=enabled,
+        entitlement_status=status,
+    )
 
 
 def get_launch_readiness() -> WebstoreLaunchReadiness:

@@ -8,6 +8,7 @@ from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
+from core_runtime import encode_bearer_token
 from server import app
 
 
@@ -129,14 +130,36 @@ class DocuLinkApiTests(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         os.environ["DOCULINK_OBJECT_STORAGE_ROOT"] = self.tmp.name
         self.repo = FakeDocuLinkRepository()
+        self.activity_events = []
         self.patch = patch("routes.doculink.repository", return_value=self.repo)
         self.patch.start()
+        self.activity_patch = patch("routes.doculink.record_activity_event", side_effect=self.record_activity_event)
+        self.activity_patch.start()
         self.client = TestClient(app)
 
     def tearDown(self):
+        self.activity_patch.stop()
         self.patch.stop()
         self.tmp.cleanup()
         os.environ.pop("DOCULINK_OBJECT_STORAGE_ROOT", None)
+        os.environ.pop("SIGNGUYAI_MAX_UPLOAD_BYTES", None)
+
+    async def record_activity_event(self, _database, context, **payload):
+        event = {
+            "tenant_id": context.tenant_id,
+            "actor_id": context.user_id,
+            **payload,
+        }
+        self.activity_events.append(event)
+        return deepcopy(event)
+
+    def bearer(self, role: str, tenant_id: str = "shop-a", user_id: str = "user-a") -> str:
+        token = encode_bearer_token({
+            "sub": user_id,
+            "tenant_id": tenant_id,
+            "role": role,
+        })
+        return f"Bearer {token}"
 
     def test_document_create_is_tenant_scoped_and_activity_is_recorded(self):
         created = self.client.post("/api/doculink/documents", json={
@@ -159,22 +182,80 @@ class DocuLinkApiTests(unittest.TestCase):
         upload = self.client.post(
             "/api/doculink/files/upload",
             files={"file": ("proof.txt", io.BytesIO(b"proof data"), "text/plain")},
-            headers={"X-Tenant-Id": "shop-a"},
+            headers={"X-Tenant-Id": "shop-a", "X-Actor-Id": "staff-a"},
         )
         self.assertEqual(upload.status_code, 201)
         file_record = upload.json()
         self.assertNotIn("object_path", file_record)
         self.assertEqual(file_record["size_bytes"], len(b"proof data"))
+        self.assertEqual(file_record["uploaded_by"], "staff-a")
         stored_files = list(Path(self.tmp.name).rglob("proof*"))
         self.assertEqual(stored_files, [])
         self.assertTrue(list(Path(self.tmp.name).rglob("*.txt")))
 
-        download = self.client.get(f"/api/doculink/files/{file_record['id']}/download", headers={"X-Tenant-Id": "shop-a"})
+        download = self.client.get(f"/api/doculink/files/{file_record['id']}/download", headers={"X-Tenant-Id": "shop-a", "X-Actor-Id": "staff-a"})
         self.assertEqual(download.status_code, 200)
         self.assertEqual(download.content, b"proof data")
+        self.assertEqual([event["event_type"] for event in self.activity_events], ["files.uploaded", "files.downloaded"])
+        self.assertEqual(self.activity_events[0]["actor_id"], "staff-a")
 
         cross_tenant = self.client.get(f"/api/doculink/files/{file_record['id']}/download", headers={"X-Tenant-Id": "shop-b"})
         self.assertEqual(cross_tenant.status_code, 404)
+
+    def test_upload_rejects_disallowed_mime_type(self):
+        with patch.dict(os.environ, {"SIGNGUYAI_AUTH_MODE": "preview"}, clear=False):
+            response = self.client.post(
+                "/api/doculink/files/upload",
+                files={"file": ("malware.exe", io.BytesIO(b"not really exe"), "application/x-msdownload")},
+                headers={"X-Tenant-Id": "shop-a"},
+            )
+
+        self.assertEqual(response.status_code, 415)
+        self.assertEqual(self.activity_events, [])
+
+    def test_upload_rejects_file_over_configured_size_limit(self):
+        with patch.dict(os.environ, {"SIGNGUYAI_AUTH_MODE": "preview", "SIGNGUYAI_MAX_UPLOAD_BYTES": "4"}, clear=False):
+            response = self.client.post(
+                "/api/doculink/files/upload",
+                files={"file": ("proof.txt", io.BytesIO(b"proof data"), "text/plain")},
+                headers={"X-Tenant-Id": "shop-a"},
+            )
+
+        self.assertEqual(response.status_code, 413)
+        self.assertEqual(self.activity_events, [])
+
+    def test_file_download_requires_authentication_when_auth_is_enforced(self):
+        with patch.dict(os.environ, {"SIGNGUYAI_AUTH_MODE": "enforced"}, clear=False):
+            response = self.client.get("/api/doculink/files/FILE-1/download")
+
+        self.assertEqual(response.status_code, 401)
+
+    def test_staff_can_upload_and_download_but_cannot_share_documents(self):
+        with patch.dict(
+            os.environ,
+            {"JWT_SECRET_KEY": "doculink-test-secret", "SIGNGUYAI_AUTH_MODE": "enforced"},
+            clear=False,
+        ):
+            upload = self.client.post(
+                "/api/doculink/files/upload",
+                files={"file": ("proof.txt", io.BytesIO(b"proof data"), "text/plain")},
+                headers={"Authorization": self.bearer("staff")},
+            )
+            self.assertEqual(upload.status_code, 201)
+            file_id = upload.json()["id"]
+
+            download = self.client.get(
+                f"/api/doculink/files/{file_id}/download",
+                headers={"Authorization": self.bearer("staff")},
+            )
+            share = self.client.post(
+                "/api/doculink/documents/DOC-1/shares",
+                json={"share_type": "customer_portal", "recipient_type": "customer", "recipient_id": "CUST-1"},
+                headers={"Authorization": self.bearer("staff")},
+            )
+
+        self.assertEqual(download.status_code, 200)
+        self.assertEqual(share.status_code, 403)
 
     def test_files_and_documents_can_link_to_supported_records(self):
         document = self.client.post("/api/doculink/documents", json={"title": "Proof approval", "document_type": "approval"}).json()
@@ -187,8 +268,10 @@ class DocuLinkApiTests(unittest.TestCase):
             "entity_type": "wrap_project",
             "entity_id": "WRAP-1",
             "relationship_type": "attachment",
+            "customer_visible": True,
         })
         self.assertEqual(file_link.status_code, 201)
+        self.assertTrue(file_link.json()["customer_visible"])
 
         document_link = self.client.post(f"/api/doculink/documents/{document['id']}/links", json={
             "entity_type": "wrap_project",
@@ -200,6 +283,8 @@ class DocuLinkApiTests(unittest.TestCase):
         links = self.client.get("/api/doculink/links?entity_type=wrap_project&entity_id=WRAP-1").json()
         self.assertEqual(len(links["file_links"]), 1)
         self.assertEqual(len(links["document_links"]), 1)
+        self.assertTrue(links["file_links"][0]["customer_visible"])
+        self.assertIn("files.linked", [event["event_type"] for event in self.activity_events])
 
     def test_ai_generated_document_starts_as_review_required_draft(self):
         created = self.client.post("/api/doculink/documents", json={

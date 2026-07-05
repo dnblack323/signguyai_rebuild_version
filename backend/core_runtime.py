@@ -12,7 +12,7 @@ import os
 import time
 from functools import lru_cache
 
-from fastapi import Header, HTTPException, status
+from fastapi import Depends, Header, HTTPException, status
 from motor.motor_asyncio import AsyncIOMotorClient
 
 try:
@@ -159,4 +159,13 @@ async def get_tenant_id(
 
 def has_permission(user: dict, permission: str) -> bool:
     return identity_has_permission(user, permission)
+
+
+def require_permission(permission: str):
+    async def dependency(context: RuntimeIdentityContext = Depends(get_identity_context)) -> RuntimeIdentityContext:
+        if not identity_has_permission(context, permission):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied")
+        return context
+
+    return dependency
 

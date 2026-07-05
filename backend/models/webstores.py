@@ -27,9 +27,10 @@ class WebstoreCapabilities(BaseModel):
     cart_checkout_enabled: bool = False
     standalone_available: bool = True
     product_mode: WebstoreProductMode = "full_app"
-    standalone_platform_fee_basis_points: int = 500
+    standalone_platform_fee_basis_points: int = 150
     direct_stripe_owner_payout: bool = True
     draft_preview_available: bool = True
+    entitlement_status: str = "preview"
 
 
 class LaunchCheck(BaseModel):

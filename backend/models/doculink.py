@@ -109,6 +109,7 @@ class FileLinkPayload(PreviewEnvelope):
     entity_type: str
     entity_id: str
     relationship_type: str = "attachment"
+    customer_visible: bool = False
     created_by: str = ""
 
 

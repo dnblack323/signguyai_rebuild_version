@@ -49,6 +49,14 @@ class Permission(StrEnum):
     USERS_MANAGE = "users:manage"
     SETTINGS_VIEW = "settings:view"
     SETTINGS_MANAGE = "settings:manage"
+    ACTIVITY_VIEW = "activity:view"
+    FILES_VIEW = "files:view"
+    FILES_UPLOAD = "files:upload"
+    FILES_MANAGE = "files:manage"
+    EMAIL_ACTIVITY_VIEW = "email_activity:view"
+    EMAIL_MANAGE = "email:manage"
+    NOTIFICATIONS_VIEW = "notifications:view"
+    NOTIFICATIONS_MANAGE = "notifications:manage"
     WEBSTORES_VIEW = "webstores:view"
     WEBSTORES_CREATE = "webstores:create"
     WEBSTORES_MANAGE = "webstores:manage"
@@ -97,6 +105,14 @@ ROLE_PERMISSIONS: dict[str, list[str]] = {
         Permission.FINANCIALS_VIEW,
         Permission.USERS_VIEW,
         Permission.SETTINGS_VIEW,
+        Permission.ACTIVITY_VIEW,
+        Permission.FILES_VIEW,
+        Permission.FILES_UPLOAD,
+        Permission.FILES_MANAGE,
+        Permission.EMAIL_ACTIVITY_VIEW,
+        Permission.EMAIL_MANAGE,
+        Permission.NOTIFICATIONS_VIEW,
+        Permission.NOTIFICATIONS_MANAGE,
         Permission.WEBSTORES_VIEW,
         Permission.WEBSTORES_CREATE,
         Permission.WEBSTORES_MANAGE,
@@ -116,6 +132,9 @@ ROLE_PERMISSIONS: dict[str, list[str]] = {
         Permission.INVOICES_VIEW,
         Permission.TIME_OWN,
         Permission.EMPLOYEES_VIEW,
+        Permission.FILES_VIEW,
+        Permission.FILES_UPLOAD,
+        Permission.NOTIFICATIONS_VIEW,
         Permission.PRODUCTS_VIEW,
         Permission.INVENTORY_VIEW,
         Permission.INVENTORY_PULL,
