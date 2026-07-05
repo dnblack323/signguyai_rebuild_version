@@ -96,6 +96,18 @@ class PlatformAdminRouteTests(unittest.TestCase):
                 "version": 1,
             },
         ])
+        self.database["pricing_foundations"].rows.append({
+            "id": "pricing-a",
+            "tenant_id": "shop-a",
+            "key": "default",
+            "settings": {"labor": {"shop_labor_rate": 95}},
+        })
+        self.database["feature_entitlements"].rows.append({
+            "id": "entitlement-a",
+            "tenant_id": "shop-a",
+            "feature_key": "core",
+            "status": "enabled",
+        })
         self.database_patch = patch("routes.platform_admin.get_database", return_value=self.database)
         self.database_patch.start()
         self.client = TestClient(app)
@@ -159,6 +171,49 @@ class PlatformAdminRouteTests(unittest.TestCase):
         self.assertEqual(audit.json()["total"], 1)
         self.assertEqual(audit.json()["events"][0]["action"], "tenant.status.updated")
         self.assertEqual(audit.json()["events"][0]["target_tenant_id"], "shop-b")
+
+    def test_platform_admin_readiness_reports_tenant_launch_checks(self):
+        with patch.dict(
+            os.environ,
+            {
+                "JWT_SECRET_KEY": "platform-admin-test-secret",
+                "SIGNGUYAI_AUTH_MODE": "enforced",
+                "SENDGRID_API_KEY": "test-sendgrid-key",
+                "DOCULINK_OBJECT_STORAGE_ROOT": "C:/tmp/object-storage",
+            },
+            clear=False,
+        ):
+            ready = self.client.get(
+                "/api/platform-admin/tenants/shop-a/readiness",
+                headers={"Authorization": self.bearer("platform_admin")},
+            )
+            not_ready = self.client.get(
+                "/api/platform-admin/tenants/shop-b/readiness",
+                headers={"Authorization": self.bearer("platform_admin")},
+            )
+
+        self.assertEqual(ready.status_code, 200)
+        self.assertTrue(ready.json()["can_launch"])
+        self.assertEqual({check["key"] for check in ready.json()["checks"]}, {
+            "tenant_profile",
+            "account_status",
+            "billing_status",
+            "pricing_foundation",
+            "feature_entitlements",
+            "object_storage",
+            "email_provider",
+        })
+        self.assertEqual(not_ready.status_code, 200)
+        self.assertFalse(not_ready.json()["can_launch"])
+
+    def test_missing_tenant_readiness_returns_404(self):
+        with patch.dict(os.environ, {"JWT_SECRET_KEY": "platform-admin-test-secret", "SIGNGUYAI_AUTH_MODE": "enforced"}, clear=False):
+            response = self.client.get(
+                "/api/platform-admin/tenants/missing-shop/readiness",
+                headers={"Authorization": self.bearer("platform_admin")},
+            )
+
+        self.assertEqual(response.status_code, 404)
 
 
 if __name__ == "__main__":

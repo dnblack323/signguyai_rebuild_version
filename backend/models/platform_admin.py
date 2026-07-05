@@ -31,6 +31,20 @@ class PlatformAdminAuditListResponse(StrictBaseModel):
     total: int = 0
 
 
+class TenantReadinessCheck(StrictBaseModel):
+    key: str
+    label: str
+    passed: bool
+    severity: Literal["blocker", "warning", "info"] = "blocker"
+    detail: str = ""
+
+
+class TenantReadinessResponse(StrictBaseModel):
+    tenant_id: str
+    can_launch: bool
+    checks: list[TenantReadinessCheck] = Field(default_factory=list)
+
+
 class PlatformAdminAuditEvent(StrictBaseModel):
     id: str
     action: str

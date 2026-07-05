@@ -21,8 +21,12 @@ except ImportError:
     from models.access import RuntimeIdentityContext, identity_has_permission, role_permissions
 
 
-MONGO_URL = os.getenv("MONGO_URL", "mongodb://127.0.0.1:27017")
-MONGO_DB_NAME = os.getenv("MONGO_DB_NAME", "signguyai_rebuild")
+MONGO_URL = os.getenv("MONGO_URL")
+DB_NAME = os.getenv("DB_NAME")
+
+if not MONGO_URL or not DB_NAME:
+    raise RuntimeError("Missing required environment variables: MONGO_URL and DB_NAME must be set.")
+
 PREVIEW_TENANT_ID = "preview-shop"
 PREVIEW_USER_ID = "preview-user"
 SUPPORTED_JWT_ALGORITHM = "HS256"
@@ -34,7 +38,7 @@ def get_mongo_client() -> AsyncIOMotorClient:
 
 
 def get_database():
-    return get_mongo_client()[MONGO_DB_NAME]
+    return get_mongo_client()[DB_NAME]
 
 
 def auth_mode() -> str:

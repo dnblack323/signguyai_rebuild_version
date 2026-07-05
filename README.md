@@ -32,41 +32,34 @@ This release establishes the controlling application shell and first structural 
 
 ## Frontend
 
+To run the frontend:
 ```bash
 cd frontend
-npm install
-npm run dev
+yarn install
+yarn start
 ```
 
-The frontend runs at `http://localhost:5173`.
-
-For normal local review, double-click `Start Review.cmd`. See `LOCAL_REVIEW_GUIDE.md`.
+The frontend runs at `http://localhost:3000`.
 
 ## Backend
 
+To run the backend:
 ```bash
 cd backend
+# Create virtual environment if needed
+python -m venv .venv
+# Activate virtual environment
+# Windows: .venv\Scripts\Activate.ps1
+# Mac/Linux: source .venv/bin/activate
 python -m pip install -r requirements.txt
-uvicorn main:app --reload --port 8000
+uvicorn main:app --reload --port 8001
 ```
 
-The backend health endpoint is `http://localhost:8000/api/health` for direct backend development. The bundled local review launcher uses port `8001`.
-The dashboard digest contract is `/api/digest`.
-The temporary compatibility capability contract is `/api/webstores/capabilities`.
-The transferred shared-system contracts include `/api/community/posts`, `/api/notes`, and `/api/ai/tools`.
+The backend health endpoint is `http://localhost:8001/api/health` for direct backend development. The bundled local review launcher uses port `8001`.
 
-## Wrap It!
+Wrap It! opens the React Wrap Lab workspace. Its dashboard, project command center, pricing, design/proofing, damage inspection, production, installation, files, communication, customer portal, and AI mockup studio are backed by `/api/wrap-lab`.
 
-Wrap It! opens the React Wrap Lab workspace. Its dashboard, project command center, pricing,
-design/proofing, damage inspection, production, installation, files, communication, customer
-portal, and AI mockup studio are backed by `/api/wrap-lab`.
-
-Wrap Lab project records are tenant scoped and stored in MongoDB. Copy `.env.example` to `.env`
-or provide `MONGO_URL` and `MONGO_DB_NAME` through the runtime environment. When MongoDB is not
-available, the frontend clearly enters local preview mode so visual review remains possible;
-production persistence requires MongoDB.
-
-See `ORDER_PORTAL_MANAGER_MASTER_SPEC.md` for the controlling product spec, `ORDER_PORTAL_MAIN_APP_INTEGRATION_SPEC.md` for future SignGuyAI OS integration rules, `ORDER_PORTAL_RELEASE_PLAN.md` for build sequencing, and `ORDER_PORTAL_AGENT_BUILD_RULES.md` before modifying this area.
+Wrap Lab project records are tenant scoped and stored in MongoDB. Copy `.env.example` to `.env` or provide `MONGO_URL` and `DB_NAME` through the runtime environment. When MongoDB is not available, the frontend clearly enters local preview mode so visual review remains possible; production persistence requires MongoDB.
 
 ## Emergent
 

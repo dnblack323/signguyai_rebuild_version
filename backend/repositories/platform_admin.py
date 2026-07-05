@@ -1,3 +1,5 @@
+import os
+
 try:
     from ..shared.dates import utc_now
     from ..shared.ids import new_id
@@ -15,6 +17,8 @@ class PlatformAdminRepository:
         self.database = database
         self.tenants = database["tenants"]
         self.audit_events = database["platform_admin_audit_events"]
+        self.pricing_foundations = database["pricing_foundations"]
+        self.feature_entitlements = database["feature_entitlements"]
 
     async def ensure_indexes(self):
         for collection_name in self.collections:
@@ -99,5 +103,33 @@ class PlatformAdminRepository:
         cursor = self.audit_events.find(query).sort("created_at", -1).limit(limit)
         return [self._public(row) for row in await cursor.to_list(length=limit)]
 
+    async def tenant_readiness(self, tenant_id: str) -> dict | None:
+        tenant = await self.tenants.find_one({"tenant_id": tenant_id})
+        if not tenant:
+            return None
+        pricing = await self.pricing_foundations.find_one({"tenant_id": tenant_id, "key": "default"})
+        entitlement_cursor = self.feature_entitlements.find({"tenant_id": tenant_id}).limit(200)
+        entitlements = await entitlement_cursor.to_list(length=200)
+        checks = [
+            self._check("tenant_profile", "Tenant profile exists", bool(tenant.get("name")), f"Tenant name: {tenant.get('name') or 'missing'}"),
+            self._check("account_status", "Account is active or trialing", tenant.get("account_status") in {"active", "trialing"}, f"Account status: {tenant.get('account_status') or 'missing'}"),
+            self._check("billing_status", "Billing is current or trialing", tenant.get("billing_status") in {"current", "trialing"}, f"Billing status: {tenant.get('billing_status') or 'missing'}"),
+            self._check("pricing_foundation", "Pricing foundation saved", bool(pricing and pricing.get("settings")), "Pricing settings are present" if pricing else "Pricing foundation missing"),
+            self._check("feature_entitlements", "Feature entitlements configured", bool(entitlements), f"{len(entitlements)} entitlement record(s) found"),
+            self._check("object_storage", "Object storage configured", self._storage_configured(), "Configured" if self._storage_configured() else "Using local/default storage configuration"),
+            self._check("email_provider", "SendGrid configured", bool(os.getenv("SENDGRID_API_KEY")), "Configured" if os.getenv("SENDGRID_API_KEY") else "SENDGRID_API_KEY is missing"),
+        ]
+        return {
+            "tenant_id": tenant_id,
+            "can_launch": all(check["passed"] for check in checks if check["severity"] == "blocker"),
+            "checks": checks,
+        }
+
     def _public(self, document: dict) -> dict:
         return {key: value for key, value in document.items() if key != "_id"}
+
+    def _check(self, key: str, label: str, passed: bool, detail: str, severity: str = "blocker") -> dict:
+        return {"key": key, "label": label, "passed": passed, "severity": severity, "detail": detail}
+
+    def _storage_configured(self) -> bool:
+        return any(os.getenv(key) for key in ("DOCULINK_OBJECT_STORAGE_ROOT", "S3_BUCKET", "EMERGENT_OBJECT_STORAGE_BUCKET"))

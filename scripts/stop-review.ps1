@@ -16,7 +16,7 @@ foreach ($name in @("frontend", "backend")) {
     }
 }
 
-foreach ($port in @(5173, 8001)) {
+foreach ($port in @(3000, 8001)) {
     Get-NetTCPConnection -State Listen -LocalPort $port -ErrorAction SilentlyContinue |
         Select-Object -ExpandProperty OwningProcess -Unique |
         ForEach-Object { Stop-ProcessTree $_ }

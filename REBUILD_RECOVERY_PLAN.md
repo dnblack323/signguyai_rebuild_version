@@ -124,7 +124,7 @@ Verification snapshot:
 | --- | --- | --- | --- |
 | Phase 0: Product shape | Mostly done, with open naming decisions | `PHASE_0_DECISIONS.md` and `PHASE_0_AGENT_MANUAL_OUTLINE.md` exist. Founder pricing and release order are captured. | Final public name for Webstores vs Order Portal Manager. Final production-unit label. Pricing category matrix details. |
 | Phase 1: Architecture and data model | Strong partial | FastAPI/Vite shell, Mongo repositories, UUIDv7 IDs, integer money, tenant indexes, normalized child records, repeatable backend/frontend verification. | Full schema review against Phase 0 and production environment bootstrap. |
-| Phase 2: Auth, tenant isolation, billing | Not launch-ready | Preview tenant dependency exists. Permission helper exists. Billing docs exist. | Real auth, user accounts, tenant membership, roles, entitlements, founder billing records, Stripe products/coupons, platform fees, tenant isolation tests. |
+| Phase 2: Auth, tenant isolation, billing | Not launch-ready | Preview tenant dependency exists. Permission helper exists. Billing docs exist. Current-tenant profile read/update exists without login/user provisioning. | Real auth, user accounts, tenant membership, role claims, entitlements, founder billing records, Stripe products/coupons, platform fees, tenant isolation tests. |
 | Phase 3: Core CRM | Partial | Shared customer records, frontend workspace, customer API. | Real CRM depth: contacts, addresses, activity, tags, import/export, customer portal linkage, duplicate handling. |
 | Phase 4: Pricing engine | Partial | Pricing foundation workspace, backend persistence, category schemas, backend pricing snapshots, integer cents. | Complete launch category matrix, owner override reasons, audited overrides, explain-math panel, pricing tests, tenant-specific settings applied to calculations. |
 | Phase 5: Production workflow | Early partial | Order items, statuses, work order drafts, production summary concepts, `production_required` schema, and category-aware production defaults. | Automatic production units beyond draft snapshots, production board, production task states, field/mobile view. |
@@ -133,7 +133,7 @@ Verification snapshot:
 | Phase 8: Employee tools | Mostly not started | Navigation placeholders and preview module status exist. | Time tracking, payroll, employee roles, staff productivity tools. Defer until core workflow is stable. |
 | Phase 9: Webstores/add-ons | Spec and UI preview only | Order Portal docs, standalone mode, preview workspace, capability/readiness endpoints. | Real portal CRUD, products, public storefront, cart, checkout, Stripe Connect, owner portal, portal-to-order conversion. |
 | Phase 10: AI tools | Preview only | AI tool catalog and preview response persistence exist. | Real AI provider, credit ledger, cost tracking, daily limits, model logging, tenant balance enforcement. |
-| Phase 11: Admin/observability/hardening | Early partial | Basic health route exists. Platform Admin backend skeleton can list tenants, update tenant account/billing status, and record platform admin audit events without implementing login or impersonation flows. | Platform admin frontend portal, impersonation after Emergent-owned auth, error tracking, logs, backups, rate limits, support tooling, security review. |
+| Phase 11: Admin/observability/hardening | Early partial | Basic health route exists. Platform Admin backend skeleton can list tenants, update tenant account/billing status, record platform admin audit events, and report tenant launch-readiness checks without implementing login or impersonation flows. | Platform admin frontend portal, impersonation after Emergent-owned auth, error tracking, logs, backups, rate limits, support tooling, security review. |
 | Phase 12: Launch polish | Not started | App has a previewable shell. | QA pass, onboarding, empty states, docs, terms/privacy, production deploy path, monitoring, support process. |
 
 ## Resume From Here
@@ -187,7 +187,7 @@ This step is module-owned implementation work. Use the Auth, Tenants/Organizatio
 Build order:
 
 1. Auth and users.
-2. Tenant membership and role claims.
+2. Tenant membership and role claims. Current-tenant profile storage is done; membership/user provisioning waits for Emergent-owned auth/login work.
 3. Replace preview tenant headers with authenticated tenant resolution.
 4. Role and permission enforcement at route level.
 5. Feature flags and entitlements.
@@ -196,7 +196,7 @@ Build order:
 8. Object storage production config.
 9. Email provider foundation.
 10. Audit log foundation.
-11. Platform creator/admin skeleton. Backend tenant status/audit foundation is done; frontend portal and impersonation wait for Emergent-owned auth/login work.
+11. Platform creator/admin skeleton. Backend tenant status/audit/readiness foundation is done; frontend portal and impersonation wait for Emergent-owned auth/login work.
 
 Exit criteria:
 

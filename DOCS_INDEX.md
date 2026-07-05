@@ -29,8 +29,8 @@ Do not use a broad Phase 0 or architecture note to overwrite a newer module rebu
 
 These source documents live outside this repo and should be treated as source inputs, not copied wholesale into the repo:
 
-- `C:\Users\thesi\OneDrive\1 SignGuyAi OS\0REBUILD\all EMERGENT MD FILES\SIGNGUY_AI_ARCHITECTURE_MAP.md`: Complete app architecture, navigation, page map, and folder-structure recommendation. Compare this against the current rebuild before applying because some recommendations are already implemented here.
-- `C:\Users\thesi\OneDrive\1 SignGuyAi OS\0REBUILD\all EMERGENT MD FILES\MODULE SPECS MDS\`: Module rebuild sheets. These own module-specific rebuild rules such as Auth, Tenants/Organizations, Users/Roles/Permissions, Settings, Orders, Webstores, Pricing, AI, Platform Admin, and related module behavior.
+- `[OneDrive]/0REBUILD/all EMERGENT MD FILES/SIGNGUY_AI_ARCHITECTURE_MAP.md`: Complete app architecture, navigation, page map, and folder-structure recommendation. Compare this against the current rebuild before applying because some recommendations are already implemented here.
+- `[OneDrive]/0REBUILD/all EMERGENT MD FILES/MODULE SPECS MDS/`: Module rebuild sheets. These own module-specific rebuild rules such as Auth, Tenants/Organizations, Users/Roles/Permissions, Settings, Orders, Webstores, Pricing, AI, Platform Admin, and related module behavior.
 
 ## Order Portal / Webstores Module Docs
 

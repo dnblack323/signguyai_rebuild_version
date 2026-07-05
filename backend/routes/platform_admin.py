@@ -3,12 +3,12 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 try:
     from ..core_runtime import get_database, get_identity_context
     from ..models.access import RuntimeIdentityContext, UserRole
-    from ..models.platform_admin import PlatformAdminAuditListResponse, TenantListResponse, TenantStatusPatch
+    from ..models.platform_admin import PlatformAdminAuditListResponse, TenantListResponse, TenantReadinessResponse, TenantStatusPatch
     from ..repositories.platform_admin import PlatformAdminRepository
 except ImportError:
     from core_runtime import get_database, get_identity_context
     from models.access import RuntimeIdentityContext, UserRole
-    from models.platform_admin import PlatformAdminAuditListResponse, TenantListResponse, TenantStatusPatch
+    from models.platform_admin import PlatformAdminAuditListResponse, TenantListResponse, TenantReadinessResponse, TenantStatusPatch
     from repositories.platform_admin import PlatformAdminRepository
 
 
@@ -63,6 +63,19 @@ async def update_tenant_status(
     if not tenant:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant not found")
     return tenant
+
+
+@router.get("/tenants/{tenant_id}/readiness", response_model=TenantReadinessResponse)
+async def tenant_readiness(
+    tenant_id: str,
+    _context: RuntimeIdentityContext = Depends(require_platform_admin),
+) -> TenantReadinessResponse:
+    repo = repository()
+    await repo.ensure_indexes()
+    readiness = await repo.tenant_readiness(tenant_id)
+    if not readiness:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant not found")
+    return TenantReadinessResponse(**readiness)
 
 
 @router.get("/audit-events", response_model=PlatformAdminAuditListResponse)
