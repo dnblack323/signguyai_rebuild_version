@@ -1,0 +1,589 @@
+
+================================================================================
+PRICING FOUNDATION FIELD USAGE AUDIT
+================================================================================
+
+Starting audit at: 2026-05-18T04:24:11.534394
+SAFETY: This is a READ-ONLY audit. No fields will be removed.
+
+Loading Pricing Foundation schema...
+Extracting all field paths...
+✓ Found 103 unique field paths
+
+Searching codebase for field usage (this may take a moment)...
+  Processed 20/103 fields...
+  Processed 40/103 fields...
+  Processed 60/103 fields...
+  Processed 80/103 fields...
+  Processed 100/103 fields...
+✓ Completed field usage analysis
+
+================================================================================
+AUDIT SUMMARY STATISTICS
+================================================================================
+
+Total fields audited:                 103
+  • Actively Used:                    49
+  • Used Indirectly:                  9
+  • Stored / Display Only:            45
+  • Quiz-Mapped Only:                 0
+  • Deprecated / Legacy:              0
+  • Unused / Safe to Remove:          0
+  • Needs Review:                     0
+
+================================================================================
+DETAILED FIELD AUDIT REPORT
+================================================================================
+
+
+================================================================================
+ACTIVELY_USED: Actively Used - Field directly changes pricing output
+================================================================================
+
+Count: 49
+
+Field: application_time_per_sqft
+Reason: Verified in calculator code - directly affects price output
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/models/pricing.py
+Frontend: frontend/src/pages/PricingFoundation.js
+
+Field: banner_grommet_price_each
+Reason: Verified in calculator code - directly affects price output
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/tests/test_iteration88_bug_fixes.py, backend/models/pricing.py
+Frontend: frontend/src/pages/PricingFoundation.js
+
+Field: banner_hemming_tape_price_per_linear_inch
+Reason: Verified in calculator code - directly affects price output
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/tests/test_iteration88_bug_fixes.py, backend/models/pricing.py
+Frontend: frontend/src/pages/PricingFoundation.js
+
+Field: category_defaults
+Reason: Found in pricing logic: backend/quiz_mapping_verification.py, backend/server.py
+Backend: backend/quiz_mapping_verification.py, backend/server.py, backend/routes/job_tickets.py
+Frontend: frontend/src/pages/PricingFoundation.js, frontend/src/components/PricingCalculator.js, frontend/src/components/pricing/PricingSetupQuiz.js
+
+Field: category_defaults.apparel
+Reason: Found in pricing logic: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py, backend/services/workflow_engine.py
+Frontend: frontend/src/pages/WorkflowTemplateManager.js, frontend/src/pages/OrderDetail.js, frontend/src/pages/Questionnaires.js
+
+Field: category_defaults.apparel.default_blank_cost
+Reason: Verified in calculator code - directly affects price output
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py
+Frontend: frontend/src/components/pricing/PricingSetupQuiz.js
+
+Field: category_defaults.apparel.default_decoration_cost
+Reason: Verified in calculator code - directly affects price output
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py
+Frontend: frontend/src/components/pricing/PricingSetupQuiz.js
+
+Field: category_defaults.banners
+Reason: Found in pricing logic: backend/quiz_mapping_verification.py, backend/server.py
+Backend: backend/quiz_mapping_verification.py, backend/server.py, backend/services/workflow_engine.py
+Frontend: frontend/src/pages/WorkflowTemplateManager.js, frontend/src/pages/OrderDetail.js, frontend/src/pages/JobTicketDetail.js
+
+Field: category_defaults.banners.sell_rate_defaults.base_rate
+Reason: Verified in calculator code - directly affects price output
+Backend: backend/quiz_mapping_verification.py, backend/server.py
+Frontend: frontend/src/pages/PricingFoundation.js, frontend/src/components/pricing/PricingSetupQuiz.js
+
+Field: category_defaults.custom
+Reason: Found in pricing logic: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py, backend/services/workflow_engine.py
+Frontend: frontend/src/App.js, frontend/src/utils/assistantPrefsApi.js, frontend/src/config/legacyNavConfig.js
+
+Field: category_defaults.custom.default_markup_multiplier
+Reason: Verified in calculator code - directly affects price output
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py, backend/server.py
+Frontend: frontend/src/pages/PricingFoundation.js, frontend/src/components/PricingCalculator.js, frontend/src/components/pricing/PricingSetupQuiz.js
+
+Field: category_defaults.cut_vinyl
+Reason: Found in pricing logic: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py, backend/server.py
+Frontend: frontend/src/pages/WorkflowTemplateManager.js, frontend/src/pages/OrderDetail.js, frontend/src/pages/Jobs.js
+
+Field: category_defaults.cut_vinyl.sell_rate_defaults.base_rate
+Reason: Verified in calculator code - directly affects price output
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py, backend/server.py
+Frontend: frontend/src/pages/PricingFoundation.js, frontend/src/components/pricing/PricingSetupQuiz.js
+
+Field: category_defaults.digital_print
+Reason: Found in pricing logic: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py, backend/server.py
+Frontend: frontend/src/pages/OrderDetail.js, frontend/src/pages/Jobs.js, frontend/src/pages/JobTicketDetail.js
+
+Field: category_defaults.digital_print.sell_rate_defaults.base_rate
+Reason: Verified in calculator code - directly affects price output
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py, backend/server.py
+Frontend: frontend/src/pages/PricingFoundation.js, frontend/src/components/pricing/PricingSetupQuiz.js
+
+Field: category_defaults.digital_print.sell_rate_defaults.laminate_addon_per_sqft
+Reason: Verified in calculator code - directly affects price output
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py
+Frontend: frontend/src/components/pricing/PricingSetupQuiz.js
+
+Field: category_defaults.promotional
+Reason: Found in pricing logic: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py, backend/server.py
+Frontend: frontend/src/pages/Jobs.js, frontend/src/pages/AITools.js, frontend/src/pages/FeaturesPage.js
+
+Field: category_defaults.promotional.default_markup_multiplier
+Reason: Verified in calculator code - directly affects price output
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py, backend/server.py
+Frontend: frontend/src/pages/PricingFoundation.js, frontend/src/components/PricingCalculator.js, frontend/src/components/pricing/PricingSetupQuiz.js
+
+Field: category_defaults.rigid_signs
+Reason: Found in pricing logic: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py, backend/server.py
+Frontend: frontend/src/pages/WorkflowTemplateManager.js, frontend/src/pages/OrderDetail.js, frontend/src/pages/Jobs.js
+
+Field: category_defaults.rigid_signs.sell_rate_defaults.base_rate
+Reason: Verified in calculator code - directly affects price output
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py, backend/server.py
+Frontend: frontend/src/pages/PricingFoundation.js, frontend/src/components/pricing/PricingSetupQuiz.js
+
+Field: category_defaults.rigid_signs.sell_rate_defaults.yard_sign_rate
+Reason: Verified in calculator code - directly affects price output
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py
+Frontend: frontend/src/components/pricing/PricingSetupQuiz.js
+
+Field: category_defaults.services
+Reason: Found in pricing logic: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py, backend/main.py
+Frontend: frontend/src/pages/OrderDetail.js, frontend/src/pages/Jobs.js, frontend/src/pages/JobTicketDetail.js
+
+Field: category_defaults.services.labor_rate_overrides.design
+Reason: Verified in calculator code - directly affects price output
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py, backend/services/workflow_engine.py
+Frontend: frontend/src/pages/WorkflowTemplateManager.js, frontend/src/pages/OrderDetail.js, frontend/src/pages/NewOrderForm.js
+
+Field: category_defaults.services.labor_rate_overrides.install
+Reason: Verified in calculator code - directly affects price output
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py, backend/services/workflow_engine.py
+Frontend: frontend/src/pages/WorkflowTemplateManager.js, frontend/src/pages/OrderDetail.js, frontend/src/pages/NewOrderForm.js
+
+Field: category_defaults.services.labor_rate_overrides.production
+Reason: Verified in calculator code - directly affects price output
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py, backend/services/ai_assistant_actions.py
+Frontend: frontend/src/App.js, frontend/src/pages/WorkflowTemplateManager.js, frontend/src/pages/ProductionBoard.js
+
+Field: category_defaults.services.minimums
+Reason: Found in pricing logic: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py, backend/routes/platform_admin.py
+Frontend: frontend/src/pages/PricingFoundation.js, frontend/src/components/DynamicCategoryFields.js, frontend/src/components/pricing/PricingSetupQuiz.js
+
+Field: category_defaults.vehicle_graphics
+Reason: Found in pricing logic: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py, backend/routes/profit_analytics.py
+Frontend: frontend/src/pages/Jobs.js, frontend/src/components/LivePricingPreview.js, frontend/src/components/PricingCalculator.js
+
+Field: category_defaults.vehicle_graphics.sell_rate_defaults.color_change_per_sqft
+Reason: Verified in calculator code - directly affects price output
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py
+Frontend: frontend/src/components/pricing/PricingSetupQuiz.js
+
+Field: category_defaults.vehicle_graphics.sell_rate_defaults.printed_wrap_per_sqft
+Reason: Verified in calculator code - directly affects price output
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py
+Frontend: frontend/src/components/pricing/PricingSetupQuiz.js
+
+Field: default_markup_percent
+Reason: Verified in calculator code - directly affects price output
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/tests/test_iteration134.py, backend/tests/test_pricing.py
+
+Field: deposit_percentage
+Reason: Verified in calculator code - directly affects price output
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py, backend/tests/test_pricing_foundation.py
+Frontend: frontend/src/pages/PricingFoundation.js, frontend/src/components/pricing/PricingSetupQuiz.js
+
+Field: design_hourly_rate
+Reason: Verified in calculator code - directly affects price output
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py, backend/server.py
+Frontend: frontend/src/pages/PricingFoundation.js, frontend/src/components/pricing/PricingSetupQuiz.js
+
+Field: hardware_accessories
+Reason: Found in pricing logic: backend/pricing_foundation_field_usage_audit.py, backend/server.py
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/server.py, backend/routes/job_tickets.py
+Frontend: frontend/src/pages/PricingFoundation.js, frontend/src/components/PricingCalculator.js
+
+Field: hourly_rate
+Reason: Verified in calculator code - directly affects price output
+Backend: backend/quiz_mapping_verification.py, backend/server.py, backend/services/ai_assistant_actions.py
+Frontend: frontend/src/pages/Payroll.js, frontend/src/pages/EmployeePortalProfile.js, frontend/src/pages/PricingFoundation.js
+
+Field: install_hourly_rate
+Reason: Verified in calculator code - directly affects price output
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py, backend/server.py
+Frontend: frontend/src/pages/PricingFoundation.js, frontend/src/components/pricing/PricingSetupQuiz.js
+
+Field: laminate_time_per_sqft
+Reason: Verified in calculator code - directly affects price output
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/models/pricing.py
+Frontend: frontend/src/pages/PricingFoundation.js
+
+Field: material_markup_percent
+Reason: Verified in calculator code - directly affects price output
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/models/pricing.py
+Frontend: frontend/src/pages/PricingFoundation.js
+
+Field: materials
+Reason: Verified in calculator code - directly affects price output
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/services/ai_assistant_actions.py, backend/routes/webstores.py
+Frontend: frontend/src/App.js, frontend/src/pages/NewOrderForm.js, frontend/src/pages/PricingFoundation.js
+
+Field: mileage_rate
+Reason: Verified in calculator code - directly affects price output
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/models/pricing.py
+Frontend: frontend/src/pages/PricingFoundation.js
+
+Field: minimum_order
+Reason: Verified in calculator code - directly affects price output
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py, backend/server.py
+Frontend: frontend/src/pages/PricingFoundation.js, frontend/src/components/pricing/PricingSetupQuiz.js
+
+Field: minimum_travel_charge
+Reason: Verified in calculator code - directly affects price output
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/models/pricing.py
+Frontend: frontend/src/pages/PricingFoundation.js
+
+Field: print_time_per_sqft
+Reason: Verified in calculator code - directly affects price output
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/models/pricing.py
+Frontend: frontend/src/pages/PricingFoundation.js
+
+Field: production_hourly_rate
+Reason: Verified in calculator code - directly affects price output
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py, backend/server.py
+Frontend: frontend/src/pages/PricingFoundation.js, frontend/src/pages/OnboardingHub.js, frontend/src/components/pricing/PricingSetupQuiz.js
+
+Field: rush_fee_flat
+Reason: Verified in calculator code - directly affects price output
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/models/pricing.py
+Frontend: frontend/src/pages/PricingFoundation.js
+
+Field: rush_fee_percentage
+Reason: Verified in calculator code - directly affects price output
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/server.py, backend/tests/test_pricing_foundation.py
+Frontend: frontend/src/pages/PricingFoundation.js
+
+Field: target_profit_margin_percent
+Reason: Verified in calculator code - directly affects price output
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py, backend/server.py
+Frontend: frontend/src/pages/PricingFoundation.js, frontend/src/components/PricingCalculator.js, frontend/src/components/pricing/PricingSetupQuiz.js
+
+Field: tenant_id
+Reason: Found in pricing logic: backend/pricing_foundation_field_usage_audit.py, backend/core_runtime.py
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/core_runtime.py, backend/server.py
+Frontend: frontend/src/pages/PlatformAdminAuditLog.js, frontend/src/pages/PlatformAdminEmailLogs.js, frontend/src/pages/EmployeePortalLogin.js
+
+Field: waste_percentage
+Reason: Verified in calculator code - directly affects price output
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/server.py, backend/tests/test_pricing_foundation.py
+Frontend: frontend/src/pages/PricingFoundation.js
+
+Field: weeding_time_per_sqft
+Reason: Verified in calculator code - directly affects price output
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/models/pricing.py
+Frontend: frontend/src/pages/PricingFoundation.js
+
+
+================================================================================
+USED_INDIRECTLY: Used Indirectly - Affects multiplier, rule, or default
+================================================================================
+
+Count: 9
+
+Field: ai_estimation_rules
+Reason: Affects calculation rules, multipliers, or AI behavior
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/server.py, backend/routes/pricing.py
+Frontend: frontend/src/pages/PricingFoundation.js, frontend/src/components/PricingCalculator.js
+
+Field: benchmark_rules
+Reason: Affects calculation rules, multipliers, or AI behavior
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/server.py, backend/routes/pricing.py
+Frontend: frontend/src/pages/PricingFoundation.js
+
+Field: complexity_multiplier_base
+Reason: Affects calculation rules, multipliers, or AI behavior
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/server.py, backend/models/pricing.py
+Frontend: frontend/src/pages/PricingFoundation.js
+
+Field: complexity_multiplier_max
+Reason: Affects calculation rules, multipliers, or AI behavior
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/server.py, backend/models/pricing.py
+Frontend: frontend/src/pages/PricingFoundation.js
+
+Field: global_calc_rules
+Reason: Affects calculation rules, multipliers, or AI behavior
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/server.py, backend/routes/pricing.py
+Frontend: frontend/src/pages/PricingFoundation.js
+
+Field: install_complexity_multiplier_base
+Reason: Affects calculation rules, multipliers, or AI behavior
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/models/pricing.py
+Frontend: frontend/src/pages/PricingFoundation.js
+
+Field: install_complexity_multiplier_max
+Reason: Affects calculation rules, multipliers, or AI behavior
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/models/pricing.py
+Frontend: frontend/src/pages/PricingFoundation.js
+
+Field: quantity_breaks
+Reason: Affects calculation rules, multipliers, or AI behavior
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py, backend/server.py
+Frontend: frontend/src/pages/PricingFoundation.js, frontend/src/components/pricing/PricingSetupQuiz.js
+
+Field: rounding_rule
+Reason: Affects calculation rules, multipliers, or AI behavior
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/server.py, backend/tests/test_pricing_foundation.py
+Frontend: frontend/src/pages/PricingFoundation.js
+
+
+================================================================================
+STORED_DISPLAY: Stored / Display Only - Saved but doesn't affect price
+================================================================================
+
+Count: 45
+
+Field: admin_hourly_rate
+Reason: Found in models but not calculator: backend/pricing_foundation_field_usage_audit.py, backend/tests/test_pricing_foundation.py
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/tests/test_pricing_foundation.py, backend/models/pricing.py
+Frontend: frontend/src/pages/PricingFoundation.js
+
+Field: ai_fallback_behavior
+Reason: Found in models but not calculator: backend/pricing_foundation_field_usage_audit.py, backend/models/pricing.py
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/models/pricing.py
+Frontend: frontend/src/pages/PricingFoundation.js
+
+Field: ai_fallback_warnings_enabled
+Reason: Found in models but not calculator: backend/pricing_foundation_field_usage_audit.py, backend/models/pricing.py
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/models/pricing.py
+Frontend: frontend/src/pages/PricingFoundation.js
+
+Field: category_defaults.apparel.shop_pricing_table
+Reason: Benchmark/reference pricing - not used in cost-plus calculations
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py, backend/server.py
+Frontend: frontend/src/components/pricing/PricingSetupQuiz.js
+
+Field: category_defaults.banners.cost_multipliers
+Reason: Found in models but not calculator: backend/pricing_foundation_field_usage_audit.py
+Backend: backend/pricing_foundation_field_usage_audit.py
+
+Field: category_defaults.banners.default_minimum_sell_price
+Reason: Stored in database but not enforced in calculator
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py, backend/tests/test_banners_pricing.py
+Frontend: frontend/src/pages/PricingFoundation.js, frontend/src/components/pricing/PricingSetupQuiz.js
+
+Field: category_defaults.banners.sell_rate_defaults
+Reason: Found in models but not calculator: backend/quiz_mapping_verification.py, backend/server.py
+Backend: backend/quiz_mapping_verification.py, backend/server.py, backend/models/pricing.py
+Frontend: frontend/src/pages/PricingFoundation.js, frontend/src/components/pricing/PricingSetupQuiz.js
+
+Field: category_defaults.banners.sell_rate_defaults.large_format_rate
+Reason: Found in models but not calculator: backend/pricing_foundation_field_usage_audit.py
+Backend: backend/pricing_foundation_field_usage_audit.py
+
+Field: category_defaults.cut_vinyl.default_minimum_sell_price
+Reason: Stored in database but not enforced in calculator
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py, backend/tests/test_banners_pricing.py
+Frontend: frontend/src/pages/PricingFoundation.js, frontend/src/components/pricing/PricingSetupQuiz.js
+
+Field: category_defaults.cut_vinyl.sell_rate_defaults
+Reason: Found in models but not calculator: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py, backend/server.py
+Frontend: frontend/src/pages/PricingFoundation.js, frontend/src/components/pricing/PricingSetupQuiz.js
+
+Field: category_defaults.digital_print.sell_rate_defaults
+Reason: Found in models but not calculator: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py, backend/server.py
+Frontend: frontend/src/pages/PricingFoundation.js, frontend/src/components/pricing/PricingSetupQuiz.js
+
+Field: category_defaults.promotional.minimum_charge
+Reason: Stored in database but not enforced in calculator
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py, backend/routes/job_tickets.py
+Frontend: frontend/src/pages/PricingFoundation.js, frontend/src/components/DynamicCategoryFields.js, frontend/src/components/pricing/PricingSetupQuiz.js
+
+Field: category_defaults.promotional.minimum_setup_fee
+Reason: Stored in database but not enforced in calculator
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py
+Frontend: frontend/src/components/pricing/PricingSetupQuiz.js
+
+Field: category_defaults.rigid_signs.default_minimum_sell_price
+Reason: Stored in database but not enforced in calculator
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py, backend/tests/test_banners_pricing.py
+Frontend: frontend/src/pages/PricingFoundation.js, frontend/src/components/pricing/PricingSetupQuiz.js
+
+Field: category_defaults.rigid_signs.quantity_breaks
+Reason: Found in models but not calculator: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py, backend/server.py
+Frontend: frontend/src/pages/PricingFoundation.js, frontend/src/components/pricing/PricingSetupQuiz.js
+
+Field: category_defaults.rigid_signs.quantity_breaks.qty_10_percent
+Reason: Stored in database but not enforced in calculator
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py
+Frontend: frontend/src/components/pricing/PricingSetupQuiz.js
+
+Field: category_defaults.rigid_signs.quantity_breaks.qty_25_percent
+Reason: Stored in database but not enforced in calculator
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py
+Frontend: frontend/src/components/pricing/PricingSetupQuiz.js
+
+Field: category_defaults.rigid_signs.sell_rate_defaults
+Reason: Found in models but not calculator: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py, backend/server.py
+Frontend: frontend/src/pages/PricingFoundation.js, frontend/src/components/pricing/PricingSetupQuiz.js
+
+Field: category_defaults.services.labor_rate_overrides
+Reason: Found in models but not calculator: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py
+Frontend: frontend/src/components/pricing/PricingSetupQuiz.js
+
+Field: category_defaults.services.minimums.design
+Reason: Stored in database but not enforced in calculator
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py, backend/services/workflow_engine.py
+Frontend: frontend/src/pages/WorkflowTemplateManager.js, frontend/src/pages/OrderDetail.js, frontend/src/pages/NewOrderForm.js
+
+Field: category_defaults.services.minimums.install
+Reason: Stored in database but not enforced in calculator
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py, backend/services/workflow_engine.py
+Frontend: frontend/src/pages/WorkflowTemplateManager.js, frontend/src/pages/OrderDetail.js, frontend/src/pages/NewOrderForm.js
+
+Field: category_defaults.vehicle_graphics.benchmarks
+Reason: Benchmark/reference pricing - not used in cost-plus calculations
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py, backend/server.py
+Frontend: frontend/src/pages/CompanySettings.js, frontend/src/pages/PricingFoundation.js, frontend/src/pages/PricingSetup.js
+
+Field: category_defaults.vehicle_graphics.benchmarks.package_door_lettering
+Reason: Benchmark/reference pricing - not used in cost-plus calculations
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py
+Frontend: frontend/src/components/pricing/PricingSetupQuiz.js
+
+Field: category_defaults.vehicle_graphics.benchmarks.package_full_wrap
+Reason: Benchmark/reference pricing - not used in cost-plus calculations
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py
+Frontend: frontend/src/components/pricing/PricingSetupQuiz.js
+
+Field: category_defaults.vehicle_graphics.benchmarks.package_partial_wrap
+Reason: Benchmark/reference pricing - not used in cost-plus calculations
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py
+Frontend: frontend/src/components/pricing/PricingSetupQuiz.js
+
+Field: category_defaults.vehicle_graphics.benchmarks.package_spot_graphics
+Reason: Benchmark/reference pricing - not used in cost-plus calculations
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py
+Frontend: frontend/src/components/pricing/PricingSetupQuiz.js
+
+Field: category_defaults.vehicle_graphics.sell_rate_defaults
+Reason: Found in models but not calculator: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/quiz_mapping_verification.py, backend/server.py
+Frontend: frontend/src/pages/PricingFoundation.js, frontend/src/components/pricing/PricingSetupQuiz.js
+
+Field: file_cleanup_fee_default
+Reason: Found in models but not calculator: backend/pricing_foundation_field_usage_audit.py, backend/server.py
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/server.py, backend/models/pricing.py
+Frontend: frontend/src/pages/PricingFoundation.js
+
+Field: minimum_design_charge
+Reason: Stored in database but not enforced in calculator
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/tests/test_pricing_foundation.py, backend/models/pricing.py
+Frontend: frontend/src/pages/PricingFoundation.js
+
+Field: minimum_install_charge
+Reason: Stored in database but not enforced in calculator
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/server.py, backend/tests/test_pricing_foundation.py
+Frontend: frontend/src/pages/PricingFoundation.js
+
+Field: minimum_print_charge
+Reason: Stored in database but not enforced in calculator
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/tests/test_pricing_foundation.py, backend/models/pricing.py
+Frontend: frontend/src/pages/PricingFoundation.js
+
+Field: minimum_removal_charge
+Reason: Stored in database but not enforced in calculator
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/models/pricing.py
+Frontend: frontend/src/pages/PricingFoundation.js
+
+Field: minimum_service_charge
+Reason: Stored in database but not enforced in calculator
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/tests/test_pricing_foundation.py, backend/models/pricing.py
+Frontend: frontend/src/pages/PricingFoundation.js
+
+Field: minimum_sign_charge
+Reason: Stored in database but not enforced in calculator
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/tests/test_pricing_foundation.py, backend/models/pricing.py
+Frontend: frontend/src/pages/PricingFoundation.js
+
+Field: minimum_vinyl_charge
+Reason: Stored in database but not enforced in calculator
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/tests/test_pricing_foundation.py, backend/models/pricing.py
+Frontend: frontend/src/pages/PricingFoundation.js
+
+Field: minimum_wrap_charge
+Reason: Stored in database but not enforced in calculator
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/tests/test_pricing_foundation.py, backend/models/pricing.py
+Frontend: frontend/src/pages/PricingFoundation.js
+
+Field: project_handling_hourly_rate
+Reason: Found in models but not calculator: backend/pricing_foundation_field_usage_audit.py, backend/models/pricing.py
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/models/pricing.py
+Frontend: frontend/src/pages/PricingFoundation.js
+
+Field: removal_hourly_rate
+Reason: Found in models but not calculator: backend/pricing_foundation_field_usage_audit.py, backend/server.py
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/server.py, backend/models/pricing.py
+Frontend: frontend/src/pages/PricingFoundation.js
+
+Field: selling_price_benchmarks
+Reason: Benchmark/reference pricing - not used in cost-plus calculations
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/server.py, backend/routes/profit_analytics.py
+Frontend: frontend/src/pages/PricingFoundation.js
+
+Field: setup_fee_apparel_dtf
+Reason: Found in models but not calculator: backend/pricing_foundation_field_usage_audit.py, backend/tests/test_pricing_foundation.py
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/tests/test_pricing_foundation.py, backend/models/pricing.py
+Frontend: frontend/src/pages/PricingFoundation.js
+
+Field: setup_fee_apparel_screen
+Reason: Found in models but not calculator: backend/pricing_foundation_field_usage_audit.py, backend/tests/test_pricing_foundation.py
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/tests/test_pricing_foundation.py, backend/models/pricing.py
+Frontend: frontend/src/pages/PricingFoundation.js
+
+Field: setup_fee_default
+Reason: Found in models but not calculator: backend/pricing_foundation_field_usage_audit.py, backend/server.py
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/server.py, backend/tests/test_pricing_foundation.py
+Frontend: frontend/src/pages/PricingFoundation.js
+
+Field: setup_fee_print
+Reason: Found in models but not calculator: backend/pricing_foundation_field_usage_audit.py, backend/server.py
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/server.py, backend/tests/test_pricing_foundation.py
+Frontend: frontend/src/pages/PricingFoundation.js
+
+Field: setup_fee_vinyl
+Reason: Found in models but not calculator: backend/pricing_foundation_field_usage_audit.py, backend/tests/test_pricing_foundation.py
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/tests/test_pricing_foundation.py, backend/models/pricing.py
+Frontend: frontend/src/pages/PricingFoundation.js
+
+Field: travel_hourly_rate
+Reason: Found in models but not calculator: backend/pricing_foundation_field_usage_audit.py, backend/models/pricing.py
+Backend: backend/pricing_foundation_field_usage_audit.py, backend/models/pricing.py
+Frontend: frontend/src/pages/PricingFoundation.js
+
+================================================================================
+REPORTS GENERATED
+================================================================================
+
+📄 Markdown report: /app/PRICING_FOUNDATION_FIELD_USAGE_AUDIT.md
+📄 JSON report: /app/pricing_foundation_field_usage_audit.json
+
+================================================================================
+SAFETY CONFIRMATION
+================================================================================
+
+✅ DRY RUN ONLY - No fields were removed or modified
+✅ No Pricing Foundation values were changed
+✅ No database updates performed
+
+================================================================================
+AUDIT COMPLETE
+================================================================================
+

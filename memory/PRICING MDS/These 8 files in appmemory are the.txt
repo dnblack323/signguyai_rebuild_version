@@ -1,0 +1,495 @@
+"These 8 files in /app/memory/ are the authoritative handoff docs for rebuilding our Pricing module (extracted from the legacy app). Before touching any pricing code, read PRICING_LEGACY_REBUILD_HANDOFF_MASTER.md first for the overview, then follow PRICING_REBUILD_BUILD_ORDER.md for build sequence. Do NOT port anything listed in PRICING_FEATURES_DO_NOT_PORT.md. Use PRICING_TO_REBUILD_MIGRATION_MAP.md to map legacy logic to this codebase's structure. Validate against PRICING_REBUILD_VERIFICATION_AND_PARITY_TEST_PLAN.md when done."
+
+
+
+"I'm giving you read access to the legacy app's code so you can extract the real pricing business logic — labor rates, markup percentages, materials costs, coverage tiers, waste %, overhead rules, minimum charges. Do NOT copy its code structure or files directly.
+
+Before writing any pricing code, read these files in /app/memory/ in this order:
+
+PRICING_LEGACY_REBUILD_HANDOFF_MASTER.md — overview
+PRICING_LEGACY_ARCHITECTURE_MISTAKES_AND_PREVENTION.md — 28 specific documented bugs in the legacy code, with the correct pattern for each
+PRICING_FEATURES_DO_NOT_PORT.md — explicit list of legacy code patterns/files to never copy as-is
+PRICING_MODULE_EXTRACTION_INVENTORY.md and PRICING_TO_REBUILD_MIGRATION_MAP.md — exactly which numbers/config to extract and how to transform them
+PRICING_REBUILD_BUILD_ORDER.md — build sequence
+PRICING_REBUILD_VERIFICATION_AND_PARITY_TEST_PLAN.md — how to verify your new calculator's math still matches the legacy formula's intended output (not its buggy structure)
+Build one PricingEngine.calculate(category, input, tenant_config) entry point using the already-added Money (integer cents) utility and PricingResult/PricingSnapshot/PricingWarning/PricingOverride schemas in models/pricing_core.py — not 9 separate float-based functions. For each category, write a golden-formula test comparing your new calculator's output against the legacy calculator's output for identical inputs, so you can prove the underlying business math (prices customers actually see) is preserved even though the code is completely rebuilt clean."
+
+
+
+
+**Why it wasn't in GitHub:** This session's `/app` workspace is a completely separate app/repo from your external `dnblack323/signguyai_rebuild_version` repo — they've never been connected. Code I write here only exists in this session's local filesystem. It only reaches GitHub if you use the **"Save to Github"** button in this chat's input bar, which would push it to a repo tied to *this* session — not your external rebuild repo. Since that was never done, the Sprint 1 pricing code stayed local to this session only.
+
+Here are the 4 pieces of code — copy each into the new session and ask the new agent to create the file at the given path:
+
+**1. `backend/services/money.py`**
+```python
+"""
+Money utility — Pricing Rebuild Sprint 1 shared infrastructure.
+
+Implements the currency/rounding rules locked in Phase 0 Group 1
+(P0-PRC-008 - P0-PRC-012, see /app/memory/PHASE_0_PRICING_DECISIONS_FORMULA_GOVERNANCE.md §4):
+
+- All money is stored as an integer number of cents. No raw float currency
+  value is ever the source of truth.
+- Percentages/multipliers may be applied at full precision internally; a
+  value only becomes "rounded" once it is finalized into a named cost
+  bucket or a final price — never repeatedly mid-formula.
+- Default rounding method is half-up ("round half away from zero"), per
+  Phase 0 Group 1's approved decision.
+- Whole-dollar rounding is opt-in only (`Money.round_to_dollar`), never the
+  default behavior of any arithmetic helper.
+
+NOT YET WIRED INTO ANY LIVE CALCULATOR, ROUTE, OR SCREEN. This module is
+pure, dependency-free infrastructure for Phase 3+ to consume.
+"""
+from __future__ import annotations
+
+from decimal import Decimal, ROUND_HALF_UP
+from typing import Union
+
+Numeric = Union[int, float, Decimal, str]
+
+
+class Money:
+    """An immutable monetary value, always backed by an integer number of cents."""
+
+    __slots__ = ("_cents",)
+
+    def __init__(self, cents: int):
+        if not isinstance(cents, int):
+            raise TypeError(
+                f"Money must be constructed from an int number of cents, got {type(cents).__name__}. "
+                "Use Money.from_dollars()/from_cents_value() for conversions."
+            )
+        self._cents = cents
+
+    # ---------------- Construction ----------------
+
+    @classmethod
+    def zero(cls) -> "Money":
+        return cls(0)
+
+    @classmethod
+    def from_cents_value(cls, value: Numeric, *, round_mode: str = "half_up") -> "Money":
+        """Build a Money from a possibly-fractional number of cents, rounding once."""
+        dec = _to_decimal(value)
+        rounded = _round_decimal(dec, round_mode)
+        return cls(int(rounded))
+
+    @classmethod
+    def from_dollars(cls, value: Numeric, *, round_mode: str = "half_up") -> "Money":
+        """Build a Money from a dollar amount (e.g. 12.995 -> $13.00 half-up)."""
+        dec = _to_decimal(value) * Decimal(100)
+        rounded = _round_decimal(dec, round_mode)
+        return cls(int(rounded))
+
+    # ---------------- Conversion ----------------
+
+    @property
+    def cents(self) -> int:
+        return self._cents
+
+    @property
+    def dollars(self) -> Decimal:
+        """Exact decimal dollar value (no rounding — cents are already exact)."""
+        return Decimal(self._cents) / Decimal(100)
+
+    def format(self, *, symbol: str = "$") -> str:
+        """Presentation-layer formatting only. Never write this string back to storage."""
+        negative = self._cents < 0
+        abs_cents = abs(self._cents)
+        dollars_part, cents_part = divmod(abs_cents, 100)
+        sign = "-" if negative else ""
+        return f"{sign}{symbol}{dollars_part:,}.{cents_part:02d}"
+
+    def __repr__(self) -> str:
+        return f"Money({self._cents} cents = {self.format()})"
+
+    # ---------------- Comparison ----------------
+
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, Money):
+            return NotImplemented
+        return self._cents == other._cents
+
+    def __lt__(self, other: "Money") -> bool:
+        _require_money(other)
+        return self._cents < other._cents
+
+    def __le__(self, other: "Money") -> bool:
+        _require_money(other)
+        return self._cents <= other._cents
+
+    def __gt__(self, other: "Money") -> bool:
+        _require_money(other)
+        return self._cents > other._cents
+
+    def __ge__(self, other: "Money") -> bool:
+        _require_money(other)
+        return self._cents >= other._cents
+
+    def __hash__(self) -> int:
+        return hash(self._cents)
+
+    def is_zero(self) -> bool:
+        return self._cents == 0
+
+    def is_negative(self) -> bool:
+        return self._cents < 0
+
+    # ---------------- Arithmetic ----------------
+
+    def __add__(self, other: "Money") -> "Money":
+        _require_money(other)
+        return Money(self._cents + other._cents)
+
+    def __sub__(self, other: "Money") -> "Money":
+        _require_money(other)
+        return Money(self._cents - other._cents)
+
+    def __neg__(self) -> "Money":
+        return Money(-self._cents)
+
+    def multiply(self, factor: Numeric, *, round_mode: str = "half_up") -> "Money":
+        """Multiply by a decimal factor (e.g. a markup multiplier or quantity),
+        rounding once to the nearest cent."""
+        result = Decimal(self._cents) * _to_decimal(factor)
+        return Money(int(_round_decimal(result, round_mode)))
+
+    def percentage(self, percent: Numeric, *, round_mode: str = "half_up") -> "Money":
+        """Return the Money value representing `percent`% of this amount,
+        rounding once. E.g. Money.from_dollars(100).percentage(15) == $15.00."""
+        result = Decimal(self._cents) * (_to_decimal(percent) / Decimal(100))
+        return Money(int(_round_decimal(result, round_mode)))
+
+    def apply_percentage_increase(self, percent: Numeric, *, round_mode: str = "half_up") -> "Money":
+        """Return self + self.percentage(percent), e.g. applying overhead or markup %."""
+        return self + self.percentage(percent, round_mode=round_mode)
+
+    def apply_percentage_decrease(self, percent: Numeric, *, round_mode: str = "half_up") -> "Money":
+        """Return self - self.percentage(percent), e.g. applying a discount %."""
+        return self - self.percentage(percent, round_mode=round_mode)
+
+    def divide(self, divisor: Numeric, *, round_mode: str = "half_up") -> "Money":
+        divisor_dec = _to_decimal(divisor)
+        if divisor_dec == 0:
+            raise ZeroDivisionError("Cannot divide Money by zero")
+        result = Decimal(self._cents) / divisor_dec
+        return Money(int(_round_decimal(result, round_mode)))
+
+    # ---------------- Whole-dollar rounding (opt-in only, per P0-PRC-010) ----------------
+
+    def round_to_dollar(self, *, round_mode: str = "half_up") -> "Money":
+        """Explicit opt-in whole-dollar rounding. Never called automatically by
+        any other method on this class — a category/tenant setting must
+        explicitly request this."""
+        dollars = Decimal(self._cents) / Decimal(100)
+        rounded_dollars = _round_decimal(dollars, round_mode)
+        return Money(int(rounded_dollars) * 100)
+
+
+def sum_money(values) -> Money:
+    """Sum an iterable of Money values. Returns Money.zero() for an empty iterable."""
+    total = Money.zero()
+    for v in values:
+        _require_money(v)
+        total = total + v
+    return total
+
+
+def _require_money(value) -> None:
+    if not isinstance(value, Money):
+        raise TypeError(f"Expected a Money instance, got {type(value).__name__}")
+
+
+def _to_decimal(value: Numeric) -> Decimal:
+    if isinstance(value, Decimal):
+        return value
+    if isinstance(value, bool):
+        raise TypeError("bool is not a valid numeric input for Money math")
+    if isinstance(value, (int, str)):
+        return Decimal(value)
+    if isinstance(value, float):
+        # Route floats through str() to avoid inheriting float binary-representation
+        # noise (e.g. Decimal(0.1) != Decimal('0.1')).
+        return Decimal(str(value))
+    raise TypeError(f"Cannot convert {type(value).__name__} to Decimal")
+
+
+_ROUND_MODES = {
+    "half_up": ROUND_HALF_UP,
+}
+
+
+def _round_decimal(value: Decimal, round_mode: str) -> Decimal:
+    if round_mode not in _ROUND_MODES:
+        raise ValueError(f"Unsupported round_mode '{round_mode}'. Supported: {list(_ROUND_MODES)}")
+    return value.quantize(Decimal("1"), rounding=_ROUND_MODES[round_mode])
+```
+
+**2. `backend/models/pricing_core.py`**
+```python
+"""
+Pricing Rebuild Sprint 1 — standardized shared schemas.
+
+These schemas are the target shapes every future calculator (starting with
+Banners in Phase 3) will produce. They are NOT yet used by any live
+calculator, route, or screen — `server.py`'s existing `calculate_*`
+functions and `models/pricing.py`'s legacy models are untouched by this
+file and continue to drive all current customer-facing pricing behavior
+unchanged.
+
+Backs Phase 0 decisions:
+- Group 3 (Margin and Below-Cost Guardrails, P0-PRC-013 - P0-PRC-018) -> PricingWarning
+- Group 4 (Permissions and Override Workflow, P0-PRC-019 - P0-PRC-023) -> PricingOverride
+- Group 1 (Money, Precision, Rounding, P0-PRC-008 - P0-PRC-012) -> all money fields below
+  are integer cents (see services/money.py), never raw floats
+- Group 10 (Snapshots, Audit History, Formula Governance, P0-PRC-039 - P0-PRC-041) ->
+  PricingSnapshot (frozen, never recalculated) + PricingChangeLog
+
+See /app/memory/PHASE_0_PRICING_DECISIONS_FORMULA_GOVERNANCE.md for full rationale.
+"""
+from typing import Optional, List, Dict, Any, Literal
+from pydantic import BaseModel, Field, ConfigDict
+from datetime import datetime, timezone
+import uuid
+
+
+# ============== WARNINGS (Phase 0 Group 3) ==============
+
+WarningSeverity = Literal["info", "warning", "critical"]
+
+# Extensible, not exhaustive — matches the Remediation Plan's PricingWarning shape.
+WarningType = Literal[
+    "below_cost",
+    "margin_warning",
+    "stale_material_cost",
+    "fallback_used",
+    "missing_material",
+    "other",
+]
+
+
+class PricingWarning(BaseModel):
+    """Typed replacement for the legacy generic `warnings: [string]` array
+    (PRC-029). One warning per detected condition."""
+    model_config = ConfigDict(extra="ignore")
+
+    type: WarningType
+    severity: WarningSeverity
+    message: str
+    recommended_action: Optional[str] = None
+
+
+# ============== OVERRIDE PROVENANCE (Phase 0 Group 4) ==============
+
+# Starting taxonomy from Phase 0 §5 (P0-PRC-016) — extensible via "other".
+OverrideReason = Literal[
+    "loss_leader",
+    "relationship_pricing",
+    "competitive_match",
+    "damaged_goods_or_rework",
+    "material_already_owned",
+    "owner_discretion",
+    "other",
+]
+
+OverrideApprovalStatus = Literal[
+    "not_required",   # Owner/Admin self-approved at entry time
+    "pending",        # Staff-requested below-cost override awaiting Owner/Admin approval
+    "approved",
+    "rejected",
+]
+
+
+class PricingOverride(BaseModel):
+    """Provenance block for a manual price override. Embedded on
+    `PricingSnapshot.override` when a price was manually adjusted away from
+    the engine's calculated value — never a side note (P0-PRC-028)."""
+    model_config = ConfigDict(extra="ignore")
+
+    original_calculated_price_cents: int
+    final_selected_price_cents: int
+    reason: OverrideReason
+    reason_detail: Optional[str] = None  # required free-text when reason == "other"
+    overridden_by_user_id: str
+    overridden_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    approval_status: OverrideApprovalStatus = "not_required"
+    approved_by_user_id: Optional[str] = None
+    approved_at: Optional[str] = None
+
+
+# ============== PRICING RESULT (live calculation output) ==============
+
+class PricingCostBucket(BaseModel):
+    """One named, finalized cost component inside a PricingResult breakdown.
+    Money is always integer cents (Phase 0 Group 1) — see services/money.py."""
+    model_config = ConfigDict(extra="ignore")
+
+    key: str  # e.g. "material_cost", "production_labor_cost", "overhead_cost"
+    label: str
+    amount_cents: int
+    included_in_overhead_basis: bool = False
+
+
+class PricingResult(BaseModel):
+    """Live, uncommitted calculation output. Every future calculator's
+    `PricingEngine.calculate(...)` call returns this shape (Phase 1 skeleton
+    only — no engine dispatcher exists yet)."""
+    model_config = ConfigDict(extra="ignore")
+
+    category: str
+    cost_breakdown: List[PricingCostBucket] = Field(default_factory=list)
+    total_cost_cents: int
+    overhead_cost_cents: int
+    overhead_basis_cents: int  # the (material + direct production labor) basis overhead was computed on
+    suggested_price_cents: int
+    profit_margin_percent: float
+    pricing_method: str = "calculated"  # e.g. "calculated" | "package_benchmark" | "manual_override"
+    warnings: List[PricingWarning] = Field(default_factory=list)
+
+
+# ============== PRICING SNAPSHOT (frozen, committed) ==============
+
+class PricingSnapshot(BaseModel):
+    """A permanently frozen copy of a PricingResult, taken the moment a price
+    is committed to a Quote Item / Order Item / Wrap Project / Webstore Order
+    Item. Never recalculated by any later configuration change (P0-PRC-040).
+    """
+    model_config = ConfigDict(extra="ignore")
+
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    tenant_id: str
+    category: str
+    cost_breakdown: List[PricingCostBucket] = Field(default_factory=list)
+    total_cost_cents: int
+    overhead_cost_cents: int
+    overhead_basis_cents: int
+    final_price_cents: int
+    profit_margin_percent: float
+    pricing_method: str = "calculated"
+    warnings: List[PricingWarning] = Field(default_factory=list)
+    override: Optional[PricingOverride] = None
+    config_version_used: Optional[str] = None
+    snapshotted_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    snapshotted_by_user_id: Optional[str] = None
+    # Where this snapshot is attached (Quote Item, Order Item, etc.) — populated
+    # by the calling code once a real integration point exists (Phase 3+).
+    linked_record_type: Optional[str] = None
+    linked_record_id: Optional[str] = None
+
+
+# ============== PRICING CHANGE LOG (Phase 0 Group 10) ==============
+
+class PricingChangeLog(BaseModel):
+    """Append-only audit record for every write to PricingFoundationSettings,
+    PricingMaterial, or CategoryPricingConfig (P0-PRC-039, P0-PRC-012,
+    P0-PRC-027). Never mutated or deleted once written."""
+    model_config = ConfigDict(extra="ignore")
+
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    tenant_id: str
+    field: str  # dotted path of the changed field, e.g. "materials.vinyl_gloss.cost_per_sqft"
+    old_value: Optional[Any] = None
+    new_value: Optional[Any] = None
+    changed_by_user_id: str
+    changed_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    source_action: str  # e.g. "foundation_settings_save", "material_edit", "quiz_completion"
+    related_category: Optional[str] = None
+    related_material_id: Optional[str] = None
+    related_template_id: Optional[str] = None
+```
+
+**3. `backend/services/pricing_change_log.py`**
+```python
+"""
+Pricing Change Log write-through helper — Pricing Rebuild Sprint 1.
+
+Backs Phase 0 Group 10 (P0-PRC-039, P0-PRC-012, P0-PRC-027, see
+/app/memory/PHASE_0_PRICING_DECISIONS_FORMULA_GOVERNANCE.md §14): every
+future write to Pricing Foundation settings, materials, labor rates,
+markup, waste, category rules, templates, or benchmarks must route through
+this one shared helper so the audit trail is consistent and never
+hand-rolled per call site.
+
+NOT YET CALLED FROM ANY LIVE ROUTE. `routes/pricing.py`'s existing
+Foundation settings save endpoints are untouched by this file — wiring
+this helper into them is explicitly Phase 2+ scope, not Sprint 1.
+"""
+from typing import Any, Optional
+
+from models.pricing_core import PricingChangeLog
+
+
+async def log_pricing_change(
+    db,
+    *,
+    tenant_id: str,
+    field: str,
+    old_value: Optional[Any],
+    new_value: Optional[Any],
+    changed_by_user_id: str,
+    source_action: str,
+    related_category: Optional[str] = None,
+    related_material_id: Optional[str] = None,
+    related_template_id: Optional[str] = None,
+) -> PricingChangeLog:
+    """Write one PricingChangeLog entry and return the record that was written.
+
+    This is the single write-through path every future pricing-config
+    mutation must use (Phase 0 Group 10). It performs no diffing itself —
+    callers are responsible for only invoking this when `old_value !=
+    new_value`, so the log stays a record of real changes, not every save.
+    """
+    entry = PricingChangeLog(
+        tenant_id=tenant_id,
+        field=field,
+        old_value=old_value,
+        new_value=new_value,
+        changed_by_user_id=changed_by_user_id,
+        source_action=source_action,
+        related_category=related_category,
+        related_material_id=related_material_id,
+        related_template_id=related_template_id,
+    )
+    await db.pricing_change_logs.insert_one(entry.model_dump())
+    return entry
+
+
+async def get_pricing_change_log(
+    db,
+    *,
+    tenant_id: str,
+    field: Optional[str] = None,
+    related_category: Optional[str] = None,
+    limit: int = 100,
+):
+    """Read helper for the future minimal change-log viewer UI (Phase 1/2
+    acceptance criteria: "a UI exists, even minimal, to view them per
+    field"). Not yet called from any live route."""
+    query: dict = {"tenant_id": tenant_id}
+    if field:
+        query["field"] = field
+    if related_category:
+        query["related_category"] = related_category
+    cursor = db.pricing_change_logs.find(query, {"_id": 0}).sort("changed_at", -1).limit(limit)
+    return await cursor.to_list(length=limit)
+```
+
+**4. New Permissions to add to the rebuild's `models/access.py` (equivalent of this session's `models/auth.py` Permission enum):**
+```python
+# Pricing Rebuild — Sprint 1 permissions
+PRICING_VIEW = "pricing:view"
+PRICING_EDIT_FOUNDATION = "pricing:edit_foundation"
+PRICING_OVERRIDE = "pricing:override"
+
+# Role mapping (Phase 0 Group 4, P0-PRC-019):
+# OWNER/PLATFORM_ADMIN -> all 3
+# ADMIN -> PRICING_VIEW, PRICING_EDIT_FOUNDATION, PRICING_OVERRIDE (self-approving)
+# STAFF -> PRICING_VIEW only (can later request but not finalize an override)
+```
+
+**Instruction to paste to the new agent along with this code:**
+> "Add these 3 pricing files to /app/backend (services/money.py, models/pricing_core.py, services/pricing_change_log.py) and add the 3 pricing permissions to our role/permission model, following the role mapping described above. This is shared infrastructure only — do not wire it into any live pricing route/screen yet; that comes later per PRICING_REBUILD_BUILD_ORDER.md."
+
+Also worth noting: this code was unit-tested in this session (`test_money_utility.py`) — ask the new agent to write equivalent tests once the files are in place, to confirm rounding/arithmetic behavior matches before building on top of it.
