@@ -1,20 +1,22 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 
 try:
-    from ..core_runtime import get_database, get_tenant_id
-    from ..models.orders import LinkArtworkPayload, OrderItemPatch, OrderItemPayload, OrderPatch, OrderPayload, PricingCalculatePayload
+    from ..core_runtime import get_database, get_identity_context, get_tenant_id
+    from ..models.orders import LinkArtworkPayload, OrderItemPatch, OrderItemPayload, OrderPatch, OrderPayload, PricingCalculatePayload, PricingOverridePayload
     from ..repositories.doculink import DocuLinkRepository
     from ..repositories.invoices import InvoicesRepository
     from ..repositories.orders import OrdersRepository
+    from ..repositories.pricing_foundation import PricingFoundationRepository
     from ..repositories.quotes import QuotesRepository
     from ..services.order_schemas import category_schema
     from ..services.pricing_engine import calculate_item_price
 except ImportError:
-    from core_runtime import get_database, get_tenant_id
-    from models.orders import LinkArtworkPayload, OrderItemPatch, OrderItemPayload, OrderPatch, OrderPayload, PricingCalculatePayload
+    from core_runtime import get_database, get_identity_context, get_tenant_id
+    from models.orders import LinkArtworkPayload, OrderItemPatch, OrderItemPayload, OrderPatch, OrderPayload, PricingCalculatePayload, PricingOverridePayload
     from repositories.doculink import DocuLinkRepository
     from repositories.invoices import InvoicesRepository
     from repositories.orders import OrdersRepository
+    from repositories.pricing_foundation import PricingFoundationRepository
     from repositories.quotes import QuotesRepository
     from services.order_schemas import category_schema
     from services.pricing_engine import calculate_item_price
@@ -38,6 +40,15 @@ def quotes_repository() -> QuotesRepository:
 
 def doculink_repository() -> DocuLinkRepository:
     return DocuLinkRepository(get_database())
+
+
+def pricing_foundation_repository() -> PricingFoundationRepository:
+    return PricingFoundationRepository(get_database())
+
+
+async def _foundation_settings(tenant_id: str) -> dict:
+    foundation = await pricing_foundation_repository().get_default(tenant_id)
+    return (foundation or {}).get("settings", {})
 
 
 @orders_router.get("")
@@ -265,29 +276,39 @@ async def clone_order_item(item_id: str, tenant_id: str = Depends(get_tenant_id)
 
 
 @items_router.post("/{item_id}/calculate-pricing")
-async def calculate_pricing(item_id: str, payload: PricingCalculatePayload, tenant_id: str = Depends(get_tenant_id)):
+async def calculate_pricing(item_id: str, payload: PricingCalculatePayload, context=Depends(get_identity_context)):
     repo = repository()
-    item = await repo.get_item(tenant_id, item_id)
+    item = await repo.get_item(context.tenant_id, item_id)
     if not item:
         raise HTTPException(status_code=404, detail="Order item not found")
     specs = {**item.get("specs", {}), **payload.specs}
-    calculation = calculate_item_price(item["item_category"], item.get("quantity", 1), specs)
+    foundation = await _foundation_settings(context.tenant_id)
+    calculation = calculate_item_price(item["item_category"], item.get("quantity", 1), specs, foundation)
     if payload.save_snapshot:
-        snapshot = await repo.save_pricing_snapshot(tenant_id, item, calculation)
+        snapshot = await repo.save_pricing_snapshot(context.tenant_id, item, calculation)
         return {"calculation": calculation, "snapshot": snapshot}
     return calculation
 
 
 @items_router.post("/{item_id}/save-pricing")
-async def save_pricing(item_id: str, payload: PricingCalculatePayload, tenant_id: str = Depends(get_tenant_id)):
+async def save_pricing(item_id: str, payload: PricingCalculatePayload, context=Depends(get_identity_context)):
     repo = repository()
-    item = await repo.get_item(tenant_id, item_id)
+    item = await repo.get_item(context.tenant_id, item_id)
     if not item:
         raise HTTPException(status_code=404, detail="Order item not found")
     specs = {**item.get("specs", {}), **payload.specs}
-    calculation = calculate_item_price(item["item_category"], item.get("quantity", 1), specs)
-    snapshot = await repo.save_pricing_snapshot(tenant_id, item, calculation)
+    foundation = await _foundation_settings(context.tenant_id)
+    calculation = calculate_item_price(item["item_category"], item.get("quantity", 1), specs, foundation)
+    snapshot = await repo.save_pricing_snapshot(context.tenant_id, item, calculation)
     return {"calculation": calculation, "snapshot": snapshot}
+
+
+@items_router.post("/{item_id}/override-pricing")
+async def override_pricing(item_id: str, payload: PricingOverridePayload, context=Depends(get_identity_context)):
+    updated = await repository().set_pricing_override(context.tenant_id, item_id, payload.override_price_minor, payload.reason, context.user_id)
+    if not updated:
+        raise HTTPException(status_code=404, detail="Order item not found")
+    return updated
 
 @orders_router.post("/{order_id}/items/{item_id}/link-artwork")
 async def link_artwork(order_id: str, item_id: str, payload: LinkArtworkPayload, tenant_id: str = Depends(get_tenant_id)):

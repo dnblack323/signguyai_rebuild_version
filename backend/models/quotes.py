@@ -23,6 +23,10 @@ class QuoteLineItemPayload(PreviewEnvelope):
     estimated_price_minor: int = 0
     material_estimate_minor: int = 0
     labor_estimate_minor: int = 0
+    manual_price_override_minor: int = 0
+    override_reason: str = ""
+    override_actor_id: str = ""
+    override_at: datetime | None = None
     production_required: bool | None = None
 
 
@@ -46,6 +50,10 @@ class QuoteLineItemPatch(PreviewEnvelope):
     estimated_price_minor: int | None = None
     material_estimate_minor: int | None = None
     labor_estimate_minor: int | None = None
+    manual_price_override_minor: int | None = None
+    override_reason: str | None = None
+    override_actor_id: str | None = None
+    override_at: datetime | None = None
     production_required: bool | None = None
 
 

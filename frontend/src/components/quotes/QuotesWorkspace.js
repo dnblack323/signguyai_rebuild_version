@@ -116,6 +116,13 @@ export function QuotesWorkspace({ onToast, onNavigate }) {
     const result = await api(`/quotes/${activeQuote.id}/items/${item.id}/calculate-pricing`, { method: "POST", body: JSON.stringify({ specs }) });
     await refreshQuote();
     onToast?.(`Price calculated: ${money(result.calculation.selling_price_minor)}`);
+    return result.calculation;
+  };
+
+  const overridePricing = async (item, overridePriceMinor, reason) => {
+    await api(`/quotes/${activeQuote.id}/items/${item.id}/override-pricing`, { method: "POST", body: JSON.stringify({ override_price_minor: overridePriceMinor, reason }) });
+    await refreshQuote();
+    onToast?.(`Price overridden to ${money(overridePriceMinor)}`);
   };
 
   const saveQuoteFields = async (patch) => {
@@ -229,7 +236,7 @@ export function QuotesWorkspace({ onToast, onNavigate }) {
             {declinePanel && <DeclinePanel reason={declineReason} setReason={setDeclineReason} onDecline={declineQuote} onCancel={() => setDeclinePanel(false)} />}
 
             <nav className="order-detail-tabs">{detailTabs.map((tab) => <button key={tab} className={activeTab === tab ? "active" : ""} onClick={() => setActiveTab(tab)}>{tab}</button>)}</nav>
-            {activeTab === "Line Items" && <LineItemsTab quote={activeQuote} draft={itemDraft} setDraft={setItemDraft} createItem={createItem} deleteItem={deleteItem} calculateItem={calculateItem} saveQuoteFields={saveQuoteFields} locked={!actionableQuoteStatuses.includes(activeQuote.status)} />}
+            {activeTab === "Line Items" && <LineItemsTab quote={activeQuote} draft={itemDraft} setDraft={setItemDraft} createItem={createItem} deleteItem={deleteItem} calculateItem={calculateItem} overridePricing={overridePricing} saveQuoteFields={saveQuoteFields} locked={!actionableQuoteStatuses.includes(activeQuote.status)} />}
             {activeTab === "Files" && <FilesTab quote={activeQuote} files={files} uploadQuoteFile={uploadQuoteFile} onOpenDocuLink={() => onNavigate?.("operations", "documents")} />}
             {activeTab === "Activity" && <ActivityTab activity={activity} />}
           </>}
@@ -239,7 +246,7 @@ export function QuotesWorkspace({ onToast, onNavigate }) {
   );
 }
 
-function LineItemsTab({ quote, draft, setDraft, createItem, deleteItem, calculateItem, saveQuoteFields, locked }) {
+function LineItemsTab({ quote, draft, setDraft, createItem, deleteItem, calculateItem, overridePricing, saveQuoteFields, locked }) {
   const [fields, setFields] = useState({ discount_minor: quote.discount_minor || 0, tax_minor: quote.tax_minor || 0, notes: quote.notes || "", terms: quote.terms || "" });
 
   useEffect(() => { setFields({ discount_minor: quote.discount_minor || 0, tax_minor: quote.tax_minor || 0, notes: quote.notes || "", terms: quote.terms || "" }); }, [quote.id]);
@@ -252,16 +259,7 @@ function LineItemsTab({ quote, draft, setDraft, createItem, deleteItem, calculat
       <button onClick={createItem} data-testid="quote-add-item-button"><Plus size={15} />Add Line Item</button>
     </div>}
     <div className="order-items-grid">
-      {(quote.line_items || []).map((item) => <article key={item.id} data-testid={`quote-line-item-${item.id}`}>
-        <div><strong>{item.item_category}</strong><span>Qty {item.quantity}</span></div>
-        <h3>{item.item_name}</h3>
-        <p>{item.description || "No description yet."}</p>
-        <dl><div><dt>Price</dt><dd>{money(item.estimated_price_minor)}</dd></div></dl>
-        {!locked && <div className="order-item-actions">
-          <button onClick={() => calculateItem(item)}><Calculator size={14} />Calculate</button>
-          <button onClick={() => deleteItem(item.id)}><Trash2 size={14} />Remove</button>
-        </div>}
-      </article>)}
+      {(quote.line_items || []).map((item) => <QuoteLineItemCard key={item.id} item={item} deleteItem={deleteItem} calculateItem={calculateItem} overridePricing={overridePricing} locked={locked} />)}
     </div>
     {!quote.line_items?.length && <Empty title="No line items yet" text="Add the first line item to start building this quote." />}
 
@@ -279,6 +277,48 @@ function LineItemsTab({ quote, draft, setDraft, createItem, deleteItem, calculat
       </div>
     </div>
   </section>;
+}
+
+function QuoteLineItemCard({ item, deleteItem, calculateItem, overridePricing, locked }) {
+  const [calcResult, setCalcResult] = useState(null);
+  const [overrideOpen, setOverrideOpen] = useState(false);
+  const [overridePrice, setOverridePrice] = useState("");
+  const [overrideReason, setOverrideReason] = useState("");
+
+  const runCalculate = async () => setCalcResult(await calculateItem(item));
+  const submitOverride = async () => {
+    if (!overrideReason.trim() || overridePrice === "") return;
+    await overridePricing(item, Math.round(Number(overridePrice) * 100), overrideReason.trim());
+    setOverrideOpen(false); setOverridePrice(""); setOverrideReason("");
+  };
+
+  return <article data-testid={`quote-line-item-${item.id}`}>
+    <div><strong>{item.item_category}</strong><span>Qty {item.quantity}</span></div>
+    <h3>{item.item_name}</h3>
+    <p>{item.description || "No description yet."}</p>
+    <dl><div><dt>Price</dt><dd>{money(item.estimated_price_minor)}</dd></div></dl>
+    {item.override_reason && <p className="pricing-override-badge" data-testid={`quote-item-override-badge-${item.id}`}>Manually overridden by {item.override_actor_id || "staff"}: "{item.override_reason}"</p>}
+    {!locked && <div className="order-item-actions">
+      <button onClick={runCalculate} data-testid={`quote-item-calculate-button-${item.id}`}><Calculator size={14} />Calculate</button>
+      <button onClick={() => setOverrideOpen((value) => !value)} data-testid={`quote-item-override-toggle-${item.id}`}>Override Price</button>
+      <button onClick={() => deleteItem(item.id)}><Trash2 size={14} />Remove</button>
+    </div>}
+    {overrideOpen && <div className="pricing-override-panel" data-testid={`quote-item-override-panel-${item.id}`}>
+      <label><span>Override Price ($)</span><input type="number" value={overridePrice} onChange={(event) => setOverridePrice(event.target.value)} data-testid={`quote-item-override-price-input-${item.id}`} /></label>
+      <label><span>Reason (required)</span><input value={overrideReason} onChange={(event) => setOverrideReason(event.target.value)} placeholder="Why is this price different?" data-testid={`quote-item-override-reason-input-${item.id}`} /></label>
+      <button onClick={submitOverride} data-testid={`quote-item-override-submit-${item.id}`}><Save size={14} />Save Override</button>
+    </div>}
+    {calcResult && <PricingBreakdown calculation={calcResult} testId={item.id} />}
+  </article>;
+}
+
+function PricingBreakdown({ calculation, testId }) {
+  const lines = [...(calculation.breakdown?.materials || []), ...(calculation.breakdown?.labor || []), ...(calculation.breakdown?.overhead || [])];
+  return <div className="pricing-breakdown" data-testid={`pricing-breakdown-${testId}`}>
+    <div className="pricing-breakdown-header"><span>Method: {label(calculation.calculation_method)}</span><strong>{money(calculation.selling_price_minor)}</strong></div>
+    {lines.map((line, index) => <div key={index} className="pricing-breakdown-line"><span>{label(line.name)}</span><span>{line.quantity} {line.unit}</span><b>{money(line.total_cost_minor)}</b></div>)}
+    {calculation.warnings?.map((warning, index) => <p key={index} className={`pricing-warning ${warning.severity}`} data-testid={`pricing-warning-${testId}-${index}`}>{warning.message}</p>)}
+  </div>;
 }
 
 function ApprovalPanel({ approval, setApproval, onApprove, onCancel }) {

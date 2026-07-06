@@ -133,6 +133,29 @@ class QuotesRepository:
         await self.record_event(tenant_id, quote_id, "quote_line_item_updated", actor_id, {"item_id": item_id, "fields": sorted(patch.keys())})
         return {key: value for key, value in updated.items() if key != "_id"}
 
+    async def set_pricing_override(self, tenant_id: str, quote_id: str, item_id: str, override_price_minor: int, reason: str, actor_id: str) -> dict | None:
+        existing = await self.items.find_one({"tenant_id": tenant_id, "id": item_id, "quote_id": quote_id})
+        if not existing:
+            return None
+        now = utc_now()
+        original_price_minor = int(existing.get("estimated_price_minor", 0))
+        updated = {
+            **existing,
+            "manual_price_override_minor": override_price_minor,
+            "estimated_price_minor": override_price_minor,
+            "override_reason": reason,
+            "override_actor_id": actor_id,
+            "override_at": now,
+            "updated_at": now,
+            "version": int(existing.get("version", 1)) + 1,
+        }
+        await self.items.replace_one({"tenant_id": tenant_id, "id": item_id}, updated)
+        await self.recalculate_totals(tenant_id, quote_id)
+        await self.record_event(tenant_id, quote_id, "quote_line_item_pricing_override_set", actor_id, {
+            "item_id": item_id, "original_price_minor": original_price_minor, "override_price_minor": override_price_minor, "reason": reason,
+        })
+        return {key: value for key, value in updated.items() if key != "_id"}
+
     async def delete_item(self, tenant_id: str, quote_id: str, item_id: str, actor_id: str = "") -> bool:
         quote = await self.quotes.find_one({"tenant_id": tenant_id, "id": quote_id})
         if not quote:

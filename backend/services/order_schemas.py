@@ -73,6 +73,7 @@ CATEGORY_SCHEMAS = {
         field("services_labor_role", "Labor Role", "select", ["production", "design", "install", "consultation", "site_survey", "other"], True),
         field("estimated_hours", "Estimated Hours", "number", affects_price=True),
         field("num_workers", "Number of Workers", "number", affects_price=True),
+        field("flat_fee_minor", "Flat Fee (cents, used when Foundation method is Flat Fee)", "number", affects_price=True),
     ],
     "promo_misc": [
         field("unit_cost_minor", "Unit Cost Minor", "number", affects_price=True),

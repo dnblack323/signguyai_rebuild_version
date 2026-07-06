@@ -83,6 +83,49 @@ const sections = [
 ];
 
 function q(key, label, type, unit, options = []) { return { key, label, type, unit, options }; }
+
+const METHOD_SELECTORS = {
+  banners: { categoryKey: "banners", options: [
+    { value: "sell_rate_per_sqft", label: "Flat rate per square foot" },
+    { value: "cost_plus", label: "Materials + labor + overhead + markup" },
+  ] },
+  rigid: { categoryKey: "rigid_signs", options: [
+    { value: "sell_rate_per_sqft", label: "Flat rate per square foot" },
+    { value: "cost_plus", label: "Materials + labor + overhead + markup" },
+  ] },
+  cutvinyl: { categoryKey: "cut_vinyl", options: [
+    { value: "sell_rate_per_sqft", label: "Flat rate per square foot" },
+    { value: "cost_plus", label: "Materials + labor + overhead + markup" },
+  ] },
+  digital: { categoryKey: "digital_print", options: [
+    { value: "sell_rate_per_sqft", label: "Flat rate per square foot" },
+    { value: "cost_plus", label: "Materials + labor + overhead + markup" },
+  ] },
+  vehicle: { categoryKey: "vehicle_graphics", options: [
+    { value: "package_benchmark", label: "Flat package price by coverage level" },
+    { value: "cost_plus", label: "Materials + labor + overhead + markup" },
+  ] },
+  apparel: { categoryKey: "apparel", options: [
+    { value: "price_table", label: "My own quantity-tier price sheet" },
+    { value: "cost_plus", label: "Blank + decoration cost + markup" },
+  ] },
+  services: { categoryKey: "services", options: [
+    { value: "hourly", label: "Hourly rate x estimated hours" },
+    { value: "flat_fee", label: "Flat fee per job" },
+  ] },
+};
+
+function MethodSelector({ foundation, setFoundation, categoryKey, options }) {
+  const path = `category_defaults.${categoryKey}.calculation_method`;
+  const value = getPath(foundation, path) || options[0].value;
+  return <div className="pricing-method-select" data-testid={`pricing-method-select-${categoryKey}`}>
+    <span>How should this category be priced?</span>
+    <div className="segmented">
+      {options.map((option) => <button key={option.value} type="button" className={value === option.value ? "active" : ""} onClick={() => setFoundation((current) => setPath(current, path, option.value))} data-testid={`pricing-method-option-${categoryKey}-${option.value}`}>{option.label}</button>)}
+    </div>
+  </div>;
+}
+
 const answered = (answers, key) => answers[key] !== undefined && answers[key] !== "" && answers[key] !== null;
 const n = (answers, key) => answered(answers, key) ? Number(answers[key]) : null;
 const avg = (values) => values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null;
@@ -254,6 +297,7 @@ export function PricingFoundationWorkspace({ onToast }) {
           {!reviewMode ? (
             <>
               <div className="pricing-quiz-heading"><span>Step {step + 1} of {sections.length}</span><h2>{active.title}</h2><p>{active.subtitle}</p></div>
+              {METHOD_SELECTORS[active.id] && <MethodSelector foundation={foundation} setFoundation={setFoundation} {...METHOD_SELECTORS[active.id]} />}
               <div className="pricing-question-grid">
                 {active.questions.map((question) => <Question key={question.key} question={question} value={answers[question.key]} onChange={setAnswer} />)}
               </div>

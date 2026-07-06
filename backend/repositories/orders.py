@@ -204,6 +204,28 @@ class OrdersRepository:
     async def list_pricing_snapshots(self, tenant_id: str, item_id: str) -> list[dict]:
         return await self.snapshots.find({"tenant_id": tenant_id, "order_item_id": item_id}, {"_id": 0}).sort("created_at", DESCENDING).to_list(length=50)
 
+    async def set_pricing_override(self, tenant_id: str, item_id: str, override_price_minor: int, reason: str, actor_id: str) -> dict | None:
+        existing = await self.items.find_one({"tenant_id": tenant_id, "id": item_id})
+        if not existing:
+            return None
+        now = utc_now()
+        original_price_minor = int(existing.get("estimated_price_minor", 0))
+        await self.items.update_one(
+            {"tenant_id": tenant_id, "id": item_id},
+            {"$set": {
+                "manual_quote_override_minor": override_price_minor,
+                "estimated_price_minor": override_price_minor,
+                "override_reason": reason,
+                "override_actor_id": actor_id,
+                "override_at": now,
+                "updated_at": now,
+            }, "$inc": {"version": 1}},
+        )
+        await self.record_event(tenant_id, existing["order_id"], item_id, "pricing_override_set", actor_id, {
+            "original_price_minor": original_price_minor, "override_price_minor": override_price_minor, "reason": reason,
+        })
+        return await self.get_item(tenant_id, item_id)
+
     async def record_event(self, tenant_id: str, order_id: str, item_id: str, event_type: str, actor_id: str = "", metadata: dict | None = None) -> dict:
         now = utc_now()
         document = {

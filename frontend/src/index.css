@@ -574,6 +574,17 @@ h1, h2 { font-family: Manrope, sans-serif; color: #172033; }
 .order-spec-editor input, .order-spec-editor select, .order-spec-editor textarea { width: 100%; border: 1px solid var(--border); border-radius: 8px; background: white; color: #172033; padding: 9px; font: inherit; font-size: 12px; outline: 0; text-transform: none; letter-spacing: 0; font-weight: 500; }
 .order-spec-editor input[type="checkbox"] { width: 18px; height: 18px; }
 .order-spec-editor textarea { min-height: 76px; resize: vertical; }
+.pricing-override-badge { margin: -2px 0 10px; padding: 8px 10px; border-radius: 10px; background: #fff7ed; border: 1px solid #fed7aa; color: #9a3412; font-size: 11px; font-weight: 700; }
+.pricing-override-panel { margin-top: 10px; padding: 12px; border: 1px solid #cbd5e1; border-radius: 14px; background: #f8fafc; display: grid; grid-template-columns: 1fr 1fr auto; gap: 9px; align-items: end; }
+.pricing-override-panel label { display: flex; flex-direction: column; gap: 5px; color: var(--muted); font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; }
+.pricing-override-panel input { border: 1px solid var(--border); border-radius: 8px; padding: 9px; font: inherit; font-size: 12px; }
+.pricing-breakdown { margin-top: 12px; border: 1px solid #d9e3ea; border-radius: 14px; background: #f8fbfc; padding: 12px; display: grid; gap: 7px; }
+.pricing-breakdown-header { display: flex; justify-content: space-between; align-items: baseline; color: #0f766e; font-weight: 800; font-size: 12px; }
+.pricing-breakdown-line { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; font-size: 11px; color: #475569; }
+.pricing-breakdown-line b { color: #172033; }
+.pricing-warning { margin: 4px 0 0; padding: 8px 10px; border-radius: 10px; font-size: 11px; font-weight: 700; }
+.pricing-warning.critical { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; }
+.pricing-warning.warning { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
 .order-spec-actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 8px; }
 .order-spec-actions button { border: 1px solid #b9d9d6; border-radius: 8px; background: white; color: var(--teal-dark); padding: 9px 11px; display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 800; cursor: pointer; }
 .order-financial-grid, .order-notes-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
@@ -661,6 +672,8 @@ h1, h2 { font-family: Manrope, sans-serif; color: #172033; }
 .pricing-section-list button.active { border-color: #0d9488; box-shadow: 0 12px 28px rgba(13, 148, 136, .16); }
 .pricing-section-list button.review span { background: #fff7ed; color: #c2410c; }
 .pricing-quiz-panel, .pricing-foundation-current { border: 1px solid #dce6ee; border-radius: 22px; background: #fff; padding: 22px; box-shadow: 0 14px 32px rgba(15, 23, 42, .05); }
+.pricing-method-select { margin-top: 16px; padding: 14px; border: 1px solid #99f6e4; border-radius: 16px; background: #f0fdfa; display: grid; gap: 9px; }
+.pricing-method-select > span { color: #0f766e; font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
 .pricing-question-grid { margin-top: 18px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .pricing-question { display: grid; gap: 7px; padding: 13px; border: 1px solid #e2e8f0; border-radius: 16px; background: #f8fafc; }
 .pricing-question > span { color: #334155; font-weight: 800; font-size: 13px; }

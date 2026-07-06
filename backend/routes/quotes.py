@@ -2,18 +2,20 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 try:
     from ..core_runtime import get_database, get_identity_context
-    from ..models.orders import PricingCalculatePayload
+    from ..models.orders import PricingCalculatePayload, PricingOverridePayload
     from ..models.quotes import QuoteApprovalPayload, QuoteDeclinePayload, QuoteLineItemPatch, QuoteLineItemPayload, QuotePatch, QuotePayload
     from ..repositories.doculink import DocuLinkRepository
     from ..repositories.orders import OrdersRepository
+    from ..repositories.pricing_foundation import PricingFoundationRepository
     from ..repositories.quotes import QuotesRepository
     from ..services.pricing_engine import calculate_item_price
 except ImportError:
     from core_runtime import get_database, get_identity_context
-    from models.orders import PricingCalculatePayload
+    from models.orders import PricingCalculatePayload, PricingOverridePayload
     from models.quotes import QuoteApprovalPayload, QuoteDeclinePayload, QuoteLineItemPatch, QuoteLineItemPayload, QuotePatch, QuotePayload
     from repositories.doculink import DocuLinkRepository
     from repositories.orders import OrdersRepository
+    from repositories.pricing_foundation import PricingFoundationRepository
     from repositories.quotes import QuotesRepository
     from services.pricing_engine import calculate_item_price
 
@@ -31,6 +33,15 @@ def orders_repository() -> OrdersRepository:
 
 def doculink_repository() -> DocuLinkRepository:
     return DocuLinkRepository(get_database())
+
+
+def pricing_foundation_repository() -> PricingFoundationRepository:
+    return PricingFoundationRepository(get_database())
+
+
+async def _foundation_settings(tenant_id: str) -> dict:
+    foundation = await pricing_foundation_repository().get_default(tenant_id)
+    return (foundation or {}).get("settings", {})
 
 
 @quotes_router.get("")
@@ -122,7 +133,8 @@ async def calculate_quote_item_pricing(quote_id: str, item_id: str, payload: Pri
     if not item:
         raise HTTPException(status_code=404, detail="Quote line item not found")
     specs = {**item.get("specs", {}), **payload.specs}
-    calculation = calculate_item_price(item["item_category"], item.get("quantity", 1), specs)
+    foundation = await _foundation_settings(context.tenant_id)
+    calculation = calculate_item_price(item["item_category"], item.get("quantity", 1), specs, foundation)
     try:
         updated = await repo.update_item(context.tenant_id, quote_id, item_id, {
             "specs": specs,
@@ -133,6 +145,17 @@ async def calculate_quote_item_pricing(quote_id: str, item_id: str, payload: Pri
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
     return {"calculation": calculation, "item": updated}
+
+
+@quotes_router.post("/{quote_id}/items/{item_id}/override-pricing")
+async def override_quote_item_pricing(quote_id: str, item_id: str, payload: PricingOverridePayload, context=Depends(get_identity_context)):
+    try:
+        updated = await repository().set_pricing_override(context.tenant_id, quote_id, item_id, payload.override_price_minor, payload.reason, context.user_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    if not updated:
+        raise HTTPException(status_code=404, detail="Quote line item not found")
+    return updated
 
 
 @quotes_router.post("/{quote_id}/send")

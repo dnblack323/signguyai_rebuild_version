@@ -112,6 +112,13 @@ export function OrdersWorkspace({ onToast, onNavigate }) {
     const result = await api(`/order-items/${item.id}/save-pricing`, { method: "POST", body: JSON.stringify({ specs }) });
     await refreshOrder();
     onToast?.(`Price calculated: ${money(result.calculation.selling_price_minor)}`);
+    return result.calculation;
+  };
+
+  const overridePricing = async (item, overridePriceMinor, reason) => {
+    await api(`/order-items/${item.id}/override-pricing`, { method: "POST", body: JSON.stringify({ override_price_minor: overridePriceMinor, reason }) });
+    await refreshOrder();
+    onToast?.(`Price overridden to ${money(overridePriceMinor)}`);
   };
 
   const updateOrderStatus = async (status) => {
@@ -211,7 +218,7 @@ export function OrdersWorkspace({ onToast, onNavigate }) {
               <div className="order-status-controls"><strong>{money(activeOrder.estimated_total_minor)}</strong><select value={activeOrder.status} onChange={(event) => updateOrderStatus(event.target.value)}>{actionableOrderStatuses.map((status) => <option key={status} value={status}>{label(status)}</option>)}</select><button onClick={nextOrderStep}>Next Step</button></div>
             </header>
             <nav className="order-detail-tabs">{detailTabs.map((tab) => <button key={tab} className={activeTab === tab ? "active" : ""} onClick={() => setActiveTab(tab)}>{tab}</button>)}</nav>
-            {activeTab === "Order Items" && <OrderItemsTab order={activeOrder} draft={itemDraft} setDraft={setItemDraft} createItem={createItem} saveItemSpecs={saveItemSpecs} calculateItem={calculateItem} updateItemStatus={updateItemStatus} updateItemProductionRequired={updateItemProductionRequired} />}
+            {activeTab === "Order Items" && <OrderItemsTab order={activeOrder} draft={itemDraft} setDraft={setItemDraft} createItem={createItem} saveItemSpecs={saveItemSpecs} calculateItem={calculateItem} overridePricing={overridePricing} updateItemStatus={updateItemStatus} updateItemProductionRequired={updateItemProductionRequired} />}
             {activeTab === "Production" && <ProductionTab workOrderDrafts={workOrderDrafts} generateWorkOrderDraft={generateWorkOrderDraft} />}
             {activeTab === "Financial" && <FinancialTab order={activeOrder} sourceQuote={sourceQuote} invoiceDrafts={invoiceDrafts} generateInvoiceDraft={generateInvoiceDraft} onNavigate={onNavigate} />}
             {activeTab === "Drawings" && <Placeholder icon={FileText} title="Drawings use DocuLink" text="Order drawings and markups will be linked through DocuLink file/document IDs." />}
@@ -225,20 +232,24 @@ export function OrdersWorkspace({ onToast, onNavigate }) {
   );
 }
 
-function OrderItemsTab({ order, draft, setDraft, createItem, saveItemSpecs, calculateItem, updateItemStatus, updateItemProductionRequired }) {
+function OrderItemsTab({ order, draft, setDraft, createItem, saveItemSpecs, calculateItem, overridePricing, updateItemStatus, updateItemProductionRequired }) {
   const updateDraftCategory = (category) => setDraft({ ...draft, item_category: category, production_required: productionDefaultCategories.has(category) });
 
   return <section className="order-tab-panel">
     <div className="order-item-create"><input value={draft.item_name} onChange={(event) => setDraft({ ...draft, item_name: event.target.value })} placeholder="Item name / order item description" /><select value={draft.item_category} onChange={(event) => updateDraftCategory(event.target.value)}>{categories.map((category) => <option key={category}>{category}</option>)}</select><input type="number" value={draft.quantity} onChange={(event) => setDraft({ ...draft, quantity: Number(event.target.value) })} /><label><input type="checkbox" checked={draft.production_required} onChange={(event) => setDraft({ ...draft, production_required: event.target.checked })} />Production</label><button onClick={createItem}><Plus size={15} />Add Item</button></div>
-    <div className="order-items-grid">{(order.items || []).map((item) => <OrderItemCard key={item.id} item={item} saveItemSpecs={saveItemSpecs} calculateItem={calculateItem} updateItemStatus={updateItemStatus} updateItemProductionRequired={updateItemProductionRequired} />)}</div>
+    <div className="order-items-grid">{(order.items || []).map((item) => <OrderItemCard key={item.id} item={item} saveItemSpecs={saveItemSpecs} calculateItem={calculateItem} overridePricing={overridePricing} updateItemStatus={updateItemStatus} updateItemProductionRequired={updateItemProductionRequired} />)}</div>
     {!order.items?.length && <Empty title="No order items yet" text="Add the first order item to start pricing and production planning." />}
   </section>;
 }
 
-function OrderItemCard({ item, saveItemSpecs, calculateItem, updateItemStatus, updateItemProductionRequired }) {
+function OrderItemCard({ item, saveItemSpecs, calculateItem, overridePricing, updateItemStatus, updateItemProductionRequired }) {
   const [expanded, setExpanded] = useState(false);
   const [schema, setSchema] = useState([]);
   const [specs, setSpecs] = useState(item.specs || {});
+  const [calcResult, setCalcResult] = useState(null);
+  const [overrideOpen, setOverrideOpen] = useState(false);
+  const [overridePrice, setOverridePrice] = useState("");
+  const [overrideReason, setOverrideReason] = useState("");
 
   useEffect(() => { setSpecs(item.specs || {}); }, [item.id, item.specs]);
   useEffect(() => {
@@ -247,19 +258,33 @@ function OrderItemCard({ item, saveItemSpecs, calculateItem, updateItemStatus, u
   }, [expanded, item.item_category]);
 
   const setSpec = (key, value, type) => setSpecs((current) => ({ ...current, [key]: type === "number" ? Number(value || 0) : type === "toggle" ? Boolean(value) : value }));
+  const runCalculate = async () => setCalcResult(await calculateItem(item, specs));
+  const submitOverride = async () => {
+    if (!overrideReason.trim() || overridePrice === "") return;
+    await overridePricing(item, Math.round(Number(overridePrice) * 100), overrideReason.trim());
+    setOverrideOpen(false); setOverridePrice(""); setOverrideReason("");
+  };
 
-  return <article>
+  return <article data-testid={`order-item-card-${item.id}`}>
     <div><strong>{item.item_number}</strong><span>{item.item_category}</span></div>
     <h3>{item.item_name}</h3>
     <p>{item.description || "No item description yet."}</p>
     <dl><div><dt>Qty</dt><dd>{item.quantity}</dd></div><div><dt>Status</dt><dd>{label(item.status)}</dd></div><div><dt>Price</dt><dd>{money(item.estimated_price_minor)}</dd></div></dl>
+    {item.override_reason && <p className="pricing-override-badge" data-testid={`order-item-override-badge-${item.id}`}>Manually overridden by {item.override_actor_id || "staff"}: "{item.override_reason}"</p>}
     <div className="order-item-status-row"><span>Item Status</span><select value={item.status} onChange={(event) => updateItemStatus(item, event.target.value)}>{itemStatuses.map((status) => <option key={status} value={status}>{label(status)}</option>)}</select></div>
     <label className="order-item-production-toggle"><input type="checkbox" checked={Boolean(item.production_required)} onChange={(event) => updateItemProductionRequired(item, event.target.checked)} />Production required</label>
     <div className="order-item-actions">
       <button onClick={() => setExpanded((value) => !value)}><FileText size={14} />{expanded ? "Hide Specs" : "Edit Specs"}</button>
-      <button onClick={() => calculateItem(item, specs)}><Calculator size={14} />Calculate</button>
+      <button onClick={runCalculate} data-testid={`order-item-calculate-button-${item.id}`}><Calculator size={14} />Calculate</button>
+      <button onClick={() => setOverrideOpen((value) => !value)} data-testid={`order-item-override-toggle-${item.id}`}>Override Price</button>
       {item.item_category === "vehicle_wrap" && <button><ChevronRight size={14} />Open Wrap Command Center</button>}
     </div>
+    {overrideOpen && <div className="pricing-override-panel" data-testid={`order-item-override-panel-${item.id}`}>
+      <label><span>Override Price ($)</span><input type="number" value={overridePrice} onChange={(event) => setOverridePrice(event.target.value)} data-testid={`order-item-override-price-input-${item.id}`} /></label>
+      <label><span>Reason (required)</span><input value={overrideReason} onChange={(event) => setOverrideReason(event.target.value)} placeholder="Why is this price different?" data-testid={`order-item-override-reason-input-${item.id}`} /></label>
+      <button onClick={submitOverride} data-testid={`order-item-override-submit-${item.id}`}><Save size={14} />Save Override</button>
+    </div>}
+    {calcResult && <PricingBreakdown calculation={calcResult} testId={item.id} />}
     {expanded && <div className="order-spec-editor">
       {schema.map((field) => <label key={field.key}>
         <span>{field.label}{field.affects_price ? " *" : ""}</span>
@@ -268,9 +293,18 @@ function OrderItemCard({ item, saveItemSpecs, calculateItem, updateItemStatus, u
           : field.type === "textarea" ? <textarea value={specs[field.key] ?? ""} onChange={(event) => setSpec(field.key, event.target.value, field.type)} />
           : <input type={field.type === "number" ? "number" : "text"} value={specs[field.key] ?? ""} onChange={(event) => setSpec(field.key, event.target.value, field.type)} />}
       </label>)}
-      <div className="order-spec-actions"><button onClick={() => saveItemSpecs(item, specs)}><Save size={14} />Save Specs</button><button onClick={() => calculateItem(item, specs)}><Calculator size={14} />Save Price</button></div>
+      <div className="order-spec-actions"><button onClick={() => saveItemSpecs(item, specs)}><Save size={14} />Save Specs</button><button onClick={runCalculate}><Calculator size={14} />Save Price</button></div>
     </div>}
   </article>;
+}
+
+function PricingBreakdown({ calculation, testId }) {
+  const lines = [...(calculation.breakdown?.materials || []), ...(calculation.breakdown?.labor || []), ...(calculation.breakdown?.overhead || [])];
+  return <div className="pricing-breakdown" data-testid={`pricing-breakdown-${testId}`}>
+    <div className="pricing-breakdown-header"><span>Method: {label(calculation.calculation_method)}</span><strong>{money(calculation.selling_price_minor)}</strong></div>
+    {lines.map((line, index) => <div key={index} className="pricing-breakdown-line"><span>{label(line.name)}</span><span>{line.quantity} {line.unit}</span><b>{money(line.total_cost_minor)}</b></div>)}
+    {calculation.warnings?.map((warning, index) => <p key={index} className={`pricing-warning ${warning.severity}`} data-testid={`pricing-warning-${testId}-${index}`}>{warning.message}</p>)}
+  </div>;
 }
 
 function ProductionTab({ workOrderDrafts, generateWorkOrderDraft }) {
