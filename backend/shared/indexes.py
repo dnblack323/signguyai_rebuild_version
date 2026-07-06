@@ -172,19 +172,34 @@ INDEX_MANIFEST: dict[str, tuple[IndexSpec, ...]] = {
         IndexSpec(keys=(("tenant_id", ASCENDING), ("order_item_id", ASCENDING), ("created_at", DESCENDING)), name="tenant_id_1_order_item_id_1_created_at_-1"),
         IndexSpec(keys=(("tenant_id", ASCENDING), ("event_type", ASCENDING), ("created_at", DESCENDING)), name="tenant_id_1_event_type_1_created_at_-1"),
     ),
-    "quote_drafts": (
+    "sequence_counters": (
+        IndexSpec(keys=(("tenant_id", ASCENDING), ("sequence_name", ASCENDING)), name="tenant_id_1_sequence_name_1_unique", unique=True),
+    ),
+    "quotes": (
         TENANT_ID_INDEX,
         IndexSpec(keys=(("tenant_id", ASCENDING), ("quote_number", ASCENDING)), name="tenant_id_1_quote_number_1_unique", unique=True),
-        IndexSpec(keys=(("tenant_id", ASCENDING), ("order_id", ASCENDING), ("created_at", DESCENDING)), name="tenant_id_1_order_id_1_created_at_-1"),
         IndexSpec(keys=(("tenant_id", ASCENDING), ("customer_id", ASCENDING)), name="tenant_id_1_customer_id_1"),
         IndexSpec(keys=(("tenant_id", ASCENDING), ("status", ASCENDING), ("created_at", DESCENDING)), name="tenant_id_1_status_1_created_at_-1"),
+        IndexSpec(keys=(("tenant_id", ASCENDING), ("converted_order_id", ASCENDING)), name="tenant_id_1_converted_order_id_1"),
     ),
-    "invoice_drafts": (
+    "quote_line_items": (
+        TENANT_ID_INDEX,
+        IndexSpec(keys=(("tenant_id", ASCENDING), ("quote_id", ASCENDING)), name="tenant_id_1_quote_id_1"),
+    ),
+    "quote_events": (
+        TENANT_ID_INDEX,
+        IndexSpec(keys=(("tenant_id", ASCENDING), ("quote_id", ASCENDING), ("created_at", DESCENDING)), name="tenant_id_1_quote_id_1_created_at_-1"),
+    ),
+    "invoices": (
         TENANT_ID_INDEX,
         IndexSpec(keys=(("tenant_id", ASCENDING), ("invoice_number", ASCENDING)), name="tenant_id_1_invoice_number_1_unique", unique=True),
         IndexSpec(keys=(("tenant_id", ASCENDING), ("order_id", ASCENDING), ("created_at", DESCENDING)), name="tenant_id_1_order_id_1_created_at_-1"),
         IndexSpec(keys=(("tenant_id", ASCENDING), ("customer_id", ASCENDING)), name="tenant_id_1_customer_id_1"),
         IndexSpec(keys=(("tenant_id", ASCENDING), ("status", ASCENDING), ("created_at", DESCENDING)), name="tenant_id_1_status_1_created_at_-1"),
+    ),
+    "invoice_events": (
+        TENANT_ID_INDEX,
+        IndexSpec(keys=(("tenant_id", ASCENDING), ("invoice_id", ASCENDING), ("created_at", DESCENDING)), name="tenant_id_1_invoice_id_1_created_at_-1"),
     ),
     "work_order_drafts": (
         TENANT_ID_INDEX,

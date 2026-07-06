@@ -14,8 +14,10 @@ try:
     from .routes.doculink import router as doculink_router
     from .routes.customers import router as customers_router
     from .routes.health import router as health_router
+    from .routes.invoices import invoices_router
     from .routes.orders import items_router, orders_router
     from .routes.platform_admin import router as platform_admin_router
+    from .routes.quotes import quotes_router
     from .routes.pricing_foundation import router as pricing_foundation_router
     from .routes.settings import router as settings_router
     from .routes.shared_systems import router as shared_systems_router
@@ -34,8 +36,10 @@ except ImportError:
     from routes.doculink import router as doculink_router
     from routes.customers import router as customers_router
     from routes.health import router as health_router
+    from routes.invoices import invoices_router
     from routes.orders import items_router, orders_router
     from routes.platform_admin import router as platform_admin_router
+    from routes.quotes import quotes_router
     from routes.pricing_foundation import router as pricing_foundation_router
     from routes.settings import router as settings_router
     from routes.shared_systems import router as shared_systems_router
@@ -72,6 +76,8 @@ app.include_router(doculink_router, prefix="/api")
 app.include_router(customers_router, prefix="/api")
 app.include_router(orders_router, prefix="/api")
 app.include_router(items_router, prefix="/api")
+app.include_router(quotes_router, prefix="/api")
+app.include_router(invoices_router, prefix="/api")
 app.include_router(platform_admin_router, prefix="/api")
 app.include_router(pricing_foundation_router, prefix="/api")
 app.include_router(settings_router, prefix="/api")

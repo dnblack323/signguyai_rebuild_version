@@ -34,6 +34,8 @@ import { NotesWorkspace } from "./components/shared/NotesWorkspace";
 import { PricingFoundationWorkspace } from "./components/settings/PricingFoundationWorkspace";
 import { DocuLinkWorkspace } from "./components/doculink/DocuLinkWorkspace";
 import { OrdersWorkspace } from "./components/orders/OrdersWorkspace";
+import { QuotesWorkspace } from "./components/quotes/QuotesWorkspace";
+import { InvoicesWorkspace } from "./components/invoices/InvoicesWorkspace";
 import { StandaloneWebstoresShell, WebstoresWorkspace } from "./components/webstores/WebstoresWorkspace";
 import { useAuth } from "./context/AuthContext";
 import { api } from "./lib/api";
@@ -141,8 +143,12 @@ function App() {
               <WebstoresWorkspace onToast={showToast} />
             ) : module === "customers" ? (
               <CustomersWorkspace onToast={showToast} onNavigate={navigate} />
+            ) : module === "quotes" ? (
+              <QuotesWorkspace onToast={showToast} onNavigate={navigate} />
             ) : module === "orders" ? (
               <OrdersWorkspace onToast={showToast} onNavigate={navigate} />
+            ) : module === "billing" ? (
+              <InvoicesWorkspace onToast={showToast} onNavigate={navigate} />
             ) : module === "documents" ? (
               <DocuLinkWorkspace onToast={showToast} />
             ) : module === "community" ? (

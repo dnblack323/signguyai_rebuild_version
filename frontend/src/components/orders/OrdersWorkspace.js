@@ -1,12 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Activity, Calculator, ChevronRight, FilePlus2, FileText, FolderOpen, Link, PackagePlus, Plus, ReceiptText, Save, Search, ShoppingBag, Upload, UserRound } from "lucide-react";
+import { Activity, Calculator, ChevronRight, FileText, FolderOpen, Link, PackagePlus, Plus, ReceiptText, Save, Search, ShoppingBag, Upload, UserRound } from "lucide-react";
 import { customerDisplayName, loadSharedCustomers } from "../customers/customerCore";
 import { api } from "../../lib/api";
 
 const orderStatuses = ["", "draft", "new_intake", "awaiting_review", "awaiting_quote", "quote_sent", "awaiting_approval", "approved", "in_production", "partially_complete", "ready_for_pickup", "out_for_delivery", "completed", "on_hold", "cancelled"];
 const actionableOrderStatuses = orderStatuses.filter(Boolean);
 const itemStatuses = ["new", "awaiting_info", "awaiting_proof", "awaiting_approval", "approved", "queued", "in_production", "in_qc", "ready", "completed", "on_hold", "rework", "cancelled"];
-const quoteStatuses = ["draft_internal", "ready_for_review", "sent", "approved", "revision_requested", "declined", "archived"];
 const categories = ["banners", "rigid_signs", "cut_vinyl", "digital_print", "vehicle_wrap", "apparel", "services", "promo_misc", "custom"];
 const productionDefaultCategories = new Set(["banners", "rigid_signs", "cut_vinyl", "digital_print", "vehicle_wrap", "apparel", "promo_misc", "custom"]);
 const detailTabs = ["Order Items", "Production", "Financial", "Drawings", "Files", "Notes", "Activity"];
@@ -22,7 +21,7 @@ export function OrdersWorkspace({ onToast, onNavigate }) {
   const [activeTab, setActiveTab] = useState("Order Items");
   const [activity, setActivity] = useState([]);
   const [files, setFiles] = useState({ file_links: [], document_links: [] });
-  const [quoteDrafts, setQuoteDrafts] = useState([]);
+  const [sourceQuote, setSourceQuote] = useState(null);
   const [invoiceDrafts, setInvoiceDrafts] = useState([]);
   const [workOrderDrafts, setWorkOrderDrafts] = useState([]);
   const [filters, setFilters] = useState({ query: "", status: "" });
@@ -42,7 +41,7 @@ export function OrdersWorkspace({ onToast, onNavigate }) {
     setActiveOrder(order);
     setOrders((current) => current.map((row) => row.id === order.id ? { ...row, ...order, items: undefined } : row));
     api(`/orders/${orderId}/activity`).then(setActivity).catch(() => {});
-    api(`/orders/${orderId}/quotes`).then(setQuoteDrafts).catch(() => {});
+    api(`/orders/${orderId}/source-quote`).then(setSourceQuote).catch(() => {});
     api(`/orders/${orderId}/invoices`).then(setInvoiceDrafts).catch(() => {});
     api(`/orders/${orderId}/work-orders`).then(setWorkOrderDrafts).catch(() => {});
   };
@@ -61,8 +60,8 @@ export function OrdersWorkspace({ onToast, onNavigate }) {
     const order = await api(`/orders/${orderId}`);
     setActiveOrder(order);
     setActiveTab("Order Items");
-    Promise.all([api(`/orders/${orderId}/activity`), api(`/orders/${orderId}/files`), api(`/orders/${orderId}/quotes`), api(`/orders/${orderId}/invoices`), api(`/orders/${orderId}/work-orders`)])
-      .then(([activityRows, fileRows, quoteRows, invoiceRows, workOrderRows]) => { setActivity(activityRows); setFiles(fileRows); setQuoteDrafts(quoteRows); setInvoiceDrafts(invoiceRows); setWorkOrderDrafts(workOrderRows); })
+    Promise.all([api(`/orders/${orderId}/activity`), api(`/orders/${orderId}/files`), api(`/orders/${orderId}/source-quote`), api(`/orders/${orderId}/invoices`), api(`/orders/${orderId}/work-orders`)])
+      .then(([activityRows, fileRows, quoteRow, invoiceRows, workOrderRows]) => { setActivity(activityRows); setFiles(fileRows); setSourceQuote(quoteRow); setInvoiceDrafts(invoiceRows); setWorkOrderDrafts(workOrderRows); })
       .catch(() => {});
   };
 
@@ -154,26 +153,6 @@ export function OrdersWorkspace({ onToast, onNavigate }) {
     onToast?.("File uploaded and linked to order");
   };
 
-  const generateQuoteDraft = async () => {
-    if (!activeOrder) return;
-    try {
-      const quote = await api(`/orders/${activeOrder.id}/generate-quote`, { method: "POST" });
-      setQuoteDrafts(await api(`/orders/${activeOrder.id}/quotes`));
-      await refreshOrder();
-      onToast?.(`Quote draft ${quote.quote_number} generated`);
-    } catch (error) {
-      onToast?.(error.message || "Unable to generate quote draft");
-    }
-  };
-
-  const saveQuoteDraft = async (quoteId, patch) => {
-    if (!activeOrder) return;
-    const updated = await api(`/orders/${activeOrder.id}/quotes/${quoteId}`, { method: "PUT", body: JSON.stringify(patch) });
-    setQuoteDrafts((current) => current.map((quote) => quote.id === updated.id ? updated : quote));
-    api(`/orders/${activeOrder.id}/activity`).then(setActivity).catch(() => {});
-    onToast?.(`Quote draft ${updated.quote_number} saved`);
-  };
-
   const generateInvoiceDraft = async () => {
     if (!activeOrder) return;
     try {
@@ -234,7 +213,7 @@ export function OrdersWorkspace({ onToast, onNavigate }) {
             <nav className="order-detail-tabs">{detailTabs.map((tab) => <button key={tab} className={activeTab === tab ? "active" : ""} onClick={() => setActiveTab(tab)}>{tab}</button>)}</nav>
             {activeTab === "Order Items" && <OrderItemsTab order={activeOrder} draft={itemDraft} setDraft={setItemDraft} createItem={createItem} saveItemSpecs={saveItemSpecs} calculateItem={calculateItem} updateItemStatus={updateItemStatus} updateItemProductionRequired={updateItemProductionRequired} />}
             {activeTab === "Production" && <ProductionTab workOrderDrafts={workOrderDrafts} generateWorkOrderDraft={generateWorkOrderDraft} />}
-            {activeTab === "Financial" && <FinancialTab order={activeOrder} quoteDrafts={quoteDrafts} invoiceDrafts={invoiceDrafts} generateQuoteDraft={generateQuoteDraft} saveQuoteDraft={saveQuoteDraft} generateInvoiceDraft={generateInvoiceDraft} />}
+            {activeTab === "Financial" && <FinancialTab order={activeOrder} sourceQuote={sourceQuote} invoiceDrafts={invoiceDrafts} generateInvoiceDraft={generateInvoiceDraft} onNavigate={onNavigate} />}
             {activeTab === "Drawings" && <Placeholder icon={FileText} title="Drawings use DocuLink" text="Order drawings and markups will be linked through DocuLink file/document IDs." />}
             {activeTab === "Files" && <FilesTab order={activeOrder} files={files} uploadOrderFile={uploadOrderFile} onOpenDocuLink={() => onNavigate?.("operations", "documents")} />}
             {activeTab === "Notes" && <NotesTab order={activeOrder} />}
@@ -309,73 +288,28 @@ function ProductionTab({ workOrderDrafts, generateWorkOrderDraft }) {
   </section>;
 }
 
-function FinancialTab({ order, quoteDrafts, invoiceDrafts, generateQuoteDraft, saveQuoteDraft, generateInvoiceDraft }) {
-  const latest = quoteDrafts[0];
+function FinancialTab({ order, sourceQuote, invoiceDrafts, generateInvoiceDraft, onNavigate }) {
   const latestInvoice = invoiceDrafts[0];
-  const [selectedId, setSelectedId] = useState("");
-  const selected = quoteDrafts.find((quote) => quote.id === selectedId) || latest;
-
-  useEffect(() => {
-    if (!selectedId && latest) setSelectedId(latest.id);
-  }, [latest?.id, selectedId]);
 
   return <section className="order-tab-panel">
     <div className="order-financial-grid">
       <article><span>Estimated Total</span><strong>{money(order.estimated_total_minor)}</strong><p>Built from order item pricing snapshots.</p></article>
-      <article><span>Payment Status</span><strong>{label(order.payment_status)}</strong><p>Invoices and payments come in the billing phase.</p></article>
-      <article><span>Latest Quote Draft</span><strong>{latest ? money(latest.total_minor) : "$0.00"}</strong><p>{latest ? `${latest.quote_number} - ${label(latest.status)}` : "No quote draft generated yet."}</p></article>
+      <article><span>Payment Status</span><strong>{label(order.payment_status)}</strong><p>{latestInvoice ? `${latestInvoice.invoice_number} - ${label(latestInvoice.status)}` : "No invoice generated yet."}</p></article>
+      <article><span>Source Quote</span><strong>{sourceQuote ? sourceQuote.quote_number : "Direct Order"}</strong><p>{sourceQuote ? `${label(sourceQuote.status)} - opened from the Quotes module.` : "This order was created directly, without a customer quote."}</p></article>
     </div>
-    <div className="order-quote-panel">
-      <div><span>Internal Quote Drafts</span><h3>Snapshot current order pricing</h3><p>This creates an internal quote draft from current Order Item prices. Customer approval, revision, signing, and sending will come with the full Quotes module.</p></div>
-      <button onClick={generateQuoteDraft}><FilePlus2 size={15} />Generate Quote Draft</button>
-    </div>
+    {sourceQuote && <div className="order-quote-panel">
+      <div><span>Quote On File</span><h3>This order came from an approved quote</h3><p>{sourceQuote.quote_number} was approved and converted into this order. Open the Quotes module to view the original commercial record.</p></div>
+      <button onClick={() => onNavigate?.("operations", "quotes")}><ChevronRight size={15} />Open Quote</button>
+    </div>}
     <div className="order-quote-panel invoice-panel">
-      <div><span>Invoice Drafts</span><h3>Create billing draft</h3><p>Uses the approved quote draft when available. Otherwise it snapshots current order item pricing for internal billing review.</p></div>
-      <button onClick={generateInvoiceDraft}><ReceiptText size={15} />Generate Invoice Draft</button>
+      <div><span>Invoices</span><h3>Bill this order</h3><p>Generates a first-class invoice snapshot from current Order Item prices. Manage status and payments in the Invoices module.</p></div>
+      <button onClick={generateInvoiceDraft} data-testid="order-generate-invoice-button"><ReceiptText size={15} />Generate Invoice</button>
     </div>
     <div className="order-invoice-list">
-      {invoiceDrafts.map((invoice) => <article key={invoice.id}><strong>{invoice.invoice_number}</strong><span>{label(invoice.status)}</span><b>{money(invoice.total_minor)}</b><small>{invoice.source === "quote_draft" ? "From quote" : "From order"}</small></article>)}
+      {invoiceDrafts.map((invoice) => <article key={invoice.id} onClick={() => onNavigate?.("business-management", "billing")}><strong>{invoice.invoice_number}</strong><span>{label(invoice.status)}</span><b>{money(invoice.total_minor)}</b><small>Balance {money(invoice.balance_due_minor)}</small></article>)}
     </div>
-    <div className="order-quote-list">
-      {quoteDrafts.map((quote) => <article key={quote.id} className={selected?.id === quote.id ? "active" : ""} onClick={() => setSelectedId(quote.id)}><strong>{quote.quote_number}</strong><span>{label(quote.status)}</span><b>{money(quote.total_minor)}</b><small>{quote.line_items?.length || 0} line items</small></article>)}
-    </div>
-    {selected && <QuoteDraftEditor quote={selected} saveQuoteDraft={saveQuoteDraft} />}
+    {!invoiceDrafts.length && <Empty icon={ReceiptText} title="No invoices yet" text="Generate the first invoice once order items and pricing are ready." />}
   </section>;
-}
-
-function QuoteDraftEditor({ quote, saveQuoteDraft }) {
-  const [draft, setDraft] = useState(quote);
-
-  useEffect(() => { setDraft(quote); }, [quote.id]);
-
-  const save = () => saveQuoteDraft(quote.id, {
-    status: draft.status,
-    title: draft.title,
-    notes: draft.notes,
-    internal_notes: draft.internal_notes,
-    terms: draft.terms,
-    discount_minor: Number(draft.discount_minor || 0),
-    tax_minor: Number(draft.tax_minor || 0),
-  });
-
-  const previewTotal = Math.max(0, Number(quote.subtotal_minor || 0) - Number(draft.discount_minor || 0) + Number(draft.tax_minor || 0));
-
-  return <div className="quote-editor">
-    <div className="quote-editor-header"><div><span>Quote Draft Detail</span><h3>{quote.quote_number}</h3></div><strong>{money(previewTotal)}</strong></div>
-    <div className="quote-editor-grid">
-      <label><span>Status</span><select value={draft.status || "draft_internal"} onChange={(event) => setDraft({ ...draft, status: event.target.value })}>{quoteStatuses.map((status) => <option key={status} value={status}>{label(status)}</option>)}</select></label>
-      <label><span>Title</span><input value={draft.title || ""} onChange={(event) => setDraft({ ...draft, title: event.target.value })} /></label>
-      <label><span>Discount</span><input type="number" value={draft.discount_minor || 0} onChange={(event) => setDraft({ ...draft, discount_minor: Number(event.target.value) })} /></label>
-      <label><span>Tax</span><input type="number" value={draft.tax_minor || 0} onChange={(event) => setDraft({ ...draft, tax_minor: Number(event.target.value) })} /></label>
-      <label className="span-two"><span>Customer Notes</span><textarea value={draft.notes || ""} onChange={(event) => setDraft({ ...draft, notes: event.target.value })} /></label>
-      <label className="span-two"><span>Terms</span><textarea value={draft.terms || ""} onChange={(event) => setDraft({ ...draft, terms: event.target.value })} /></label>
-      <label className="span-two"><span>Internal Notes</span><textarea value={draft.internal_notes || ""} onChange={(event) => setDraft({ ...draft, internal_notes: event.target.value })} /></label>
-    </div>
-    <div className="quote-line-items">
-      {(quote.line_items || []).map((item) => <p key={item.order_item_id}><span>{item.item_number}</span><strong>{item.item_name}</strong><b>{money(item.selling_price_minor)}</b></p>)}
-    </div>
-    <div className="quote-editor-actions"><button onClick={save}><Save size={14} />Save Quote Draft</button></div>
-  </div>;
 }
 
 function FilesTab({ order, files, uploadOrderFile, onOpenDocuLink }) {

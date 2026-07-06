@@ -57,6 +57,7 @@ class OrderPayload(PreviewEnvelope):
     default_item_category: ItemCategory | str = "custom"
     shared_artwork_default_mode: Literal["ask", "inherit", "none"] = "ask"
     created_by: str = ""
+    source_quote_id: str = ""
 
 
 class OrderDocument(OrderPayload, TenantDocument):
@@ -180,16 +181,6 @@ class OrderItemSpecPayload(PreviewEnvelope):
 class PricingCalculatePayload(PreviewEnvelope):
     specs: dict[str, Any] = Field(default_factory=dict)
     save_snapshot: bool = False
-
-
-class QuoteDraftPatch(PreviewEnvelope):
-    status: Literal["draft_internal", "ready_for_review", "sent", "approved", "revision_requested", "declined", "archived"] | None = None
-    title: str | None = None
-    notes: str | None = None
-    internal_notes: str | None = None
-    terms: str | None = None
-    discount_minor: int | None = None
-    tax_minor: int | None = None
 
 
 class LinkArtworkPayload(PreviewEnvelope):
