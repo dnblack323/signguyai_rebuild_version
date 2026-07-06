@@ -1,5 +1,11 @@
 # SignGuyAI Rebuild — PRD / Memory
 
+> **PROCESS RULE**: Before porting/rebuilding ANY feature from the legacy repo
+> (`github.com/dnblack323/signguyai`), run the full audit in
+> `/app/memory/FEATURE_MIGRATION_PREFLIGHT_PROTOCOL.md` first (Sections 1-4: rules → investigation →
+> preflight audit → implementation plan) before writing any code. This applies to every future
+> feature migration session, not just this one.
+
 ## Original Problem Statement
 Repo `signguyai_rebuild_version` pulled into Emergent. User requested a VERIFICATION-ONLY pass:
 1. Read `REBUILD_RECOVERY_PLAN.md`, `PHASE_0_DECISIONS.md`, `DOCS_INDEX.md` at repo root (source of truth for scope/resume point).
