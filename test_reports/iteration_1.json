@@ -1,0 +1,39 @@
+{
+  "summary": "First feature-testing pass of the real email/password JWT auth rebuild. All 16 backend pytest cases pass (register, duplicate-email rejection, login, wrong-password, brute-force lockout, forgot/reset password, tenant isolation, unauthenticated 401 boundary, module smoke tests). Frontend UI flows (register, login, error states, logout, redirect-to-login, forgot/reset password) all verified working via Playwright and match data-testid spec. CRITICAL new bug found: tenant registration crashes with an unhandled 500 (MongoDB DuplicateKeyError on tenants.slug unique index) whenever two different accounts register with the same company_name or full_name (very plausible collision, e.g. 'Acme', 'John Smith'). Also found a REGRESSION in Wrap Lab (new uncaught runtime error blocks the module, different from the previously-fixed 'Invalid Host header' issue) and a config mismatch (FRONTEND_URL in backend/.env is a stale preview domain, so password-reset links point to the wrong host).",
+  "backend_issues": {
+    "critical": [
+      {"endpoint": "POST /api/auth/register", "issue": "Unhandled 500 Internal Server Error (pymongo.errors.DuplicateKeyError on tenants.slug unique index) when two different registrations use the same company_name (or same full_name when company_name is blank). repositories/tenants.py's _slug() derives the slug purely from name text with no uniqueness fallback/suffix, and register_account() in services/auth_service.py does not catch this. Reproduced via curl: two registers with full_name='Dup Slug Person <pid>' -> 2nd returns 500 'Internal Server Error'. This is a realistic collision (common company/person names) not an edge case.", "priority": "CRITICAL"}
+    ],
+    "minor": [
+      {"endpoint": "auth_service.forgot_password", "issue": "backend/.env FRONTEND_URL=https://3b5cbcbd-164a-49b2-bab9-51586c38df8f.preview.emergentagent.com is a stale/different domain than the actual current REACT_APP_BACKEND_URL (https://recovery-checkpoint-2.preview.emergentagent.com). The printed reset link therefore points to the wrong host. Verified the reset-password token itself works correctly end-to-end once the correct host is substituted (200 on reset, then login with new password succeeds, old password correctly rejected)."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "WrapLab (ShadowSurface, wrap-lab CSS inline import)", "issue": "Regression: navigating to /?mode=wrap-lab throws an uncaught runtime error overlay: '_wrap_lab_css_inline__WEBPACK_IMPORTED_MODULE_23__.default.replaceAll is not a function' in ShadowSurface component, completely blocking the module. This is a NEW/different error than the previously-fixed 'Invalid Host header' issue mentioned in the task -- confirmed the old issue is gone, but a new one now blocks Wrap Lab entirely.", "selector": "N/A - full-page red error overlay", "priority": "HIGH"}
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_auth_flows_e2e.py", "/app/test_reports/pytest/pytest_results.xml"],
+  "action_items": [
+    "Fix repositories/tenants.py _slug()/upsert_current to guarantee slug uniqueness (e.g. append a short random/tenant_id suffix, or catch DuplicateKeyError and retry with a disambiguated slug) so registration never 500s on a name collision.",
+    "Update backend/.env FRONTEND_URL to match the actual current REACT_APP_BACKEND_URL/public frontend domain so password-reset links are correct.",
+    "Investigate and fix the new Wrap Lab uncaught runtime error ('_wrap_lab_css_inline...default.replaceAll is not a function' in ShadowSurface) blocking the module from loading.",
+    "Consider adding data-testid attributes to the main App shell nav rail / workspace switching controls (Customers, Orders, module tabs) -- currently only 'topbar-logout-button' has a data-testid on the authenticated app shell, which limits automated regression testing of core module navigation."
+  ],
+  "critical_code_review_comments": [
+    "services/auth_service.register_account() should validate/handle tenant creation failures gracefully instead of letting a raw DuplicateKeyError propagate as a 500 - wrap in try/except and either retry with a unique slug or return a clear 4xx if truly unrecoverable.",
+    "repositories/tenants.py._slug() has no collision-avoidance strategy at all; any two shops with the same or similar name will collide since slug is a simple lowercase-regex transform of the name with a global unique index.",
+    "auth flows correctly bcrypt-hash passwords (bcrypt.gensalt() default produces $2b$ prefix), correctly implement anti-enumeration on forgot-password, and correctly implement the 5-attempt/15-minute lockout -- these core security behaviors are solid.",
+    "Auth design intentionally uses Bearer token in localStorage/sessionStorage (per AuthContext.js spec) rather than httpOnly cookies -- flagging as a deviation from the generic auth playbook checklist, but this appears to be the explicit architecture choice for this app, not an oversight."
+  ],
+  "updated_files": ["/app/backend/tests/test_auth_flows_e2e.py"],
+  "success_rate": {"backend": "100% (16/16 passing after fixing test-data collisions caused by the newly-discovered tenant-slug bug)", "frontend": "~95% (all auth flows pass; Wrap Lab module fails to load due to a new runtime error)"},
+  "test_credentials": "Used freshly-registered unique accounts for all tests (per instructions) rather than the seeded owner@signguyai.test account, to avoid interfering with its lockout state. memory/test_credentials.md was read and used as reference.",
+  "seed_data_creation": "Multiple TEST_-prefixed accounts created via /api/auth/register during testing (emails prefixed TEST_ or lowercased test_ due to backend email normalization). Not cleaned up; recommend periodic cleanup of tenants/users with TEST_ prefix in signguyai_rebuild DB.",
+  "retest_needed": true,
+  "main_agent_can_self_test": false,
+  "context_for_next_testing_agent": "Auth module (register/login/logout/lockout/forgot/reset/tenant-isolation/401-boundary) is solid and fully passing - no need to re-test those deeply next time unless auth code changes. Focus next pass on: (1) verifying the tenant-slug collision fix, (2) Wrap Lab runtime error fix, (3) deeper Customers/Orders/Quotes/Invoices CRUD testing now that auth works, (4) adding data-testid coverage to the main app shell so UI navigation can be tested via selectors instead of unreliable query params ('?module=customers' did not appear to switch the visible workspace in my test - could not confirm if that's the right param name for this app, worth checking with main agent since it made the Command Center dashboard render for both /?module=customers and /?module=orders without visible change).",
+  "rca_of_the_issue": "Tenant registration 500: repositories/tenants.py `_slug(name, tenant_id)` computes `slug = re.sub(r'[^a-z0-9]+', '-', name.lower()).strip('-')` with no uniqueness guarantee, while the tenants collection likely has a unique index on 'slug' (confirmed via pymongo.errors.DuplicateKeyError: index: slug_unique). Reproduction: POST /api/auth/register twice with different emails but the same company_name (or same full_name with no company_name) -> 2nd call raises unhandled DuplicateKeyError -> FastAPI returns raw 500 Internal Server Error instead of a handled 4xx/retry. Mitigation: append tenant_id (or a short random suffix) to the slug, or catch the DuplicateKeyError in upsert_current and retry with an incremented/suffixed slug."
+}

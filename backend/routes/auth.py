@@ -5,13 +5,15 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import Field
 
 try:
-    from ..core_runtime import auth_mode, encode_bearer_token, get_identity_context
+    from ..core_runtime import auth_mode, encode_bearer_token, get_database, get_identity_context
     from ..models.access import RuntimeIdentityContext, role_permissions
     from ..models.base import StrictBaseModel
+    from ..services import auth_service
 except ImportError:
-    from core_runtime import auth_mode, encode_bearer_token, get_identity_context
+    from core_runtime import auth_mode, encode_bearer_token, get_database, get_identity_context
     from models.access import RuntimeIdentityContext, role_permissions
     from models.base import StrictBaseModel
+    from services import auth_service
 
 
 auth_router = APIRouter(prefix="/auth", tags=["Auth"])
@@ -49,6 +51,39 @@ class DevTokenResponse(StrictBaseModel):
     identity: IdentityResponse
 
 
+class RegisterRequest(StrictBaseModel):
+    email: str = Field(min_length=3)
+    password: str = Field(min_length=8)
+    full_name: str = Field(min_length=1)
+    company_name: str = ""
+
+
+class LoginRequest(StrictBaseModel):
+    email: str
+    password: str
+    remember_me: bool = False
+
+
+class ForgotPasswordRequest(StrictBaseModel):
+    email: str
+
+
+class ResetPasswordRequest(StrictBaseModel):
+    token: str
+    new_password: str = Field(min_length=8)
+
+
+class MessageResponse(StrictBaseModel):
+    message: str
+
+
+class AuthResponse(StrictBaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    expires_in_seconds: int
+    identity: IdentityResponse
+
+
 def _identity_response(context: RuntimeIdentityContext) -> IdentityResponse:
     return IdentityResponse(
         tenant_id=context.tenant_id,
@@ -60,6 +95,59 @@ def _identity_response(context: RuntimeIdentityContext) -> IdentityResponse:
         impersonating=context.impersonating,
         platform_admin_id=context.platform_admin_id,
     )
+
+
+def _auth_response(result: dict) -> AuthResponse:
+    user = result["user"]
+    identity = IdentityResponse(
+        tenant_id=user["tenant_id"],
+        user_id=user["id"],
+        role=user["role"],
+        permissions=result["permissions"],
+        email=user["email"],
+        auth_source="bearer",
+    )
+    return AuthResponse(access_token=result["token"], expires_in_seconds=result["expires_in_seconds"], identity=identity)
+
+
+@auth_router.post("/register", response_model=AuthResponse, status_code=status.HTTP_201_CREATED)
+async def register_account(payload: RegisterRequest) -> AuthResponse:
+    result = await auth_service.register_account(
+        get_database(),
+        email=payload.email,
+        password=payload.password,
+        full_name=payload.full_name,
+        company_name=payload.company_name,
+    )
+    return _auth_response(result)
+
+
+@auth_router.post("/login", response_model=AuthResponse)
+async def login_account(payload: LoginRequest) -> AuthResponse:
+    result = await auth_service.login(
+        get_database(),
+        email=payload.email,
+        password=payload.password,
+        remember_me=payload.remember_me,
+    )
+    return _auth_response(result)
+
+
+@auth_router.post("/logout", response_model=MessageResponse)
+async def logout_account() -> MessageResponse:
+    return MessageResponse(message="Logged out")
+
+
+@auth_router.post("/forgot-password", response_model=MessageResponse)
+async def request_password_reset(payload: ForgotPasswordRequest) -> MessageResponse:
+    await auth_service.forgot_password(get_database(), email=payload.email)
+    return MessageResponse(message="If an account exists for this email, a reset link has been sent.")
+
+
+@auth_router.post("/reset-password", response_model=MessageResponse)
+async def complete_password_reset(payload: ResetPasswordRequest) -> MessageResponse:
+    await auth_service.reset_password(get_database(), token=payload.token, new_password=payload.new_password)
+    return MessageResponse(message="Password has been reset. You can now log in.")
 
 
 @auth_router.get("/me", response_model=IdentityResponse)

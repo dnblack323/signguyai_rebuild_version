@@ -1,12 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Activity, Calculator, ChevronRight, FilePlus2, FileText, FolderOpen, Link, PackagePlus, Plus, ReceiptText, Save, Search, ShoppingBag, Upload, UserRound } from "lucide-react";
+import { Activity, Calculator, ChevronRight, FileText, FolderOpen, Link, PackagePlus, Plus, ReceiptText, Save, Search, ShoppingBag, Upload, UserRound } from "lucide-react";
 import { customerDisplayName, loadSharedCustomers } from "../customers/customerCore";
 import { api } from "../../lib/api";
 
 const orderStatuses = ["", "draft", "new_intake", "awaiting_review", "awaiting_quote", "quote_sent", "awaiting_approval", "approved", "in_production", "partially_complete", "ready_for_pickup", "out_for_delivery", "completed", "on_hold", "cancelled"];
 const actionableOrderStatuses = orderStatuses.filter(Boolean);
 const itemStatuses = ["new", "awaiting_info", "awaiting_proof", "awaiting_approval", "approved", "queued", "in_production", "in_qc", "ready", "completed", "on_hold", "rework", "cancelled"];
-const quoteStatuses = ["draft_internal", "ready_for_review", "sent", "approved", "revision_requested", "declined", "archived"];
 const categories = ["banners", "rigid_signs", "cut_vinyl", "digital_print", "vehicle_wrap", "apparel", "services", "promo_misc", "custom"];
 const productionDefaultCategories = new Set(["banners", "rigid_signs", "cut_vinyl", "digital_print", "vehicle_wrap", "apparel", "promo_misc", "custom"]);
 const detailTabs = ["Order Items", "Production", "Financial", "Drawings", "Files", "Notes", "Activity"];
@@ -22,7 +21,7 @@ export function OrdersWorkspace({ onToast, onNavigate }) {
   const [activeTab, setActiveTab] = useState("Order Items");
   const [activity, setActivity] = useState([]);
   const [files, setFiles] = useState({ file_links: [], document_links: [] });
-  const [quoteDrafts, setQuoteDrafts] = useState([]);
+  const [sourceQuote, setSourceQuote] = useState(null);
   const [invoiceDrafts, setInvoiceDrafts] = useState([]);
   const [workOrderDrafts, setWorkOrderDrafts] = useState([]);
   const [filters, setFilters] = useState({ query: "", status: "" });
@@ -42,7 +41,7 @@ export function OrdersWorkspace({ onToast, onNavigate }) {
     setActiveOrder(order);
     setOrders((current) => current.map((row) => row.id === order.id ? { ...row, ...order, items: undefined } : row));
     api(`/orders/${orderId}/activity`).then(setActivity).catch(() => {});
-    api(`/orders/${orderId}/quotes`).then(setQuoteDrafts).catch(() => {});
+    api(`/orders/${orderId}/source-quote`).then(setSourceQuote).catch(() => {});
     api(`/orders/${orderId}/invoices`).then(setInvoiceDrafts).catch(() => {});
     api(`/orders/${orderId}/work-orders`).then(setWorkOrderDrafts).catch(() => {});
   };
@@ -61,8 +60,8 @@ export function OrdersWorkspace({ onToast, onNavigate }) {
     const order = await api(`/orders/${orderId}`);
     setActiveOrder(order);
     setActiveTab("Order Items");
-    Promise.all([api(`/orders/${orderId}/activity`), api(`/orders/${orderId}/files`), api(`/orders/${orderId}/quotes`), api(`/orders/${orderId}/invoices`), api(`/orders/${orderId}/work-orders`)])
-      .then(([activityRows, fileRows, quoteRows, invoiceRows, workOrderRows]) => { setActivity(activityRows); setFiles(fileRows); setQuoteDrafts(quoteRows); setInvoiceDrafts(invoiceRows); setWorkOrderDrafts(workOrderRows); })
+    Promise.all([api(`/orders/${orderId}/activity`), api(`/orders/${orderId}/files`), api(`/orders/${orderId}/source-quote`), api(`/orders/${orderId}/invoices`), api(`/orders/${orderId}/work-orders`)])
+      .then(([activityRows, fileRows, quoteRow, invoiceRows, workOrderRows]) => { setActivity(activityRows); setFiles(fileRows); setSourceQuote(quoteRow); setInvoiceDrafts(invoiceRows); setWorkOrderDrafts(workOrderRows); })
       .catch(() => {});
   };
 
@@ -113,6 +112,13 @@ export function OrdersWorkspace({ onToast, onNavigate }) {
     const result = await api(`/order-items/${item.id}/save-pricing`, { method: "POST", body: JSON.stringify({ specs }) });
     await refreshOrder();
     onToast?.(`Price calculated: ${money(result.calculation.selling_price_minor)}`);
+    return result.calculation;
+  };
+
+  const overridePricing = async (item, overridePriceMinor, reason) => {
+    await api(`/order-items/${item.id}/override-pricing`, { method: "POST", body: JSON.stringify({ override_price_minor: overridePriceMinor, reason }) });
+    await refreshOrder();
+    onToast?.(`Price overridden to ${money(overridePriceMinor)}`);
   };
 
   const updateOrderStatus = async (status) => {
@@ -154,35 +160,15 @@ export function OrdersWorkspace({ onToast, onNavigate }) {
     onToast?.("File uploaded and linked to order");
   };
 
-  const generateQuoteDraft = async () => {
-    if (!activeOrder) return;
-    try {
-      const quote = await api(`/orders/${activeOrder.id}/generate-quote`, { method: "POST" });
-      setQuoteDrafts(await api(`/orders/${activeOrder.id}/quotes`));
-      await refreshOrder();
-      onToast?.(`Quote draft ${quote.quote_number} generated`);
-    } catch (error) {
-      onToast?.(error.message || "Unable to generate quote draft");
-    }
-  };
-
-  const saveQuoteDraft = async (quoteId, patch) => {
-    if (!activeOrder) return;
-    const updated = await api(`/orders/${activeOrder.id}/quotes/${quoteId}`, { method: "PUT", body: JSON.stringify(patch) });
-    setQuoteDrafts((current) => current.map((quote) => quote.id === updated.id ? updated : quote));
-    api(`/orders/${activeOrder.id}/activity`).then(setActivity).catch(() => {});
-    onToast?.(`Quote draft ${updated.quote_number} saved`);
-  };
-
   const generateInvoiceDraft = async () => {
     if (!activeOrder) return;
     try {
       const invoice = await api(`/orders/${activeOrder.id}/generate-invoice`, { method: "POST" });
       setInvoiceDrafts(await api(`/orders/${activeOrder.id}/invoices`));
       api(`/orders/${activeOrder.id}/activity`).then(setActivity).catch(() => {});
-      onToast?.(`Invoice draft ${invoice.invoice_number} generated`);
+      onToast?.(`Invoice ${invoice.invoice_number} generated`);
     } catch (error) {
-      onToast?.(error.message || "Unable to generate invoice draft");
+      onToast?.(error.message || "Unable to generate invoice");
     }
   };
 
@@ -232,9 +218,9 @@ export function OrdersWorkspace({ onToast, onNavigate }) {
               <div className="order-status-controls"><strong>{money(activeOrder.estimated_total_minor)}</strong><select value={activeOrder.status} onChange={(event) => updateOrderStatus(event.target.value)}>{actionableOrderStatuses.map((status) => <option key={status} value={status}>{label(status)}</option>)}</select><button onClick={nextOrderStep}>Next Step</button></div>
             </header>
             <nav className="order-detail-tabs">{detailTabs.map((tab) => <button key={tab} className={activeTab === tab ? "active" : ""} onClick={() => setActiveTab(tab)}>{tab}</button>)}</nav>
-            {activeTab === "Order Items" && <OrderItemsTab order={activeOrder} draft={itemDraft} setDraft={setItemDraft} createItem={createItem} saveItemSpecs={saveItemSpecs} calculateItem={calculateItem} updateItemStatus={updateItemStatus} updateItemProductionRequired={updateItemProductionRequired} />}
+            {activeTab === "Order Items" && <OrderItemsTab order={activeOrder} draft={itemDraft} setDraft={setItemDraft} createItem={createItem} saveItemSpecs={saveItemSpecs} calculateItem={calculateItem} overridePricing={overridePricing} updateItemStatus={updateItemStatus} updateItemProductionRequired={updateItemProductionRequired} />}
             {activeTab === "Production" && <ProductionTab workOrderDrafts={workOrderDrafts} generateWorkOrderDraft={generateWorkOrderDraft} />}
-            {activeTab === "Financial" && <FinancialTab order={activeOrder} quoteDrafts={quoteDrafts} invoiceDrafts={invoiceDrafts} generateQuoteDraft={generateQuoteDraft} saveQuoteDraft={saveQuoteDraft} generateInvoiceDraft={generateInvoiceDraft} />}
+            {activeTab === "Financial" && <FinancialTab order={activeOrder} sourceQuote={sourceQuote} invoiceDrafts={invoiceDrafts} generateInvoiceDraft={generateInvoiceDraft} onNavigate={onNavigate} />}
             {activeTab === "Drawings" && <Placeholder icon={FileText} title="Drawings use DocuLink" text="Order drawings and markups will be linked through DocuLink file/document IDs." />}
             {activeTab === "Files" && <FilesTab order={activeOrder} files={files} uploadOrderFile={uploadOrderFile} onOpenDocuLink={() => onNavigate?.("operations", "documents")} />}
             {activeTab === "Notes" && <NotesTab order={activeOrder} />}
@@ -246,20 +232,24 @@ export function OrdersWorkspace({ onToast, onNavigate }) {
   );
 }
 
-function OrderItemsTab({ order, draft, setDraft, createItem, saveItemSpecs, calculateItem, updateItemStatus, updateItemProductionRequired }) {
+function OrderItemsTab({ order, draft, setDraft, createItem, saveItemSpecs, calculateItem, overridePricing, updateItemStatus, updateItemProductionRequired }) {
   const updateDraftCategory = (category) => setDraft({ ...draft, item_category: category, production_required: productionDefaultCategories.has(category) });
 
   return <section className="order-tab-panel">
     <div className="order-item-create"><input value={draft.item_name} onChange={(event) => setDraft({ ...draft, item_name: event.target.value })} placeholder="Item name / order item description" /><select value={draft.item_category} onChange={(event) => updateDraftCategory(event.target.value)}>{categories.map((category) => <option key={category}>{category}</option>)}</select><input type="number" value={draft.quantity} onChange={(event) => setDraft({ ...draft, quantity: Number(event.target.value) })} /><label><input type="checkbox" checked={draft.production_required} onChange={(event) => setDraft({ ...draft, production_required: event.target.checked })} />Production</label><button onClick={createItem}><Plus size={15} />Add Item</button></div>
-    <div className="order-items-grid">{(order.items || []).map((item) => <OrderItemCard key={item.id} item={item} saveItemSpecs={saveItemSpecs} calculateItem={calculateItem} updateItemStatus={updateItemStatus} updateItemProductionRequired={updateItemProductionRequired} />)}</div>
+    <div className="order-items-grid">{(order.items || []).map((item) => <OrderItemCard key={item.id} item={item} saveItemSpecs={saveItemSpecs} calculateItem={calculateItem} overridePricing={overridePricing} updateItemStatus={updateItemStatus} updateItemProductionRequired={updateItemProductionRequired} />)}</div>
     {!order.items?.length && <Empty title="No order items yet" text="Add the first order item to start pricing and production planning." />}
   </section>;
 }
 
-function OrderItemCard({ item, saveItemSpecs, calculateItem, updateItemStatus, updateItemProductionRequired }) {
+function OrderItemCard({ item, saveItemSpecs, calculateItem, overridePricing, updateItemStatus, updateItemProductionRequired }) {
   const [expanded, setExpanded] = useState(false);
   const [schema, setSchema] = useState([]);
   const [specs, setSpecs] = useState(item.specs || {});
+  const [calcResult, setCalcResult] = useState(null);
+  const [overrideOpen, setOverrideOpen] = useState(false);
+  const [overridePrice, setOverridePrice] = useState("");
+  const [overrideReason, setOverrideReason] = useState("");
 
   useEffect(() => { setSpecs(item.specs || {}); }, [item.id, item.specs]);
   useEffect(() => {
@@ -268,30 +258,54 @@ function OrderItemCard({ item, saveItemSpecs, calculateItem, updateItemStatus, u
   }, [expanded, item.item_category]);
 
   const setSpec = (key, value, type) => setSpecs((current) => ({ ...current, [key]: type === "number" ? Number(value || 0) : type === "toggle" ? Boolean(value) : value }));
+  const runCalculate = async () => setCalcResult(await calculateItem(item, specs));
+  const submitOverride = async () => {
+    if (!overrideReason.trim() || overridePrice === "") return;
+    await overridePricing(item, Math.round(Number(overridePrice) * 100), overrideReason.trim());
+    setOverrideOpen(false); setOverridePrice(""); setOverrideReason("");
+  };
 
-  return <article>
+  return <article data-testid={`order-item-card-${item.id}`}>
     <div><strong>{item.item_number}</strong><span>{item.item_category}</span></div>
     <h3>{item.item_name}</h3>
     <p>{item.description || "No item description yet."}</p>
     <dl><div><dt>Qty</dt><dd>{item.quantity}</dd></div><div><dt>Status</dt><dd>{label(item.status)}</dd></div><div><dt>Price</dt><dd>{money(item.estimated_price_minor)}</dd></div></dl>
+    {item.override_reason && <p className="pricing-override-badge" data-testid={`order-item-override-badge-${item.id}`}>Manually overridden by {item.override_actor_id || "staff"}: "{item.override_reason}"</p>}
     <div className="order-item-status-row"><span>Item Status</span><select value={item.status} onChange={(event) => updateItemStatus(item, event.target.value)}>{itemStatuses.map((status) => <option key={status} value={status}>{label(status)}</option>)}</select></div>
     <label className="order-item-production-toggle"><input type="checkbox" checked={Boolean(item.production_required)} onChange={(event) => updateItemProductionRequired(item, event.target.checked)} />Production required</label>
     <div className="order-item-actions">
       <button onClick={() => setExpanded((value) => !value)}><FileText size={14} />{expanded ? "Hide Specs" : "Edit Specs"}</button>
-      <button onClick={() => calculateItem(item, specs)}><Calculator size={14} />Calculate</button>
+      <button onClick={runCalculate} data-testid={`order-item-calculate-button-${item.id}`}><Calculator size={14} />Calculate</button>
+      <button onClick={() => setOverrideOpen((value) => !value)} data-testid={`order-item-override-toggle-${item.id}`}>Override Price</button>
       {item.item_category === "vehicle_wrap" && <button><ChevronRight size={14} />Open Wrap Command Center</button>}
     </div>
+    {overrideOpen && <div className="pricing-override-panel" data-testid={`order-item-override-panel-${item.id}`}>
+      <label><span>Override Price ($)</span><input type="number" value={overridePrice} onChange={(event) => setOverridePrice(event.target.value)} data-testid={`order-item-override-price-input-${item.id}`} /></label>
+      <label><span>Reason (required)</span><input value={overrideReason} onChange={(event) => setOverrideReason(event.target.value)} placeholder="Why is this price different?" data-testid={`order-item-override-reason-input-${item.id}`} /></label>
+      <button onClick={submitOverride} data-testid={`order-item-override-submit-${item.id}`}><Save size={14} />Save Override</button>
+    </div>}
+    {calcResult && <PricingBreakdown calculation={calcResult} testId={item.id} />}
     {expanded && <div className="order-spec-editor">
-      {schema.map((field) => <label key={field.key}>
+      {schema.filter((field) => fieldVisible(field, specs)).map((field) => <label key={field.key}>
         <span>{field.label}{field.affects_price ? " *" : ""}</span>
-        {field.type === "select" ? <select value={specs[field.key] ?? ""} onChange={(event) => setSpec(field.key, event.target.value, field.type)}><option value="">Select</option>{field.options.map((option) => <option key={option} value={option}>{option}</option>)}</select>
+        {field.type === "note" ? <p className="order-spec-note">{field.label}</p>
+          : field.type === "select" ? <select value={specs[field.key] ?? ""} onChange={(event) => setSpec(field.key, event.target.value, field.type)}><option value="">Select</option>{field.options.map((option) => <option key={option} value={option}>{option}</option>)}</select>
           : field.type === "toggle" ? <input type="checkbox" checked={Boolean(specs[field.key])} onChange={(event) => setSpec(field.key, event.target.checked, field.type)} />
           : field.type === "textarea" ? <textarea value={specs[field.key] ?? ""} onChange={(event) => setSpec(field.key, event.target.value, field.type)} />
           : <input type={field.type === "number" ? "number" : "text"} value={specs[field.key] ?? ""} onChange={(event) => setSpec(field.key, event.target.value, field.type)} />}
       </label>)}
-      <div className="order-spec-actions"><button onClick={() => saveItemSpecs(item, specs)}><Save size={14} />Save Specs</button><button onClick={() => calculateItem(item, specs)}><Calculator size={14} />Save Price</button></div>
+      <div className="order-spec-actions"><button onClick={() => saveItemSpecs(item, specs)}><Save size={14} />Save Specs</button><button onClick={runCalculate}><Calculator size={14} />Save Price</button></div>
     </div>}
   </article>;
+}
+
+function PricingBreakdown({ calculation, testId }) {
+  const lines = [...(calculation.breakdown?.materials || []), ...(calculation.breakdown?.labor || []), ...(calculation.breakdown?.overhead || [])];
+  return <div className="pricing-breakdown" data-testid={`pricing-breakdown-${testId}`}>
+    <div className="pricing-breakdown-header"><span>Method: {label(calculation.calculation_method)}</span><strong>{money(calculation.selling_price_minor)}</strong></div>
+    {lines.map((line, index) => <div key={index} className="pricing-breakdown-line"><span>{label(line.name)}</span><span>{line.quantity} {line.unit}</span><b>{money(line.total_cost_minor)}</b></div>)}
+    {calculation.warnings?.map((warning, index) => <p key={index} className={`pricing-warning ${warning.severity}`} data-testid={`pricing-warning-${testId}-${index}`}>{warning.message}</p>)}
+  </div>;
 }
 
 function ProductionTab({ workOrderDrafts, generateWorkOrderDraft }) {
@@ -309,73 +323,28 @@ function ProductionTab({ workOrderDrafts, generateWorkOrderDraft }) {
   </section>;
 }
 
-function FinancialTab({ order, quoteDrafts, invoiceDrafts, generateQuoteDraft, saveQuoteDraft, generateInvoiceDraft }) {
-  const latest = quoteDrafts[0];
+function FinancialTab({ order, sourceQuote, invoiceDrafts, generateInvoiceDraft, onNavigate }) {
   const latestInvoice = invoiceDrafts[0];
-  const [selectedId, setSelectedId] = useState("");
-  const selected = quoteDrafts.find((quote) => quote.id === selectedId) || latest;
-
-  useEffect(() => {
-    if (!selectedId && latest) setSelectedId(latest.id);
-  }, [latest?.id, selectedId]);
 
   return <section className="order-tab-panel">
     <div className="order-financial-grid">
       <article><span>Estimated Total</span><strong>{money(order.estimated_total_minor)}</strong><p>Built from order item pricing snapshots.</p></article>
-      <article><span>Payment Status</span><strong>{label(order.payment_status)}</strong><p>Invoices and payments come in the billing phase.</p></article>
-      <article><span>Latest Quote Draft</span><strong>{latest ? money(latest.total_minor) : "$0.00"}</strong><p>{latest ? `${latest.quote_number} - ${label(latest.status)}` : "No quote draft generated yet."}</p></article>
+      <article><span>Payment Status</span><strong>{label(order.payment_status)}</strong><p>{latestInvoice ? `${latestInvoice.invoice_number} - ${label(latestInvoice.status)}` : "No invoice generated yet."}</p></article>
+      <article><span>Source Quote</span><strong>{sourceQuote ? sourceQuote.quote_number : "Direct Order"}</strong><p>{sourceQuote ? `${label(sourceQuote.status)} - opened from the Quotes module.` : "This order was created directly, without a customer quote."}</p></article>
     </div>
-    <div className="order-quote-panel">
-      <div><span>Internal Quote Drafts</span><h3>Snapshot current order pricing</h3><p>This creates an internal quote draft from current Order Item prices. Customer approval, revision, signing, and sending will come with the full Quotes module.</p></div>
-      <button onClick={generateQuoteDraft}><FilePlus2 size={15} />Generate Quote Draft</button>
-    </div>
+    {sourceQuote && <div className="order-quote-panel">
+      <div><span>Quote On File</span><h3>This order came from an approved quote</h3><p>{sourceQuote.quote_number} was approved and converted into this order. Open the Quotes module to view the original commercial record.</p></div>
+      <button onClick={() => onNavigate?.("operations", "quotes")}><ChevronRight size={15} />Open Quote</button>
+    </div>}
     <div className="order-quote-panel invoice-panel">
-      <div><span>Invoice Drafts</span><h3>Create billing draft</h3><p>Uses the approved quote draft when available. Otherwise it snapshots current order item pricing for internal billing review.</p></div>
-      <button onClick={generateInvoiceDraft}><ReceiptText size={15} />Generate Invoice Draft</button>
+      <div><span>Invoices</span><h3>Bill this order</h3><p>Generates a first-class invoice snapshot from current Order Item prices. Manage status and payments in the Invoices module.</p></div>
+      <button onClick={generateInvoiceDraft} data-testid="order-generate-invoice-button"><ReceiptText size={15} />Generate Invoice</button>
     </div>
     <div className="order-invoice-list">
-      {invoiceDrafts.map((invoice) => <article key={invoice.id}><strong>{invoice.invoice_number}</strong><span>{label(invoice.status)}</span><b>{money(invoice.total_minor)}</b><small>{invoice.source === "quote_draft" ? "From quote" : "From order"}</small></article>)}
+      {invoiceDrafts.map((invoice) => <article key={invoice.id} onClick={() => onNavigate?.("business-management", "billing")}><strong>{invoice.invoice_number}</strong><span>{label(invoice.status)}</span><b>{money(invoice.total_minor)}</b><small>Balance {money(invoice.balance_due_minor)}</small></article>)}
     </div>
-    <div className="order-quote-list">
-      {quoteDrafts.map((quote) => <article key={quote.id} className={selected?.id === quote.id ? "active" : ""} onClick={() => setSelectedId(quote.id)}><strong>{quote.quote_number}</strong><span>{label(quote.status)}</span><b>{money(quote.total_minor)}</b><small>{quote.line_items?.length || 0} line items</small></article>)}
-    </div>
-    {selected && <QuoteDraftEditor quote={selected} saveQuoteDraft={saveQuoteDraft} />}
+    {!invoiceDrafts.length && <Empty icon={ReceiptText} title="No invoices yet" text="Generate the first invoice once order items and pricing are ready." />}
   </section>;
-}
-
-function QuoteDraftEditor({ quote, saveQuoteDraft }) {
-  const [draft, setDraft] = useState(quote);
-
-  useEffect(() => { setDraft(quote); }, [quote.id]);
-
-  const save = () => saveQuoteDraft(quote.id, {
-    status: draft.status,
-    title: draft.title,
-    notes: draft.notes,
-    internal_notes: draft.internal_notes,
-    terms: draft.terms,
-    discount_minor: Number(draft.discount_minor || 0),
-    tax_minor: Number(draft.tax_minor || 0),
-  });
-
-  const previewTotal = Math.max(0, Number(quote.subtotal_minor || 0) - Number(draft.discount_minor || 0) + Number(draft.tax_minor || 0));
-
-  return <div className="quote-editor">
-    <div className="quote-editor-header"><div><span>Quote Draft Detail</span><h3>{quote.quote_number}</h3></div><strong>{money(previewTotal)}</strong></div>
-    <div className="quote-editor-grid">
-      <label><span>Status</span><select value={draft.status || "draft_internal"} onChange={(event) => setDraft({ ...draft, status: event.target.value })}>{quoteStatuses.map((status) => <option key={status} value={status}>{label(status)}</option>)}</select></label>
-      <label><span>Title</span><input value={draft.title || ""} onChange={(event) => setDraft({ ...draft, title: event.target.value })} /></label>
-      <label><span>Discount</span><input type="number" value={draft.discount_minor || 0} onChange={(event) => setDraft({ ...draft, discount_minor: Number(event.target.value) })} /></label>
-      <label><span>Tax</span><input type="number" value={draft.tax_minor || 0} onChange={(event) => setDraft({ ...draft, tax_minor: Number(event.target.value) })} /></label>
-      <label className="span-two"><span>Customer Notes</span><textarea value={draft.notes || ""} onChange={(event) => setDraft({ ...draft, notes: event.target.value })} /></label>
-      <label className="span-two"><span>Terms</span><textarea value={draft.terms || ""} onChange={(event) => setDraft({ ...draft, terms: event.target.value })} /></label>
-      <label className="span-two"><span>Internal Notes</span><textarea value={draft.internal_notes || ""} onChange={(event) => setDraft({ ...draft, internal_notes: event.target.value })} /></label>
-    </div>
-    <div className="quote-line-items">
-      {(quote.line_items || []).map((item) => <p key={item.order_item_id}><span>{item.item_number}</span><strong>{item.item_name}</strong><b>{money(item.selling_price_minor)}</b></p>)}
-    </div>
-    <div className="quote-editor-actions"><button onClick={save}><Save size={14} />Save Quote Draft</button></div>
-  </div>;
 }
 
 function FilesTab({ order, files, uploadOrderFile, onOpenDocuLink }) {
@@ -395,3 +364,10 @@ function Placeholder({ icon: Icon, title, text }) { return <section className="o
 function Empty({ icon: Icon = ShoppingBag, title, text }) { return <div className="orders-empty"><Icon size={28} /><h2>{title}</h2><p>{text}</p></div>; }
 function money(value = 0) { return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format((Number(value) || 0) / 100); }
 function label(value = "") { return String(value || "").replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase()); }
+
+function fieldVisible(field, specs) {
+  if (!field.depends_on) return true;
+  const currentValue = specs[field.depends_on.field];
+  if ("truthy" in field.depends_on) return Boolean(currentValue) === field.depends_on.truthy;
+  return currentValue === field.depends_on.equals || (field.depends_on.equals === false && !currentValue);
+}

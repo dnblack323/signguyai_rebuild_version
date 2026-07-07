@@ -11,6 +11,8 @@ except ImportError:
     from shared.money import to_minor_units
     from repositories.customer_children import CustomerChildRepository
 
+from pymongo import ASCENDING
+
 
 class CustomerRepository:
     def __init__(self, database):

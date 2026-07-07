@@ -1,0 +1,26 @@
+{
+  "summary": "Targeted regression re-test of the 2 bugs from iteration_4.json (Override Price panel overflow CSS fix + vehicle_wrap/apparel Design Complexity depends_on schema fix), plus a quick spot-check of Orders/Quotes pages and Calculate button. Both bugs are CONFIRMED FIXED. (1) Opened Override Price panel on a mid-row item (ORD-0091-02, rigid_signs) inside the 10-item TEST_AllCategoriesOrder (ORD-0091) at 1920x800 -- panel now renders fully contained within its own card in a single-column stacked layout, no overlap into sibling cards. Verified via document.elementFromPoint at the Save Override button's bounding-box center: returned the button itself belonging to article ORD-0091-02 (not a sibling). Submitted a valid override ($45.00, reason 'TEST regression override reason') -- price updated to $45.00, 'Manually overridden by preview-user' badge appeared, toast 'Price overridden to $45.00' shown, order total recalculated ($2,677.64 -> $2,692.64). (2) Verified Design Complexity field for both Vehicle Wrap (ORD-0091-05) and Apparel (ORD-0091-07) items: field is visible by default, disappears immediately when 'Artwork Already Ready' checkbox is toggled ON, and reappears when toggled OFF -- confirmed for both categories via direct text-content checks on the article DOM before/after toggle. (3) Spot-check: Orders and Quotes pages load cleanly with zero console errors captured (page.on('console')/pageerror listeners empty throughout the session); Calculate button on a banners item (ORD-0091-01) fires without error and returns the expected deterministic price ($107.89, unchanged since inputs unchanged, as expected for a pure recalculation).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Both fixes verified working exactly as described in the review request: .pricing-override-panel single-column layout with box-sizing:border-box resolves the overflow, and the added depends_on rule for vehicle_wrap/apparel design_complexity correctly hides/shows the field based on artwork_ready state.",
+    "No new regressions observed in the process of testing these fixes across the 10-item order used for verification."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "not tested (frontend-only scope)", "frontend": "100% (2/2 regression bugs confirmed fixed, spot-check clean)"},
+  "test_credentials": "None required - SIGNGUYAI_AUTH_MODE=preview, auth bypassed as expected.",
+  "seed_data_creation": "None - reused existing TEST_AllCategoriesOrder (ORD-0091) seeded by previous testing agent. Left a real override applied to ORD-0091-02 ($45.00, reason 'TEST regression override reason') as part of verification -- this is a real data change on pre-existing TEST_ prefixed seed data, consistent with prior convention.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Both bugs from iteration_4.json are now fixed and verified end-to-end at 1920x800 viewport: (1) Override Price panel no longer overflows/overlaps sibling cards in the multi-column Orders grid, submit works and persists correctly. (2) vehicle_wrap and apparel Design Complexity field now correctly hides/shows based on Artwork Already Ready toggle. Orders/Quotes pages load without console errors; Calculate button functions correctly for banners. No further action needed on this scope. Full 9-category deep pricing test was not re-run per instructions (out of scope, already passed in iteration_4).",
+  "rca of the issue": "N/A - this iteration is a fix-verification pass, no new bugs found. Original RCA for both bugs is documented in iteration_4.json and both root causes (CSS grid overflow, missing depends_on schema field) were correctly addressed by the fixes applied."
+}

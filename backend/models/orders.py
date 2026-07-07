@@ -57,6 +57,7 @@ class OrderPayload(PreviewEnvelope):
     default_item_category: ItemCategory | str = "custom"
     shared_artwork_default_mode: Literal["ask", "inherit", "none"] = "ask"
     created_by: str = ""
+    source_quote_id: str = ""
 
 
 class OrderDocument(OrderPayload, TenantDocument):
@@ -113,6 +114,9 @@ class OrderItemPayload(PreviewEnvelope):
     labor_estimate_minor: int = 0
     material_estimate_minor: int = 0
     manual_quote_override_minor: int = 0
+    override_reason: str = ""
+    override_actor_id: str = ""
+    override_at: datetime | None = None
     design_needed: bool = False
     customer_artwork: bool = False
     artwork_status: str = "none"
@@ -154,6 +158,9 @@ class OrderItemPatch(PreviewEnvelope):
     entry_mode: EntryMode | None = None
     estimated_price_minor: int | None = None
     manual_quote_override_minor: int | None = None
+    override_reason: str | None = None
+    override_actor_id: str | None = None
+    override_at: datetime | None = None
     design_needed: bool | None = None
     customer_artwork: bool | None = None
     artwork_status: str | None = None
@@ -182,14 +189,9 @@ class PricingCalculatePayload(PreviewEnvelope):
     save_snapshot: bool = False
 
 
-class QuoteDraftPatch(PreviewEnvelope):
-    status: Literal["draft_internal", "ready_for_review", "sent", "approved", "revision_requested", "declined", "archived"] | None = None
-    title: str | None = None
-    notes: str | None = None
-    internal_notes: str | None = None
-    terms: str | None = None
-    discount_minor: int | None = None
-    tax_minor: int | None = None
+class PricingOverridePayload(PreviewEnvelope):
+    override_price_minor: int = Field(ge=0)
+    reason: str = Field(min_length=1)
 
 
 class LinkArtworkPayload(PreviewEnvelope):

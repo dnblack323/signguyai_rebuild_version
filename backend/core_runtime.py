@@ -11,7 +11,9 @@ import json
 import os
 import time
 from functools import lru_cache
+from pathlib import Path
 
+from dotenv import load_dotenv
 from fastapi import Depends, Header, HTTPException, status
 from motor.motor_asyncio import AsyncIOMotorClient
 
@@ -20,6 +22,7 @@ try:
 except ImportError:
     from models.access import RuntimeIdentityContext, identity_has_permission, role_permissions
 
+load_dotenv(Path(__file__).resolve().parent / ".env")
 
 MONGO_URL = os.getenv("MONGO_URL")
 DB_NAME = os.getenv("DB_NAME")

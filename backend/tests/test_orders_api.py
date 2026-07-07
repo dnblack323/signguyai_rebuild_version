@@ -267,9 +267,12 @@ class OrdersApiTests(unittest.TestCase):
         self.doculink = AsyncMock()
         self.doculink.list_links = AsyncMock(return_value={"file_links": [], "document_links": []})
         self.doculink.create_file_link = AsyncMock(return_value={"id": "LINK-1", "entity_type": "order_item"})
+        self.pricing_foundation = AsyncMock()
+        self.pricing_foundation.get_default = AsyncMock(return_value=None)
         self.patches = [
             patch("routes.orders.repository", return_value=self.repo),
             patch("routes.orders.doculink_repository", return_value=self.doculink),
+            patch("routes.orders.pricing_foundation_repository", return_value=self.pricing_foundation),
         ]
         for active_patch in self.patches:
             active_patch.start()
